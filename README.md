@@ -4,8 +4,18 @@ a simple ssr framework made with go templating and ws for regional reloading
 
 ## Concepts
 
+The main two things are:
+
 - **page**: is available via mux
 - **island**: a template to be used within other templates, prefixed with "_"
+
+Scoping for islands is show in the example below.
+
+## Styling
+
+Styling scope is show in the example below too. 
+
+I wanted to note here that we hash the content to make a new file name, once serving. This allows us to cache the document in the browser for faster loading times and less server overhead. Especially compared to loading css into the template every time. Also this lets me make changes without fear that a user will miss out.
 
 ## Example
 
@@ -22,7 +32,8 @@ import (
 )
 
 func main() {
-	mux, err := gofish.NewMux("template")
+	verbose := true
+	mux, err := gofish.NewMux("template", verbose)
 	if err != nil {
 		panic(err)
 	}
@@ -35,13 +46,15 @@ Template Directory
 
 ```txt
 └── template
-    ├── about.html             /about
+    ├── about.html              /about
     ├── blog
-    │   ├── 2006-01-02.html    /blog/2006-01-03
-    │   ├── 2006-01-03.html    /blog/2006-01-03
-    │   └── _greeting.html     'greeting' is scoped to blogs
-    ├── home.html              /home
-    └── _nav.html              'nav' is globally scoped 
+    │   ├── 2006-01-02.html     /blog/2006-01-02
+    │   ├── 2006-01-03.html     /blog/2006-01-03
+    │   ├── blog-style.css	    /blog/dd55ea4c2e29831e355a68015bc12d00.css
+    │   └── _greeting.html      'greeting' can be used in a blogs
+    ├── home.html               /home
+    ├── _nav.html               'nav' can be used on all pages
+    └── style.css               /7d084444a097620c49fe94852b215eb2.css
 ```
 
 Template HTML define same as file name
