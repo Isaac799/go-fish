@@ -5,17 +5,12 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
-	"sort"
-	"strings"
 )
 
-func isIsland(s string) bool {
-	return strings.HasPrefix(s, "_")
-}
-
-func collect(items *map[string][]HTMLItem, pathBase, templateDir string, globalIslands []HTMLItem) error {
+// collect will gather html and css from template dir. Needs optimization
+func collect(items *map[string][]Item, pathBase, templateDir string, globalChildren []Item) error {
 	if items == nil {
-		items = &map[string][]HTMLItem{}
+		items = &map[string][]Item{}
 	}
 	entries, err := os.ReadDir(pathBase)
 	if err != nil {
@@ -27,74 +22,62 @@ func collect(items *map[string][]HTMLItem, pathBase, templateDir string, globalI
 
 	isRoot := pathBase == templateDir
 
-	// ReadDir is sorted by filename and island templates start with "_" they will be collected first
-	// but to ensure (and fix) for nested dir we sort too
-	sort.Slice(entries, func(i, j int) bool {
-		if !isRoot {
-			return strings.Compare(entries[i].Name(), entries[j].Name()) > 0
-		}
-		return strings.Compare(entries[i].Name(), entries[j].Name()) < 0
-	})
+	children := []Item{}
 
-	islands := []HTMLItem{}
-
-	if globalIslands != nil {
-		for _, e := range globalIslands {
-			islands = append(islands, e)
+	if globalChildren != nil {
+		for _, e := range globalChildren {
+			children = append(children, e)
 		}
 	}
 
-	// first just looking at the file entries so we can
-	// snag global islands before going down nested dirs
 	for _, e := range entries {
 		if e.IsDir() {
 			continue
 		}
 
-		info, err := e.Info()
+		htmlItem, err := newItem(e, pathBase, templateDir)
+		if errors.Is(err, ErrInvalidExtension) {
+			continue
+		}
 		if err != nil {
 			return err
 		}
+		if htmlItem.kind != htmlItemKindStyle && htmlItem.kind != htmlItemKindIsland {
+			continue
+		}
+		children = append(children, *htmlItem)
+	}
 
-		ext := filepath.Ext(info.Name())
-		if ext != ".html" {
+	for _, e := range entries {
+		if e.IsDir() {
 			continue
 		}
 
-		name := strings.TrimSuffix(info.Name(), ext)
-
-		filePath := filepath.Join(pathBase, info.Name())
-		pattern := filepath.Join(pathBase, name)
-		pattern = strings.Replace(pattern, templateDir, "", 1)
-		pattern = strings.ReplaceAll(pattern, "\\", "/")
-		pattern = strings.ReplaceAll(pattern, "//", "/")
-
-		if isIsland(info.Name()) {
-			islands = append(islands, HTMLItem{
-				kind:     htmlItemKindIsland,
-				Pattern:  pattern,
-				filePath: filePath,
-			})
+		htmlItem, err := newItem(e, pathBase, templateDir)
+		if errors.Is(err, ErrInvalidExtension) {
+			continue
+		}
+		if err != nil {
+			return err
+		}
+		if htmlItem.kind != htmlItemKindPage {
 			continue
 		}
 
-		// At this point we have gone through all islands as the arr is ordered
-		if globalIslands == nil && isRoot {
-			globalIslands = islands
+		for _, c := range children {
+			htmlItem.children = append(htmlItem.children, c)
 		}
 
 		itemsDeref := *items
 		_, exists := itemsDeref[pathBase]
 		if !exists {
-			itemsDeref[pathBase] = []HTMLItem{}
+			itemsDeref[pathBase] = []Item{}
 		}
+		itemsDeref[pathBase] = append(itemsDeref[pathBase], *htmlItem)
+	}
 
-		itemsDeref[pathBase] = append(itemsDeref[pathBase], HTMLItem{
-			kind:     htmlItemKindPage,
-			Pattern:  pattern,
-			filePath: filePath,
-			islands:  islands,
-		})
+	if globalChildren == nil && isRoot {
+		globalChildren = children
 	}
 
 	// now we can look at nested dirs
@@ -102,7 +85,7 @@ func collect(items *map[string][]HTMLItem, pathBase, templateDir string, globalI
 		if !e.IsDir() {
 			continue
 		}
-		collect(items, filepath.Join(pathBase, e.Name()), templateDir, globalIslands)
+		collect(items, filepath.Join(pathBase, e.Name()), templateDir, globalChildren)
 	}
 
 	return nil

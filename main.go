@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	mux, err := gofish.NewMux("template")
+	mux, err := gofish.NewMux("template", true)
 	if err != nil {
 		panic(err)
 	}
