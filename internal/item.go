@@ -2,6 +2,7 @@ package internal
 
 import (
 	"bytes"
+	"crypto/md5"
 	"errors"
 	"fmt"
 	"io"
@@ -53,6 +54,23 @@ func newItem(entry os.DirEntry, pathBase, templateDir string) (*Item, error) {
 		name = strings.TrimSuffix(info.Name(), ext)
 	}
 
+	// since I want to cache styling while preventing
+	// an invalid cache we make the name based on a hash
+	// of its content
+	if kind == htmlItemKindStyle {
+		f, err := os.Open(filepath.Join(pathBase, entry.Name()))
+		if err != nil {
+			return nil, err
+		}
+		defer f.Close()
+		b, err := io.ReadAll(f)
+		if err != nil {
+			return nil, err
+		}
+		hash := md5.Sum(b)
+		name = fmt.Sprintf("%x%s", hash, ext)
+	}
+
 	filePath := filepath.Join(pathBase, info.Name())
 	pattern := filepath.Join(pathBase, name)
 	pattern = strings.Replace(pattern, templateDir, "", 1)
@@ -102,6 +120,7 @@ func (hi *Item) handler(w http.ResponseWriter, _ *http.Request) {
 		}
 		w.Header().Add("Content-Type", mime.TypeByExtension(filepath.Ext(f.Name())))
 		w.Header().Add("Content-Length", strconv.Itoa(len(b)))
+		w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", browserCacheDurationSeconds))
 		w.Write(b)
 		return
 	}
