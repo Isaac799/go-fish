@@ -72,7 +72,7 @@ func collect(items *map[string][]HTMLItem, pathBase, templateDir string, globalI
 		if isIsland(info.Name()) {
 			islands = append(islands, HTMLItem{
 				kind:     htmlItemKindIsland,
-				pattern:  pattern,
+				Pattern:  pattern,
 				filePath: filePath,
 			})
 			continue
@@ -91,7 +91,7 @@ func collect(items *map[string][]HTMLItem, pathBase, templateDir string, globalI
 
 		itemsDeref[pathBase] = append(itemsDeref[pathBase], HTMLItem{
 			kind:     htmlItemKindPage,
-			pattern:  pattern,
+			Pattern:  pattern,
 			filePath: filePath,
 			islands:  islands,
 		})

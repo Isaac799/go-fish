@@ -10,16 +10,16 @@ import (
 // HTMLItem is an item found form the template dir.
 type HTMLItem struct {
 	kind     int
-	pattern  string
+	Pattern  string
 	filePath string
 	islands  []HTMLItem
 }
 
 func (hi *HTMLItem) templateName() string {
-	if len(hi.pattern) == 0 {
+	if len(hi.Pattern) == 0 {
 		return "unknown"
 	}
-	parts := strings.Split(hi.pattern, "/")
+	parts := strings.Split(hi.Pattern, "/")
 	return parts[len(parts)-1]
 }
 
@@ -44,7 +44,7 @@ func (hi *HTMLItem) handler(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 
-	err = parsed.ExecuteTemplate(w, key, nil)
+	err = parsed.ExecuteTemplate(w, key, hi)
 	if err != nil {
 		fmt.Print(err)
 		w.WriteHeader(http.StatusInternalServerError)

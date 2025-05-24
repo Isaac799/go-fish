@@ -31,8 +31,8 @@ func NewMux(templateDirPath string) (*http.ServeMux, error) {
 			if item.kind == htmlItemKindIsland {
 				continue
 			}
-			fmt.Printf("pattern: %s\n", item.pattern)
-			mux.HandleFunc(item.pattern, item.handler)
+			fmt.Printf("pattern: %s\n", item.Pattern)
+			mux.HandleFunc(item.Pattern, item.handler)
 		}
 	}
 	return mux, nil
