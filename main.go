@@ -8,10 +8,14 @@ import (
 )
 
 func main() {
-	mux, err := gofish.NewMux("template", true)
+	pond, err := gofish.NewPond("template")
 	if err != nil {
 		panic(err)
 	}
+
+	verbose := true
+	mux := pond.CastLines(verbose)
+
 	fmt.Println("gone fishing")
 	http.ListenAndServe(":8080", mux)
 }

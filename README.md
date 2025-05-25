@@ -32,14 +32,18 @@ import (
 )
 
 func main() {
-	verbose := true
-	mux, err := gofish.NewMux("template", verbose)
+	pond, err := gofish.NewPond("template")
 	if err != nil {
 		panic(err)
 	}
+
+	verbose := true
+	mux := pond.CastLines(verbose)
+
 	fmt.Println("gone fishing")
 	http.ListenAndServe(":8080", mux)
 }
+
 ```
 
 Template Directory
