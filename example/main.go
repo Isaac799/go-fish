@@ -8,7 +8,7 @@ import (
 	gofish "github.com/Isaac799/go-fish/internal"
 )
 
-func main() {
+func setupPond() gofish.Pond {
 	options := gofish.NewPondOptions{
 		Licenses: []gofish.License{
 			visitorLog,
@@ -24,11 +24,25 @@ func main() {
 		panic(err)
 	}
 
-	for _, fish := range pond.FishFinder() {
-		if fish.Pattern() == "/home" {
-			prepHomeFish(fish)
-		}
+	return pond
+}
+
+func main() {
+	pond := setupPond()
+
+	home := page{
+		pattern:    "/home",
+		data:       incrementQueryCount,
+		middleware: []gofish.License{springOnly},
 	}
+	about := page{
+		pattern:    "/about",
+		middleware: []gofish.License{springOnly},
+	}
+
+	pages := []page{home, about}
+
+	setupPages(&pond, pages)
 
 	verbose := true
 	mux := pond.CastLines(verbose)

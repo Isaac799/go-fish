@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 )
@@ -17,7 +16,7 @@ func (c *counter) increment() {
 	}
 }
 
-func counterBait(r *http.Request) any {
+func incrementQueryCount(r *http.Request) any {
 	count := r.URL.Query().Get("count")
 	if len(count) == 0 {
 		return counter{}
@@ -30,6 +29,5 @@ func counterBait(r *http.Request) any {
 		Value: i,
 	}
 	c.increment()
-	fmt.Print(c)
 	return c
 }

@@ -66,8 +66,6 @@ func newFish(entry os.DirEntry, pathBase string, pond *Pond) (*Fish, error) {
 
 	kind := -1
 
-	fmt.Println(info.Name(), mime)
-
 	if strings.HasPrefix(mime, "text/html") {
 		if strings.HasPrefix(info.Name(), "_") {
 			kind = FishKindSardine
@@ -179,7 +177,7 @@ func (f *Fish) handlerClownAnchovy(w http.ResponseWriter) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	w.Header().Add("Content-Type", mime.TypeByExtension(filepath.Ext(file.Name())))
+	w.Header().Add("Content-Type", f.mime)
 	w.Header().Add("Content-Length", strconv.Itoa(len(b)))
 	w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", browserCacheDurationSeconds))
 	w.Write(b)
