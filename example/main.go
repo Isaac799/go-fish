@@ -1,3 +1,4 @@
+// Package main is an example usage of the go-fish tool
 package main
 
 import (
@@ -41,6 +42,7 @@ func main() {
 		"template",
 		options,
 	)
+
 	if err != nil {
 		panic(err)
 	}
