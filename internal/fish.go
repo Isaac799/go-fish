@@ -27,6 +27,7 @@ type Bait = func(r *http.Request) any
 type Fish struct {
 	pond     *Pond
 	kind     int
+	mime     string
 	pattern  string
 	filePath string
 	children []Fish
@@ -54,30 +55,36 @@ func (f *Fish) Pattern() string {
 	return f.pattern
 }
 
-func isSardine(s string) bool {
-	return strings.HasPrefix(s, "_")
-}
-
 func newFish(entry os.DirEntry, pathBase string, pond *Pond) (*Fish, error) {
 	info, err := entry.Info()
 	if err != nil {
 		return nil, err
 	}
 
-	kindMap := map[string]int{
-		".html": FishKindTuna,
-		".css":  FiskKindClown,
-	}
-
 	ext := filepath.Ext(info.Name())
+	mime := mime.TypeByExtension(ext)
 
-	kind, exists := kindMap[ext]
-	if !exists {
-		return nil, ErrInvalidExtension
+	kind := -1
+
+	fmt.Println(info.Name(), mime)
+
+	if strings.HasPrefix(mime, "text/html") {
+		if strings.HasPrefix(info.Name(), "_") {
+			kind = FishKindSardine
+		} else {
+			kind = FishKindTuna
+		}
+	} else if strings.HasPrefix(mime, "text/css") ||
+		strings.HasPrefix(mime, "text/javascript") {
+		kind = FiskKindClown
+	} else if strings.HasPrefix(mime, "image") ||
+		strings.HasPrefix(mime, "audio") ||
+		strings.HasPrefix(mime, "video") {
+		kind = FiskKindAnchovy
 	}
 
-	if isSardine(info.Name()) {
-		kind = FishKindSardine
+	if kind == -1 {
+		return nil, ErrInvalidExtension
 	}
 
 	name := info.Name()
@@ -110,6 +117,7 @@ func newFish(entry os.DirEntry, pathBase string, pond *Pond) (*Fish, error) {
 
 	return &Fish{
 		kind:     kind,
+		mime:     mime,
 		pattern:  pattern,
 		filePath: filePath,
 		Licenses: []License{},
@@ -152,7 +160,7 @@ func (f *Fish) handlerSardine(w http.ResponseWriter, r *http.Request) {
 	w.Write(buff.Bytes())
 }
 
-func (f *Fish) handlerClown(w http.ResponseWriter) {
+func (f *Fish) handlerClownAnchovy(w http.ResponseWriter) {
 	file, err := os.Open(f.filePath)
 	if errors.Is(err, os.ErrNotExist) {
 		fmt.Print(err)
@@ -214,8 +222,14 @@ func (f *Fish) handlerTuna(w http.ResponseWriter, r *http.Request) {
 		if e.kind != FiskKindClown {
 			continue
 		}
-		b := fmt.Appendf(nil, `<link rel="stylesheet" href="%s">`, e.pattern)
-		buff.Write(b)
+		if strings.HasPrefix(e.mime, "text/css") {
+			b := fmt.Appendf(nil, `<link rel="stylesheet" href="%s">`, e.pattern)
+			buff.Write(b)
+		}
+		if strings.HasPrefix(e.mime, "text/javascript") {
+			b := fmt.Appendf(nil, `<script src="%s"></script>`, e.pattern)
+			buff.Write(b)
+		}
 	}
 	buff.Write(htmlEndHeadStartBody)
 
@@ -261,8 +275,8 @@ func (f *Fish) handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if f.kind == FiskKindClown {
-		f.handlerClown(w)
+	if f.kind == FiskKindClown || f.kind == FiskKindAnchovy {
+		f.handlerClownAnchovy(w)
 		return
 	}
 

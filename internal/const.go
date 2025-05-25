@@ -1,14 +1,25 @@
+// Package internal is the inner workings of the gofish package
 package internal
 
 import "errors"
 
 const (
-	// FishKindTuna is a big fish. Served as a html page. Consumes Sardines.
+	// FishKindTuna is a big fish. Served as a page. Consumes Sardines.
+	// Identified by mime [ text/html ].
+	// Not cahced.
 	FishKindTuna = iota
 	// FishKindSardine is a small fish. Used by tuna. Smaller templates, served standalone too.
+	// Identified by mime [ text/html ] & underscore prefix.
+	// Not cahced.
 	FishKindSardine
-	// FiskKindClown is a decorative fish. Css served and linkt to tuna in head of document
+	// FiskKindClown is a decorative fish. Used in head of document.
+	// Identified by mime [ text/css | text/javascript ].
+	// Is cached & name from hash.
 	FiskKindClown
+	// FiskKindAnchovy is supportive of the tuna.
+	// Identified by mime [ image | audio | video ].
+	// Is cached.
+	FiskKindAnchovy
 )
 
 const (

@@ -190,23 +190,27 @@ func (p *Pond) CastLines(verbose bool) *http.ServeMux {
 				if _, exists := pattensAdded[child.pattern]; exists {
 					continue
 				}
-
+				if child.kind == FishKindTuna {
+					// unreachable
+					continue
+				}
 				if child.kind == FiskKindClown {
 					if tw != nil {
 						tw.Write(fmt.Appendf(nil, "clown\t%s\n", child.pattern))
 					}
-					mux.HandleFunc(child.pattern, child.handler)
-					pattensAdded[child.pattern] = true
 				}
-
 				if child.kind == FishKindSardine {
 					if tw != nil {
 						tw.Write(fmt.Appendf(nil, "sardine\t%s\n", child.pattern))
 					}
-
-					mux.HandleFunc(child.pattern, child.handler)
-					pattensAdded[child.pattern] = true
 				}
+				if child.kind == FiskKindAnchovy {
+					if tw != nil {
+						tw.Write(fmt.Appendf(nil, "anchovy\t%s\n", child.pattern))
+					}
+				}
+				mux.HandleFunc(child.pattern, child.handler)
+				pattensAdded[child.pattern] = true
 			}
 		}
 	}
