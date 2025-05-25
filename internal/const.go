@@ -3,9 +3,12 @@ package internal
 import "errors"
 
 const (
-	fishKindTuna = iota
-	fishKindSardine
-	fiskKindClown
+	// FishKindTuna is a big fish. Served as a html page. Consumes Sardines.
+	FishKindTuna = iota
+	// FishKindSardine is a small fish. Used by tuna. Smaller templates, served standalone too.
+	FishKindSardine
+	// FiskKindClown is a decorative fish. Css served and linkt to tuna in head of document
+	FiskKindClown
 )
 
 const (

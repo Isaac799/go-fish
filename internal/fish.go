@@ -39,6 +39,11 @@ func (f *Fish) AddLicense(l License) {
 	f.Licenses = append(f.Licenses, l)
 }
 
+// Kind reads back the kind of a fish
+func (f *Fish) Kind() int {
+	return f.kind
+}
+
 // Pattern reads back the pattern a fish will bite for
 func (f *Fish) Pattern() string {
 	return f.pattern
@@ -55,8 +60,8 @@ func newFish(entry os.DirEntry, pathBase string, pond *Pond) (*Fish, error) {
 	}
 
 	kindMap := map[string]int{
-		".html": fishKindTuna,
-		".css":  fiskKindClown,
+		".html": FishKindTuna,
+		".css":  FiskKindClown,
 	}
 
 	ext := filepath.Ext(info.Name())
@@ -67,18 +72,18 @@ func newFish(entry os.DirEntry, pathBase string, pond *Pond) (*Fish, error) {
 	}
 
 	if isSardine(info.Name()) {
-		kind = fishKindSardine
+		kind = FishKindSardine
 	}
 
 	name := info.Name()
-	if kind == fishKindTuna || kind == fishKindSardine {
+	if kind == FishKindTuna || kind == FishKindSardine {
 		name = strings.TrimSuffix(info.Name(), ext)
 	}
 
 	// since I want to cache styling while preventing
 	// an invalid cache we make the name based on a hash
 	// of its content
-	if kind == fiskKindClown {
+	if kind == FiskKindClown {
 		f, err := os.Open(filepath.Join(pathBase, entry.Name()))
 		if err != nil {
 			return nil, err
@@ -177,7 +182,7 @@ func (f *Fish) handlerTuna(w http.ResponseWriter) {
 	// gather islands
 	collectedFilePaths := []string{}
 	for _, e := range f.children {
-		if e.kind != fishKindSardine {
+		if e.kind != FishKindSardine {
 			continue
 		}
 		collectedFilePaths = append(collectedFilePaths, e.filePath)
@@ -196,7 +201,7 @@ func (f *Fish) handlerTuna(w http.ResponseWriter) {
 
 	// styling
 	for _, e := range f.children {
-		if e.kind != fiskKindClown {
+		if e.kind != FiskKindClown {
 			continue
 		}
 		b := fmt.Appendf(nil, `<link rel="stylesheet" href="%s">`, e.pattern)
@@ -237,12 +242,12 @@ func (f *Fish) handler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if f.kind == fishKindSardine {
+	if f.kind == FishKindSardine {
 		f.handlerSardine(w)
 		return
 	}
 
-	if f.kind == fiskKindClown {
+	if f.kind == FiskKindClown {
 		f.handlerClown(w)
 		return
 	}

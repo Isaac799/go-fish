@@ -115,7 +115,7 @@ func (p *Pond) collect(pathBase string) error {
 			return err
 		}
 
-		if item.kind == fishKindTuna {
+		if item.kind == FishKindTuna {
 			pageItems = append(pageItems, item)
 			continue
 		}
@@ -176,7 +176,7 @@ func (p *Pond) CastLines(verbose bool) *http.ServeMux {
 			if _, exists := pattensAdded[item.pattern]; exists {
 				continue
 			}
-			if item.kind != fishKindTuna {
+			if item.kind != FishKindTuna {
 				continue
 			}
 			if tw != nil {
@@ -191,7 +191,7 @@ func (p *Pond) CastLines(verbose bool) *http.ServeMux {
 					continue
 				}
 
-				if child.kind == fiskKindClown {
+				if child.kind == FiskKindClown {
 					if tw != nil {
 						tw.Write(fmt.Appendf(nil, "clown\t%s\n", child.pattern))
 					}
@@ -199,7 +199,7 @@ func (p *Pond) CastLines(verbose bool) *http.ServeMux {
 					pattensAdded[child.pattern] = true
 				}
 
-				if child.kind == fishKindSardine {
+				if child.kind == FishKindSardine {
 					if tw != nil {
 						tw.Write(fmt.Appendf(nil, "sardine\t%s\n", child.pattern))
 					}
