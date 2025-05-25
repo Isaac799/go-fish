@@ -5,12 +5,22 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"text/tabwriter"
 )
+
+func htmlxHandler(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Add("Content-Type", "text/javascript")
+	w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", browserCacheDurationSeconds))
+	w.Header().Add("Content-Length", strconv.Itoa(len(htmlx)))
+	w.Write(htmlx)
+}
 
 // NewMux provides a mux to with patterns based on go templates in the specified directory
 func NewMux(templateDirPath string, verbose bool) (*http.ServeMux, error) {
 	mux := http.NewServeMux()
+
+	mux.HandleFunc("/assets/htmlx.2.0.4.js", htmlxHandler)
 
 	items := map[string][]Item{}
 	wd, err := os.Getwd()
