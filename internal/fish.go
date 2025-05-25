@@ -15,19 +15,40 @@ import (
 	"text/template"
 )
 
+// License is a requirement to catch a fish.
+// acts as a middleware. Return true if license is passed
+type License = func(w http.ResponseWriter, r *http.Request) bool
+
 // Fish is an item found form the template dir.
 type Fish struct {
+	pond     *Pond
 	kind     int
-	Pattern  string
+	pattern  string
 	filePath string
 	children []Fish
+
+	// Licenses is a collection of licenses a user must have
+	// to catch a fish. Checked after pond licenses, in the
+	// order added. To catch a fish all pond and fish licenses
+	// must be met.
+	Licenses []License
+}
+
+// AddLicense appends a license required to catch a fish
+func (f *Fish) AddLicense(l License) {
+	f.Licenses = append(f.Licenses, l)
+}
+
+// Pattern reads back the pattern a fish will bite for
+func (f *Fish) Pattern() string {
+	return f.pattern
 }
 
 func isSardine(s string) bool {
 	return strings.HasPrefix(s, "_")
 }
 
-func newFish(entry os.DirEntry, pathBase, templateDir string) (*Fish, error) {
+func newFish(entry os.DirEntry, pathBase string, pond *Pond) (*Fish, error) {
 	info, err := entry.Info()
 	if err != nil {
 		return nil, err
@@ -73,27 +94,29 @@ func newFish(entry os.DirEntry, pathBase, templateDir string) (*Fish, error) {
 
 	filePath := filepath.Join(pathBase, info.Name())
 	pattern := filepath.Join(pathBase, name)
-	pattern = strings.Replace(pattern, templateDir, "", 1)
+	pattern = strings.Replace(pattern, pond.templateDir, "", 1)
 	pattern = strings.ReplaceAll(pattern, "\\", "/")
 	pattern = strings.ReplaceAll(pattern, "//", "/")
 
 	return &Fish{
 		kind:     kind,
-		Pattern:  pattern,
+		pattern:  pattern,
 		filePath: filePath,
+		Licenses: []License{},
+		pond:     pond,
 	}, nil
 
 }
 
 func (f *Fish) templateName() string {
-	if len(f.Pattern) == 0 {
+	if len(f.pattern) == 0 {
 		return "unknown"
 	}
-	parts := strings.Split(f.Pattern, "/")
+	parts := strings.Split(f.pattern, "/")
 	return parts[len(parts)-1]
 }
 
-func (f *Fish) handlerIsland(w http.ResponseWriter) {
+func (f *Fish) handlerSardine(w http.ResponseWriter) {
 	templateName := f.templateName()
 
 	t := template.New(templateName)
@@ -114,7 +137,7 @@ func (f *Fish) handlerIsland(w http.ResponseWriter) {
 	w.Write(buff.Bytes())
 }
 
-func (f *Fish) handlerCSS(w http.ResponseWriter) {
+func (f *Fish) handlerClown(w http.ResponseWriter) {
 	file, err := os.Open(f.filePath)
 	if errors.Is(err, os.ErrNotExist) {
 		fmt.Print(err)
@@ -139,7 +162,7 @@ func (f *Fish) handlerCSS(w http.ResponseWriter) {
 	w.Write(b)
 }
 
-func (f *Fish) handlerHTMLPage(w http.ResponseWriter) {
+func (f *Fish) handlerTuna(w http.ResponseWriter) {
 	// 3 main parts to the document I will add in between
 	htmlStartHead := []byte(`<!DOCTYPE html><html lang="en">
 <head>
@@ -176,7 +199,7 @@ func (f *Fish) handlerHTMLPage(w http.ResponseWriter) {
 		if e.kind != fiskKindClown {
 			continue
 		}
-		b := fmt.Appendf(nil, `<link rel="stylesheet" href="%s">`, e.Pattern)
+		b := fmt.Appendf(nil, `<link rel="stylesheet" href="%s">`, e.pattern)
 		buff.Write(b)
 	}
 	buff.Write(htmlEndHeadStartBody)
@@ -194,16 +217,35 @@ func (f *Fish) handlerHTMLPage(w http.ResponseWriter) {
 	w.Write(buff.Bytes())
 }
 
-func (f *Fish) handler(w http.ResponseWriter, _ *http.Request) {
+func (f *Fish) handler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	for _, license := range f.pond.licenses {
+		allowed := license(w, r)
+		if !allowed {
+			return
+		}
+	}
+
+	for _, license := range f.Licenses {
+		allowed := license(w, r)
+		if !allowed {
+			return
+		}
+	}
+
 	if f.kind == fishKindSardine {
-		f.handlerIsland(w)
+		f.handlerSardine(w)
 		return
 	}
 
 	if f.kind == fiskKindClown {
-		f.handlerCSS(w)
+		f.handlerClown(w)
 		return
 	}
 
-	f.handlerHTMLPage(w)
+	f.handlerTuna(w)
 }

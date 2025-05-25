@@ -17,39 +17,68 @@ func htmlxHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Write(htmlx)
 }
 
+// NewPondOptions gives the options available when creating a new pond
+type NewPondOptions struct {
+	// Licenses for a pond are applied to all fish in the pond
+	// and are checked before a fish license in the order added.
+	// To catch a fish all pond and fish licenses must be met.
+	Licenses []License
+}
+
 // Pond is a collection of files from a dir with functions
 // to get a server running
 type Pond struct {
-	items          map[string][]Fish
 	pathBase       string
 	templateDir    string
 	globalChildren []Fish
+	// fish are the items available for catch in a pond
+	fish map[string][]Fish
+	// licenses are required for any fish to be caught
+	licenses []License
+}
+
+// FishFinder provides a slice of all fish
+func (p *Pond) FishFinder() []*Fish {
+	all := []*Fish{}
+	for _, fishes := range p.fish {
+		for i := range fishes {
+			all = append(all, &fishes[i])
+		}
+	}
+	return all
 }
 
 // NewPond provides a new pond based on dir
-func NewPond(templateDirPath string) (*Pond, error) {
+func NewPond(templateDirPath string, options NewPondOptions) (Pond, error) {
 	p := Pond{
-		items: map[string][]Fish{},
+		fish:     map[string][]Fish{},
+		licenses: options.Licenses,
+	}
+
+	if p.licenses == nil {
+		// do this to avoid nil deref in handle funcs
+		// prefer this to checking for nil
+		p.licenses = make([]License, 0)
 	}
 
 	wd, err := os.Getwd()
 	if err != nil {
-		return nil, err
+		return p, err
 	}
 	templateDir := filepath.Join(wd, templateDirPath)
 	p.templateDir = templateDir
 
 	err = p.collect(templateDir)
 	if err != nil {
-		return nil, err
+		return p, err
 	}
-	return &p, nil
+	return p, nil
 }
 
 // collect will gather html and css from template dir
 func (p *Pond) collect(pathBase string) error {
-	if p.items == nil {
-		p.items = map[string][]Fish{}
+	if p.fish == nil {
+		p.fish = map[string][]Fish{}
 	}
 	entries, err := os.ReadDir(pathBase)
 	if err != nil {
@@ -78,7 +107,7 @@ func (p *Pond) collect(pathBase string) error {
 			continue
 		}
 
-		item, err := newFish(e, pathBase, p.templateDir)
+		item, err := newFish(e, pathBase, p)
 		if errors.Is(err, ErrInvalidExtension) {
 			continue
 		}
@@ -99,7 +128,7 @@ func (p *Pond) collect(pathBase string) error {
 			pageItem.children = append(pageItem.children, c)
 		}
 
-		itemsDeref := p.items
+		itemsDeref := p.fish
 		_, exists := itemsDeref[pathBase]
 		if !exists {
 			itemsDeref[pathBase] = []Fish{}
@@ -137,48 +166,47 @@ func (p *Pond) CastLines(verbose bool) *http.ServeMux {
 		tw.Write([]byte("--\t--\n"))
 	}
 
-	for path, fish := range p.items {
+	for path, fish := range p.fish {
 		if len(fish) == 0 {
 			fmt.Printf("no patterns for: %s\n", path)
 			continue
 		}
 
 		for _, item := range fish {
-			if _, exists := pattensAdded[item.Pattern]; exists {
+			if _, exists := pattensAdded[item.pattern]; exists {
 				continue
 			}
 			if item.kind != fishKindTuna {
 				continue
 			}
 			if tw != nil {
-				tw.Write(fmt.Appendf(nil, "tuna\t%s\n", item.Pattern))
+				tw.Write(fmt.Appendf(nil, "tuna\t%s\n", item.pattern))
 			}
 
-			mux.HandleFunc(item.Pattern, item.handler)
-			pattensAdded[item.Pattern] = true
+			mux.HandleFunc(item.pattern, item.handler)
+			pattensAdded[item.pattern] = true
 
 			for _, child := range item.children {
-				if _, exists := pattensAdded[child.Pattern]; exists {
+				if _, exists := pattensAdded[child.pattern]; exists {
 					continue
 				}
 
 				if child.kind == fiskKindClown {
 					if tw != nil {
-						tw.Write(fmt.Appendf(nil, "clown\t%s\n", child.Pattern))
+						tw.Write(fmt.Appendf(nil, "clown\t%s\n", child.pattern))
 					}
-					mux.HandleFunc(child.Pattern, child.handler)
-					pattensAdded[child.Pattern] = true
+					mux.HandleFunc(child.pattern, child.handler)
+					pattensAdded[child.pattern] = true
 				}
 
 				if child.kind == fishKindSardine {
 					if tw != nil {
-						tw.Write(fmt.Appendf(nil, "sardine\t%s\n", child.Pattern))
+						tw.Write(fmt.Appendf(nil, "sardine\t%s\n", child.pattern))
 					}
 
-					mux.HandleFunc(child.Pattern, child.handler)
-					pattensAdded[child.Pattern] = true
+					mux.HandleFunc(child.pattern, child.handler)
+					pattensAdded[child.pattern] = true
 				}
-
 			}
 		}
 	}
