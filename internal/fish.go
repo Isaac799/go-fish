@@ -15,27 +15,27 @@ import (
 	"text/template"
 )
 
-// Item is an item found form the template dir.
-type Item struct {
+// Fish is an item found form the template dir.
+type Fish struct {
 	kind     int
 	Pattern  string
 	filePath string
-	children []Item
+	children []Fish
 }
 
-func isIsland(s string) bool {
+func isSardine(s string) bool {
 	return strings.HasPrefix(s, "_")
 }
 
-func newItem(entry os.DirEntry, pathBase, templateDir string) (*Item, error) {
+func newFish(entry os.DirEntry, pathBase, templateDir string) (*Fish, error) {
 	info, err := entry.Info()
 	if err != nil {
 		return nil, err
 	}
 
 	kindMap := map[string]int{
-		".html": htmlItemKindPage,
-		".css":  htmlItemKindStyle,
+		".html": fishKindTuna,
+		".css":  fiskKindClown,
 	}
 
 	ext := filepath.Ext(info.Name())
@@ -45,19 +45,19 @@ func newItem(entry os.DirEntry, pathBase, templateDir string) (*Item, error) {
 		return nil, ErrInvalidExtension
 	}
 
-	if isIsland(info.Name()) {
-		kind = htmlItemKindIsland
+	if isSardine(info.Name()) {
+		kind = fishKindSardine
 	}
 
 	name := info.Name()
-	if kind == htmlItemKindPage || kind == htmlItemKindIsland {
+	if kind == fishKindTuna || kind == fishKindSardine {
 		name = strings.TrimSuffix(info.Name(), ext)
 	}
 
 	// since I want to cache styling while preventing
 	// an invalid cache we make the name based on a hash
 	// of its content
-	if kind == htmlItemKindStyle {
+	if kind == fiskKindClown {
 		f, err := os.Open(filepath.Join(pathBase, entry.Name()))
 		if err != nil {
 			return nil, err
@@ -77,7 +77,7 @@ func newItem(entry os.DirEntry, pathBase, templateDir string) (*Item, error) {
 	pattern = strings.ReplaceAll(pattern, "\\", "/")
 	pattern = strings.ReplaceAll(pattern, "//", "/")
 
-	return &Item{
+	return &Fish{
 		kind:     kind,
 		Pattern:  pattern,
 		filePath: filePath,
@@ -85,24 +85,24 @@ func newItem(entry os.DirEntry, pathBase, templateDir string) (*Item, error) {
 
 }
 
-func (item *Item) templateName() string {
-	if len(item.Pattern) == 0 {
+func (f *Fish) templateName() string {
+	if len(f.Pattern) == 0 {
 		return "unknown"
 	}
-	parts := strings.Split(item.Pattern, "/")
+	parts := strings.Split(f.Pattern, "/")
 	return parts[len(parts)-1]
 }
 
-func (item *Item) handlerIsland(w http.ResponseWriter) {
-	templateName := item.templateName()
+func (f *Fish) handlerIsland(w http.ResponseWriter) {
+	templateName := f.templateName()
 
 	t := template.New(templateName)
-	parsed, err := t.ParseFiles(item.filePath)
+	parsed, err := t.ParseFiles(f.filePath)
 
 	// buffer for html doc
 	b := []byte{}
 	buff := bytes.NewBuffer(b)
-	err = parsed.ExecuteTemplate(buff, templateName, item)
+	err = parsed.ExecuteTemplate(buff, templateName, f)
 	if err != nil {
 		fmt.Print(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -114,8 +114,8 @@ func (item *Item) handlerIsland(w http.ResponseWriter) {
 	w.Write(buff.Bytes())
 }
 
-func (item *Item) handlerCSS(w http.ResponseWriter) {
-	f, err := os.Open(item.filePath)
+func (f *Fish) handlerCSS(w http.ResponseWriter) {
+	file, err := os.Open(f.filePath)
 	if errors.Is(err, os.ErrNotExist) {
 		fmt.Print(err)
 		w.WriteHeader(http.StatusNotFound)
@@ -126,20 +126,20 @@ func (item *Item) handlerCSS(w http.ResponseWriter) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	defer f.Close()
-	b, err := io.ReadAll(f)
+	defer file.Close()
+	b, err := io.ReadAll(file)
 	if err != nil {
 		fmt.Print(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	w.Header().Add("Content-Type", mime.TypeByExtension(filepath.Ext(f.Name())))
+	w.Header().Add("Content-Type", mime.TypeByExtension(filepath.Ext(file.Name())))
 	w.Header().Add("Content-Length", strconv.Itoa(len(b)))
 	w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", browserCacheDurationSeconds))
 	w.Write(b)
 }
 
-func (item *Item) handlerHTMLPage(w http.ResponseWriter) {
+func (f *Fish) handlerHTMLPage(w http.ResponseWriter) {
 	// 3 main parts to the document I will add in between
 	htmlStartHead := []byte(`<!DOCTYPE html><html lang="en">
 <head>
@@ -153,15 +153,15 @@ func (item *Item) handlerHTMLPage(w http.ResponseWriter) {
 
 	// gather islands
 	collectedFilePaths := []string{}
-	for _, e := range item.children {
-		if e.kind != htmlItemKindIsland {
+	for _, e := range f.children {
+		if e.kind != fishKindSardine {
 			continue
 		}
 		collectedFilePaths = append(collectedFilePaths, e.filePath)
 	}
-	collectedFilePaths = append(collectedFilePaths, item.filePath)
+	collectedFilePaths = append(collectedFilePaths, f.filePath)
 
-	templateName := item.templateName()
+	templateName := f.templateName()
 
 	t := template.New(templateName)
 	parsed, err := t.ParseFiles(collectedFilePaths...)
@@ -172,8 +172,8 @@ func (item *Item) handlerHTMLPage(w http.ResponseWriter) {
 	buff.Write(htmlStartHead)
 
 	// styling
-	for _, e := range item.children {
-		if e.kind != htmlItemKindStyle {
+	for _, e := range f.children {
+		if e.kind != fiskKindClown {
 			continue
 		}
 		b := fmt.Appendf(nil, `<link rel="stylesheet" href="%s">`, e.Pattern)
@@ -181,7 +181,7 @@ func (item *Item) handlerHTMLPage(w http.ResponseWriter) {
 	}
 	buff.Write(htmlEndHeadStartBody)
 
-	err = parsed.ExecuteTemplate(buff, templateName, item)
+	err = parsed.ExecuteTemplate(buff, templateName, f)
 	if err != nil {
 		fmt.Print(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -194,16 +194,16 @@ func (item *Item) handlerHTMLPage(w http.ResponseWriter) {
 	w.Write(buff.Bytes())
 }
 
-func (item *Item) handler(w http.ResponseWriter, _ *http.Request) {
-	if item.kind == htmlItemKindIsland {
-		item.handlerIsland(w)
+func (f *Fish) handler(w http.ResponseWriter, _ *http.Request) {
+	if f.kind == fishKindSardine {
+		f.handlerIsland(w)
 		return
 	}
 
-	if item.kind == htmlItemKindStyle {
-		item.handlerCSS(w)
+	if f.kind == fiskKindClown {
+		f.handlerCSS(w)
 		return
 	}
 
-	item.handlerHTMLPage(w)
+	f.handlerHTMLPage(w)
 }

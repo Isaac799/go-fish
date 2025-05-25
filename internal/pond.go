@@ -20,16 +20,16 @@ func htmlxHandler(w http.ResponseWriter, _ *http.Request) {
 // Pond is a collection of files from a dir with functions
 // to get a server running
 type Pond struct {
-	items          map[string][]Item
+	items          map[string][]Fish
 	pathBase       string
 	templateDir    string
-	globalChildren []Item
+	globalChildren []Fish
 }
 
 // NewPond provides a new pond based on dir
 func NewPond(templateDirPath string) (*Pond, error) {
 	p := Pond{
-		items: map[string][]Item{},
+		items: map[string][]Fish{},
 	}
 
 	wd, err := os.Getwd()
@@ -49,7 +49,7 @@ func NewPond(templateDirPath string) (*Pond, error) {
 // collect will gather html and css from template dir
 func (p *Pond) collect(pathBase string) error {
 	if p.items == nil {
-		p.items = map[string][]Item{}
+		p.items = map[string][]Fish{}
 	}
 	entries, err := os.ReadDir(pathBase)
 	if err != nil {
@@ -61,7 +61,7 @@ func (p *Pond) collect(pathBase string) error {
 
 	isRoot := pathBase == p.templateDir
 
-	children := []Item{}
+	children := []Fish{}
 
 	if p.globalChildren != nil {
 		for _, e := range p.globalChildren {
@@ -69,7 +69,7 @@ func (p *Pond) collect(pathBase string) error {
 		}
 	}
 
-	pageItems := []*Item{}
+	pageItems := []*Fish{}
 	dirs := []os.DirEntry{}
 
 	for _, e := range entries {
@@ -78,7 +78,7 @@ func (p *Pond) collect(pathBase string) error {
 			continue
 		}
 
-		item, err := newItem(e, pathBase, p.templateDir)
+		item, err := newFish(e, pathBase, p.templateDir)
 		if errors.Is(err, ErrInvalidExtension) {
 			continue
 		}
@@ -86,7 +86,7 @@ func (p *Pond) collect(pathBase string) error {
 			return err
 		}
 
-		if item.kind == htmlItemKindPage {
+		if item.kind == fishKindTuna {
 			pageItems = append(pageItems, item)
 			continue
 		}
@@ -102,7 +102,7 @@ func (p *Pond) collect(pathBase string) error {
 		itemsDeref := p.items
 		_, exists := itemsDeref[pathBase]
 		if !exists {
-			itemsDeref[pathBase] = []Item{}
+			itemsDeref[pathBase] = []Fish{}
 		}
 		itemsDeref[pathBase] = append(itemsDeref[pathBase], *pageItem)
 	}
@@ -147,11 +147,11 @@ func (p *Pond) CastLines(verbose bool) *http.ServeMux {
 			if _, exists := pattensAdded[item.Pattern]; exists {
 				continue
 			}
-			if item.kind != htmlItemKindPage {
+			if item.kind != fishKindTuna {
 				continue
 			}
 			if tw != nil {
-				tw.Write(fmt.Appendf(nil, "page\t%s\n", item.Pattern))
+				tw.Write(fmt.Appendf(nil, "tuna\t%s\n", item.Pattern))
 			}
 
 			mux.HandleFunc(item.Pattern, item.handler)
@@ -162,17 +162,17 @@ func (p *Pond) CastLines(verbose bool) *http.ServeMux {
 					continue
 				}
 
-				if child.kind == htmlItemKindStyle {
+				if child.kind == fiskKindClown {
 					if tw != nil {
-						tw.Write(fmt.Appendf(nil, "style\t%s\n", child.Pattern))
+						tw.Write(fmt.Appendf(nil, "clown\t%s\n", child.Pattern))
 					}
 					mux.HandleFunc(child.Pattern, child.handler)
 					pattensAdded[child.Pattern] = true
 				}
 
-				if child.kind == htmlItemKindIsland {
+				if child.kind == fishKindSardine {
 					if tw != nil {
-						tw.Write(fmt.Appendf(nil, "island\t%s\n", child.Pattern))
+						tw.Write(fmt.Appendf(nil, "sardine\t%s\n", child.Pattern))
 					}
 
 					mux.HandleFunc(child.Pattern, child.handler)

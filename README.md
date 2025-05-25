@@ -1,21 +1,21 @@
-# go-fish
+# Go Fish
 
-a ssr framework using go templating and htmlx
+a fish themed ssr framework using go templating and htmlx
 
 ## Concepts
 
-The main two things are:
+The main 3 things are:
 
-- **page**: is available via mux
-- **island**: a template to be used within other templates, prefixed with "_"
+- **Tuna**: is the big fish of the app, a page that people visit. Available via mux
+  - consumes sardines
+- **Sardine**: is the small fry, prefixed with "_"
+  - a template to be used within other templates 
+  - can be fetched with htmlx
+- **Clown**fish  is the styling or css of the app. 
+  - hashed for their name to enable browser cache
+  - served independently, not embedded in template
 
-Scoping for islands is show in the example below.
-
-## Styling
-
-Styling scope is show in the example below too. 
-
-I wanted to note here that we hash the content to make a new file name, once serving. This allows us to cache the document in the browser for faster loading times and less server overhead. Especially compared to loading css into the template every time. Also this lets me make changes without fear that a user will miss out.
+Sardine and Clown scope is show in the example below.
 
 ## Example
 
@@ -54,11 +54,11 @@ Template Directory
     ├── blog
     │   ├── 2006-01-02.html     /blog/2006-01-02
     │   ├── 2006-01-03.html     /blog/2006-01-03
-    │   ├── blog-style.css	    /blog/dd55ea4c2e29831e355a68015bc12d00.css
+    │   ├── blog-style.css	    /blog/dd55ea4c2e29.css
     │   └── _greeting.html      'greeting' can be used in a blogs
     ├── home.html               /home
     ├── _nav.html               'nav' can be used on all pages
-    └── style.css               /7d084444a097620c49fe94852b215eb2.css
+    └── style.css               /7d084444a097620c4.css
 ```
 
 Template HTML define same as file name
@@ -70,4 +70,18 @@ Template HTML define same as file name
 <p>Hello World </p>
 
 {{end}}
+```
+
+Using htmlx to load a sardine
+
+```html
+<div id="_nav"></div>
+<div>
+    <button
+        hx-get="/_nav"
+        hx-target="#_nav"
+    >
+        Load Nav
+    </button>
+</div>
 ```

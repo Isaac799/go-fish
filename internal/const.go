@@ -3,9 +3,9 @@ package internal
 import "errors"
 
 const (
-	htmlItemKindPage = iota
-	htmlItemKindIsland
-	htmlItemKindStyle
+	fishKindTuna = iota
+	fishKindSardine
+	fiskKindClown
 )
 
 const (
