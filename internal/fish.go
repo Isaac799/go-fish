@@ -19,6 +19,10 @@ import (
 // acts as a middleware. Return true if license is passed
 type License = func(w http.ResponseWriter, r *http.Request) bool
 
+// Bait is to be gobbled up by a fish before catching it.
+// A func that has access to the request and returns template data
+type Bait = func(r *http.Request) any
+
 // Fish is an item found form the template dir.
 type Fish struct {
 	pond     *Pond
@@ -32,6 +36,7 @@ type Fish struct {
 	// order added. To catch a fish all pond and fish licenses
 	// must be met.
 	Licenses []License
+	Bait     Bait
 }
 
 // AddLicense appends a license required to catch a fish
@@ -121,7 +126,7 @@ func (f *Fish) templateName() string {
 	return parts[len(parts)-1]
 }
 
-func (f *Fish) handlerSardine(w http.ResponseWriter) {
+func (f *Fish) handlerSardine(w http.ResponseWriter, r *http.Request) {
 	templateName := f.templateName()
 
 	t := template.New(templateName)
@@ -130,7 +135,12 @@ func (f *Fish) handlerSardine(w http.ResponseWriter) {
 	// buffer for html doc
 	b := []byte{}
 	buff := bytes.NewBuffer(b)
-	err = parsed.ExecuteTemplate(buff, templateName, f)
+
+	var pageData any
+	if f.Bait != nil {
+		pageData = f.Bait(r)
+	}
+	err = parsed.ExecuteTemplate(buff, templateName, pageData)
 	if err != nil {
 		fmt.Print(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -167,7 +177,7 @@ func (f *Fish) handlerClown(w http.ResponseWriter) {
 	w.Write(b)
 }
 
-func (f *Fish) handlerTuna(w http.ResponseWriter) {
+func (f *Fish) handlerTuna(w http.ResponseWriter, r *http.Request) {
 	// 3 main parts to the document I will add in between
 	htmlStartHead := []byte(`<!DOCTYPE html><html lang="en">
 <head>
@@ -209,7 +219,11 @@ func (f *Fish) handlerTuna(w http.ResponseWriter) {
 	}
 	buff.Write(htmlEndHeadStartBody)
 
-	err = parsed.ExecuteTemplate(buff, templateName, f)
+	var pageData any
+	if f.Bait != nil {
+		pageData = f.Bait(r)
+	}
+	err = parsed.ExecuteTemplate(buff, templateName, pageData)
 	if err != nil {
 		fmt.Print(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -243,7 +257,7 @@ func (f *Fish) handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if f.kind == FishKindSardine {
-		f.handlerSardine(w)
+		f.handlerSardine(w, r)
 		return
 	}
 
@@ -252,5 +266,5 @@ func (f *Fish) handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	f.handlerTuna(w)
+	f.handlerTuna(w, r)
 }
