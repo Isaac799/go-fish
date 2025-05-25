@@ -85,46 +85,40 @@ func newItem(entry os.DirEntry, pathBase, templateDir string) (*Item, error) {
 
 }
 
-func (hi *Item) templateName() string {
-	if len(hi.Pattern) == 0 {
+func (item *Item) templateName() string {
+	if len(item.Pattern) == 0 {
 		return "unknown"
 	}
-	parts := strings.Split(hi.Pattern, "/")
+	parts := strings.Split(item.Pattern, "/")
 	return parts[len(parts)-1]
 }
 
-func (hi *Item) handler(w http.ResponseWriter, _ *http.Request) {
-
-	if hi.kind == htmlItemKindIsland {
+func (item *Item) handlerCSS(w http.ResponseWriter) {
+	f, err := os.Open(item.filePath)
+	if errors.Is(err, os.ErrNotExist) {
+		fmt.Print(err)
+		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-
-	if hi.kind == htmlItemKindStyle {
-		f, err := os.Open(hi.filePath)
-		if errors.Is(err, os.ErrNotExist) {
-			fmt.Print(err)
-			w.WriteHeader(http.StatusNotFound)
-			return
-		}
-		if err != nil {
-			fmt.Print(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		defer f.Close()
-		b, err := io.ReadAll(f)
-		if err != nil {
-			fmt.Print(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		w.Header().Add("Content-Type", mime.TypeByExtension(filepath.Ext(f.Name())))
-		w.Header().Add("Content-Length", strconv.Itoa(len(b)))
-		w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", browserCacheDurationSeconds))
-		w.Write(b)
+	if err != nil {
+		fmt.Print(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	defer f.Close()
+	b, err := io.ReadAll(f)
+	if err != nil {
+		fmt.Print(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Header().Add("Content-Type", mime.TypeByExtension(filepath.Ext(f.Name())))
+	w.Header().Add("Content-Length", strconv.Itoa(len(b)))
+	w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", browserCacheDurationSeconds))
+	w.Write(b)
+}
 
+func (item *Item) handlerHTMLPage(w http.ResponseWriter) {
 	// 3 main parts to the document I will add in between
 	htmlStartHead := []byte(`<!DOCTYPE html><html lang="en">
 <head>
@@ -137,15 +131,15 @@ func (hi *Item) handler(w http.ResponseWriter, _ *http.Request) {
 
 	// gather islands
 	collectedFilePaths := []string{}
-	for _, e := range hi.children {
+	for _, e := range item.children {
 		if e.kind != htmlItemKindIsland {
 			continue
 		}
 		collectedFilePaths = append(collectedFilePaths, e.filePath)
 	}
-	collectedFilePaths = append(collectedFilePaths, hi.filePath)
+	collectedFilePaths = append(collectedFilePaths, item.filePath)
 
-	templateName := hi.templateName()
+	templateName := item.templateName()
 
 	t := template.New(templateName)
 	parsed, err := t.ParseFiles(collectedFilePaths...)
@@ -156,7 +150,7 @@ func (hi *Item) handler(w http.ResponseWriter, _ *http.Request) {
 	buff.Write(htmlStartHead)
 
 	// styling
-	for _, e := range hi.children {
+	for _, e := range item.children {
 		if e.kind != htmlItemKindStyle {
 			continue
 		}
@@ -165,7 +159,7 @@ func (hi *Item) handler(w http.ResponseWriter, _ *http.Request) {
 	}
 	buff.Write(htmlEndHeadStartBody)
 
-	err = parsed.ExecuteTemplate(buff, templateName, hi)
+	err = parsed.ExecuteTemplate(buff, templateName, item)
 	if err != nil {
 		fmt.Print(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -176,4 +170,18 @@ func (hi *Item) handler(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Add("Content-Type", "text/html")
 	w.Header().Add("Content-Length", strconv.Itoa(len(buff.Bytes())))
 	w.Write(buff.Bytes())
+}
+
+func (item *Item) handler(w http.ResponseWriter, _ *http.Request) {
+	if item.kind == htmlItemKindIsland {
+		// unreachable
+		return
+	}
+
+	if item.kind == htmlItemKindStyle {
+		item.handlerCSS(w)
+		return
+	}
+
+	item.handlerHTMLPage(w)
 }

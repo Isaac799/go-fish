@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 )
 
-// collect will gather html and css from template dir. Needs optimization
+// collect will gather html and css from template dir
 func collect(items *map[string][]Item, pathBase, templateDir string, globalChildren []Item) error {
 	if items == nil {
 		items = &map[string][]Item{}
@@ -30,42 +30,34 @@ func collect(items *map[string][]Item, pathBase, templateDir string, globalChild
 		}
 	}
 
+	pageItems := []*Item{}
+	dirs := []os.DirEntry{}
+
 	for _, e := range entries {
 		if e.IsDir() {
+			dirs = append(dirs, e)
 			continue
 		}
 
-		htmlItem, err := newItem(e, pathBase, templateDir)
+		item, err := newItem(e, pathBase, templateDir)
 		if errors.Is(err, ErrInvalidExtension) {
 			continue
 		}
 		if err != nil {
 			return err
 		}
-		if htmlItem.kind != htmlItemKindStyle && htmlItem.kind != htmlItemKindIsland {
+
+		if item.kind == htmlItemKindPage {
+			pageItems = append(pageItems, item)
 			continue
 		}
-		children = append(children, *htmlItem)
+
+		children = append(children, *item)
 	}
 
-	for _, e := range entries {
-		if e.IsDir() {
-			continue
-		}
-
-		htmlItem, err := newItem(e, pathBase, templateDir)
-		if errors.Is(err, ErrInvalidExtension) {
-			continue
-		}
-		if err != nil {
-			return err
-		}
-		if htmlItem.kind != htmlItemKindPage {
-			continue
-		}
-
+	for _, pageItem := range pageItems {
 		for _, c := range children {
-			htmlItem.children = append(htmlItem.children, c)
+			pageItem.children = append(pageItem.children, c)
 		}
 
 		itemsDeref := *items
@@ -73,7 +65,7 @@ func collect(items *map[string][]Item, pathBase, templateDir string, globalChild
 		if !exists {
 			itemsDeref[pathBase] = []Item{}
 		}
-		itemsDeref[pathBase] = append(itemsDeref[pathBase], *htmlItem)
+		itemsDeref[pathBase] = append(itemsDeref[pathBase], *pageItem)
 	}
 
 	if globalChildren == nil && isRoot {
@@ -81,10 +73,7 @@ func collect(items *map[string][]Item, pathBase, templateDir string, globalChild
 	}
 
 	// now we can look at nested dirs
-	for _, e := range entries {
-		if !e.IsDir() {
-			continue
-		}
+	for _, e := range dirs {
 		collect(items, filepath.Join(pathBase, e.Name()), templateDir, globalChildren)
 	}
 
