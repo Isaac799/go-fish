@@ -36,7 +36,7 @@ func main() {
 		middleware: []gofish.License{springOnly},
 	}
 	about := page{
-		pattern:    "/about",
+		pattern:    "/about-page",
 		middleware: []gofish.License{springOnly},
 	}
 

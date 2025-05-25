@@ -112,6 +112,20 @@ func newFish(entry os.DirEntry, pathBase string, pond *Pond) (*Fish, error) {
 	pattern = strings.Replace(pattern, pond.templateDir, "", 1)
 	pattern = strings.ReplaceAll(pattern, "\\", "/")
 	pattern = strings.ReplaceAll(pattern, "//", "/")
+	pattern = strings.ReplaceAll(pattern, " ", "-")
+	pattern = strings.ReplaceAll(pattern, "_", "-")
+
+	// Fixes me breaking Sardine paths
+	if strings.HasPrefix(pattern, "/-") {
+		pattern = strings.Replace(pattern, "/-", "/_", 1)
+	}
+
+	// Just for good measure
+	if strings.HasSuffix(pattern, "-") {
+		pattern = strings.TrimSuffix(pattern, "-")
+	}
+
+	pattern = strings.ToLower(pattern)
 
 	return &Fish{
 		kind:     kind,
@@ -121,7 +135,6 @@ func newFish(entry os.DirEntry, pathBase string, pond *Pond) (*Fish, error) {
 		Licenses: []License{},
 		pond:     pond,
 	}, nil
-
 }
 
 func (f *Fish) templateName() string {
