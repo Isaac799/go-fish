@@ -52,11 +52,10 @@ func NewMux(templateDirPath string, verbose bool) (*http.ServeMux, error) {
 		}
 
 		for _, item := range items {
-			if item.kind != htmlItemKindPage {
+			if _, exists := pattensAdded[item.Pattern]; exists {
 				continue
 			}
-
-			if _, exists := pattensAdded[item.Pattern]; exists {
+			if item.kind != htmlItemKindPage {
 				continue
 			}
 			if tw != nil {
@@ -67,17 +66,27 @@ func NewMux(templateDirPath string, verbose bool) (*http.ServeMux, error) {
 			pattensAdded[item.Pattern] = true
 
 			for _, child := range item.children {
-				if child.kind != htmlItemKindStyle {
-					continue
-				}
 				if _, exists := pattensAdded[child.Pattern]; exists {
 					continue
 				}
-				if tw != nil {
-					tw.Write(fmt.Appendf(nil, "style\t%s\n", child.Pattern))
+
+				if child.kind == htmlItemKindStyle {
+					if tw != nil {
+						tw.Write(fmt.Appendf(nil, "style\t%s\n", child.Pattern))
+					}
+					mux.HandleFunc(child.Pattern, child.handler)
+					pattensAdded[child.Pattern] = true
 				}
-				mux.HandleFunc(child.Pattern, child.handler)
-				pattensAdded[child.Pattern] = true
+
+				if child.kind == htmlItemKindIsland {
+					if tw != nil {
+						tw.Write(fmt.Appendf(nil, "island\t%s\n", child.Pattern))
+					}
+
+					mux.HandleFunc(child.Pattern, child.handler)
+					pattensAdded[child.Pattern] = true
+				}
+
 			}
 		}
 	}

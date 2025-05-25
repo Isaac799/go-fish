@@ -50,7 +50,7 @@ func newItem(entry os.DirEntry, pathBase, templateDir string) (*Item, error) {
 	}
 
 	name := info.Name()
-	if kind == htmlItemKindPage {
+	if kind == htmlItemKindPage || kind == htmlItemKindIsland {
 		name = strings.TrimSuffix(info.Name(), ext)
 	}
 
@@ -93,6 +93,27 @@ func (item *Item) templateName() string {
 	return parts[len(parts)-1]
 }
 
+func (item *Item) handlerIsland(w http.ResponseWriter) {
+	templateName := item.templateName()
+
+	t := template.New(templateName)
+	parsed, err := t.ParseFiles(item.filePath)
+
+	// buffer for html doc
+	b := []byte{}
+	buff := bytes.NewBuffer(b)
+	err = parsed.ExecuteTemplate(buff, templateName, item)
+	if err != nil {
+		fmt.Print(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Add("Content-Type", "text/html")
+	w.Header().Add("Content-Length", strconv.Itoa(len(buff.Bytes())))
+	w.Write(buff.Bytes())
+}
+
 func (item *Item) handlerCSS(w http.ResponseWriter) {
 	f, err := os.Open(item.filePath)
 	if errors.Is(err, os.ErrNotExist) {
@@ -123,6 +144,7 @@ func (item *Item) handlerHTMLPage(w http.ResponseWriter) {
 	htmlStartHead := []byte(`<!DOCTYPE html><html lang="en">
 <head>
     <meta charset="UTF-8">
+	<script src="/assets/htmlx.2.0.4.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" >`)
 	htmlEndHeadStartBody := []byte(`
 </head>
@@ -174,7 +196,7 @@ func (item *Item) handlerHTMLPage(w http.ResponseWriter) {
 
 func (item *Item) handler(w http.ResponseWriter, _ *http.Request) {
 	if item.kind == htmlItemKindIsland {
-		// unreachable
+		item.handlerIsland(w)
 		return
 	}
 

@@ -3,10 +3,19 @@
     Home
 </h1>
 
-{{ template "_nav" . }}
+<div id="_nav"></div>
 
 <p>
     Hello World
 </p>
+
+<div>
+    <button
+        hx-get="/_nav"
+        hx-target="#_nav"
+    >
+        Load Nav
+    </button>
+</div>
 
 {{end}}
