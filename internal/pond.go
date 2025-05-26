@@ -6,12 +6,13 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"text/tabwriter"
 )
 
 // Stock enables developer to provide what fish they think
 // the pond should have. Keyed by file name (without extension)
-type Stock map[string]Fish
+type Stock map[*regexp.Regexp]Fish
 
 // NewPondOptions gives the options available when creating a new pond
 type NewPondOptions struct {
@@ -33,22 +34,24 @@ type Pond struct {
 	licenses []License
 }
 
-// Stock puts a stock into the pond. They will find their equal
+// Stock puts a stock into the pond. They will find their matches
 // and be gobbled. So you can set fish bait and licenses, and
-// feed then into the pond so the ponds fish inherit their stuff
+// feed then into the pond so the ponds fish inherit their stuff.
+// Regex match done against relative file path to pond base dir
 func (p *Pond) Stock(stock Stock) {
-	for stockPattern, stockFish := range stock {
+	for stockFishRegex, stockFish := range stock {
 		found := false
 		for _, pondFish := range p.FishFinder() {
-			if stockPattern != pondFish.templateName {
+			matched := stockFishRegex.Match([]byte(pondFish.scopedFilePath))
+			if !matched {
 				continue
 			}
+
 			found = true
 			pondFish.Gobble(stockFish)
 		}
 		if !found {
-			fmt.Println("did not find matching fish for page")
-			os.Exit(1)
+			fmt.Println("did not find matching fish for regex: " + stockFishRegex.String())
 		}
 	}
 }

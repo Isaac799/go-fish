@@ -4,6 +4,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"regexp"
 
 	gofish "github.com/Isaac799/go-fish/internal"
 )
@@ -30,25 +31,26 @@ func setupPond() gofish.Pond {
 func main() {
 	pond := setupPond()
 
-	stock := map[string]gofish.Fish{
-		"home": {
+	stockFish := map[*regexp.Regexp]gofish.Fish{
+		regexp.MustCompile("blog"): {
+			Bait:     incrementQueryCount,
+			Licenses: []gofish.License{requireSeason},
+		},
+		regexp.MustCompile("home"): {
 			Bait:     incrementQueryCount,
 			Licenses: []gofish.License{requireSeason, springOnly},
 		},
-		"about page": {
+		regexp.MustCompile("about page"): {
 			Bait: incrementQueryCount,
 		},
-		"user.id": {
-			Bait: findUser,
-		},
-		"user.id.edit": {
+		regexp.MustCompile("user"): {
 			Bait: findUser,
 		},
 	}
 
-	pond.Stock(stock)
+	pond.Stock(stockFish)
 
-	verbose := true
+	verbose := false
 
 	mux := pond.CastLines(verbose)
 

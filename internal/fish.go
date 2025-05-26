@@ -25,13 +25,14 @@ type Bait = func(r *http.Request) any
 
 // Fish is an item found form the template dir.
 type Fish struct {
-	pond         *Pond
-	kind         int
-	mime         string
-	templateName string
-	pattern      string
-	filePath     string
-	children     []Fish
+	pond           *Pond
+	kind           int
+	mime           string
+	templateName   string
+	pattern        string
+	scopedFilePath string
+	filePath       string
+	children       []Fish
 
 	// Licenses is a collection of licenses a user must have
 	// to catch a fish. Checked after pond licenses, in the
@@ -119,6 +120,8 @@ func newFish(entry os.DirEntry, pathBase string, pond *Pond) (*Fish, error) {
 	}
 
 	filePath := filepath.Join(pathBase, info.Name())
+	scopedFilePath := strings.Replace(filePath, pond.templateDir, "", 1)
+
 	pattern := filepath.Join(pathBase, name)
 	pattern = strings.Replace(pattern, pond.templateDir, "", 1)
 	pattern = strings.ReplaceAll(pattern, "\\", "/")
@@ -142,16 +145,15 @@ func newFish(entry os.DirEntry, pathBase string, pond *Pond) (*Fish, error) {
 
 	}
 
-	fmt.Println(pattern)
-
 	return &Fish{
-		kind:         kind,
-		mime:         mime,
-		pattern:      pattern,
-		templateName: templateName,
-		filePath:     filePath,
-		Licenses:     []License{},
-		pond:         pond,
+		kind:           kind,
+		mime:           mime,
+		pattern:        pattern,
+		templateName:   templateName,
+		filePath:       filePath,
+		scopedFilePath: scopedFilePath,
+		Licenses:       []License{},
+		pond:           pond,
 	}, nil
 }
 
