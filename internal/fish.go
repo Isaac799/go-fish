@@ -27,6 +27,7 @@ type Bait = func(r *http.Request) any
 type Fish struct {
 	pond           *Pond
 	kind           int
+	isLanding      bool
 	mime           string
 	templateName   string
 	pattern        string
@@ -130,6 +131,15 @@ func newFish(entry os.DirEntry, pathBase string, pond *Pond) (*Fish, error) {
 
 	pattern = strings.ToLower(pattern)
 
+	isLanding := false
+	if kind == FishKindTuna {
+		fileParts := strings.Split(pathBase, "/")
+		if len(fileParts) > 0 {
+			parentDir := fileParts[len(fileParts)-1]
+			isLanding = parentDir == name
+		}
+	}
+
 	if kind == FishKindTuna || kind == FishKindSardine {
 		patternParts := strings.Split(pattern, ".")
 		newPatternParts := []string{}
@@ -149,6 +159,7 @@ func newFish(entry os.DirEntry, pathBase string, pond *Pond) (*Fish, error) {
 		kind:           kind,
 		mime:           mime,
 		pattern:        pattern,
+		isLanding:      isLanding,
 		templateName:   templateName,
 		filePath:       filePath,
 		scopedFilePath: scopedFilePath,

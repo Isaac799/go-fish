@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"text/tabwriter"
 )
 
@@ -200,8 +201,13 @@ func (p *Pond) CastLines(verbose bool) *http.ServeMux {
 				tw.Write(fmt.Appendf(nil, "tuna\t%s\n", item.pattern))
 			}
 
-			mux.Handle(item.pattern, item.reel())
-			pattensAdded[item.pattern] = true
+			if item.isLanding {
+				landingPattern := strings.TrimSuffix(item.pattern, item.templateName)
+				mux.Handle(landingPattern, item.reel())
+			} else {
+				mux.Handle(item.pattern, item.reel())
+				pattensAdded[item.pattern] = true
+			}
 
 			for _, child := range item.children {
 				if _, exists := pattensAdded[child.pattern]; exists {
@@ -226,6 +232,7 @@ func (p *Pond) CastLines(verbose bool) *http.ServeMux {
 						tw.Write(fmt.Appendf(nil, "anchovy\t%s\n", child.pattern))
 					}
 				}
+
 				mux.Handle(child.pattern, child.reel())
 				pattensAdded[child.pattern] = true
 			}

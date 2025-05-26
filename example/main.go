@@ -33,8 +33,7 @@ func main() {
 
 	stockFish := map[*regexp.Regexp]gofish.Fish{
 		regexp.MustCompile("blog"): {
-			Bait:     incrementQueryCount,
-			Licenses: []gofish.License{requireSeason},
+			Bait: incrementQueryCount,
 		},
 		regexp.MustCompile("home"): {
 			Bait:     incrementQueryCount,
