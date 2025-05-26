@@ -18,7 +18,7 @@ func htmlxHandler(w http.ResponseWriter, _ *http.Request) {
 }
 
 // Stock enables developer to provide what fish they think
-// the pond should have.
+// the pond should have. Keyed by file name (without extension)
 type Stock map[string]Fish
 
 // NewPondOptions gives the options available when creating a new pond
@@ -48,7 +48,7 @@ func (p *Pond) Stock(stock Stock) {
 	for stockPattern, stockFish := range stock {
 		found := false
 		for _, pondFish := range p.FishFinder() {
-			if stockPattern != pondFish.pattern {
+			if stockPattern != pondFish.templateName {
 				continue
 			}
 			found = true

@@ -25,12 +25,13 @@ type Bait = func(r *http.Request) any
 
 // Fish is an item found form the template dir.
 type Fish struct {
-	pond     *Pond
-	kind     int
-	mime     string
-	pattern  string
-	filePath string
-	children []Fish
+	pond         *Pond
+	kind         int
+	mime         string
+	templateName string
+	pattern      string
+	filePath     string
+	children     []Fish
 
 	// Licenses is a collection of licenses a user must have
 	// to catch a fish. Checked after pond licenses, in the
@@ -98,6 +99,7 @@ func newFish(entry os.DirEntry, pathBase string, pond *Pond) (*Fish, error) {
 	if kind == FishKindTuna || kind == FishKindSardine {
 		name = strings.TrimSuffix(info.Name(), ext)
 	}
+	templateName := name
 
 	// since I want to cache styling while preventing
 	// an invalid cache we make the name based on a hash
@@ -122,42 +124,39 @@ func newFish(entry os.DirEntry, pathBase string, pond *Pond) (*Fish, error) {
 	pattern = strings.ReplaceAll(pattern, "\\", "/")
 	pattern = strings.ReplaceAll(pattern, "//", "/")
 	pattern = strings.ReplaceAll(pattern, " ", "-")
-	pattern = strings.ReplaceAll(pattern, "_", "-")
-
-	// Fixes me breaking Sardine paths
-	if strings.HasPrefix(pattern, "/-") {
-		pattern = strings.Replace(pattern, "/-", "/_", 1)
-	}
-
-	// Just for good measure
-	if strings.HasSuffix(pattern, "-") {
-		pattern = strings.TrimSuffix(pattern, "-")
-	}
 
 	pattern = strings.ToLower(pattern)
 
+	if kind == FishKindTuna || kind == FishKindSardine {
+		patternParts := strings.Split(pattern, ".")
+		newPatternParts := []string{}
+		for i, e := range patternParts {
+			if (i+1)%2 == 0 {
+				param := "{" + e + "}"
+				newPatternParts = append(newPatternParts, param)
+				continue
+			}
+			newPatternParts = append(newPatternParts, e)
+		}
+		pattern = strings.Join(newPatternParts, "/")
+
+	}
+
+	fmt.Println(pattern)
+
 	return &Fish{
-		kind:     kind,
-		mime:     mime,
-		pattern:  pattern,
-		filePath: filePath,
-		Licenses: []License{},
-		pond:     pond,
+		kind:         kind,
+		mime:         mime,
+		pattern:      pattern,
+		templateName: templateName,
+		filePath:     filePath,
+		Licenses:     []License{},
+		pond:         pond,
 	}, nil
 }
 
-func (f *Fish) templateName() string {
-	if len(f.pattern) == 0 {
-		return "unknown"
-	}
-	parts := strings.Split(f.pattern, "/")
-	return parts[len(parts)-1]
-}
-
 func (f *Fish) handlerSardine(w http.ResponseWriter, r *http.Request) {
-	templateName := f.templateName()
-
-	t := template.New(templateName)
+	t := template.New(f.templateName)
 	parsed, err := t.ParseFiles(f.filePath)
 
 	// buffer for html doc
@@ -168,7 +167,7 @@ func (f *Fish) handlerSardine(w http.ResponseWriter, r *http.Request) {
 	if f.Bait != nil {
 		pageData = f.Bait(r)
 	}
-	err = parsed.ExecuteTemplate(buff, templateName, pageData)
+	err = parsed.ExecuteTemplate(buff, f.templateName, pageData)
 	if err != nil {
 		fmt.Print(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -227,9 +226,7 @@ func (f *Fish) handlerTuna(w http.ResponseWriter, r *http.Request) {
 	}
 	collectedFilePaths = append(collectedFilePaths, f.filePath)
 
-	templateName := f.templateName()
-
-	t := template.New(templateName)
+	t := template.New(f.templateName)
 	parsed, err := t.ParseFiles(collectedFilePaths...)
 
 	// buffer for html doc
@@ -257,7 +254,7 @@ func (f *Fish) handlerTuna(w http.ResponseWriter, r *http.Request) {
 	if f.Bait != nil {
 		pageData = f.Bait(r)
 	}
-	err = parsed.ExecuteTemplate(buff, templateName, pageData)
+	err = parsed.ExecuteTemplate(buff, f.templateName, pageData)
 	if err != nil {
 		fmt.Print(err)
 		w.WriteHeader(http.StatusInternalServerError)

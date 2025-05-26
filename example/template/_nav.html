@@ -1,29 +1,15 @@
 {{define "_nav"}}
 
 <nav>
-    {{if eq .Pattern "/home"}}
-    <span>Home</span>
-    {{else}}
     <a href="/home">Home</a>
-    {{end}}
-
-    {{if eq .Pattern "/about-page"}}
-    <span>About</span>
-    {{else}}
+  
     <a href="/about-page">About</a>
-    {{end}}
 
-    {{if eq .Pattern "/blog/2006-01-02"}}
-    <span>2006-01-02</span>
-    {{else}}
     <a href="/blog/2006-01-02">2006-01-02</a>
-    {{end}}
 
-    {{if eq .Pattern "/blog/2006-01-03"}}
-    <span>2006-01-02</span>
-    {{else}}
     <a href="/blog/2006-01-03">2006-01-03</a>
-    {{end}}
+
+    <a href="/game/user">user</a>
 </nav>
 
 {{end}}

@@ -28,6 +28,21 @@ See the example folder
 
 A **Tuna** has access to all other local fish, and top level fish.
 
+## Path Value
+
+For a file name, `.` delimited makes a new path. This is designed with path values in mind, and not to be used in place of dir structure. The even items are considered a value, enforcing a `/context/value` pattern. 
+
+To use path values simply name a file like: 
+- `user.id.html` translates to `/user/{id}`
+- `user.id.edit.html` translates to `/user/{id}/edit`
+
+How is this useful? 
+- You can use the `id` in the license to restrict access
+- You can use the `id` in the bait to lookup a user to help render.
+
 ## Naming
 
-Name things whatever you like, put them wherever you like. Just know that I make all names **lower kebab case for patterns**. So if a file is called `My photo.jpg` I will recognize that to `my-photo.jpg`.
+Name things whatever you like, put them wherever you like. Just know this:
+
+- **Patterns** are lower kebab case. So if a file is called `My photo.jpg` I will recognize that to `my-photo.jpg`.
+- **Template Names** are the same as file, without extension. So `about page.html` should be defined as `about page` in template.

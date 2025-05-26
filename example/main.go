@@ -31,12 +31,18 @@ func main() {
 	pond := setupPond()
 
 	stock := map[string]gofish.Fish{
-		"/home": {
+		"home": {
 			Bait:     incrementQueryCount,
 			Licenses: []gofish.License{springOnly},
 		},
-		"/about-page": {
+		"about page": {
 			Bait: incrementQueryCount,
+		},
+		"user.id": {
+			Bait: findUser,
+		},
+		"user.id.edit": {
+			Bait: findUser,
 		},
 	}
 

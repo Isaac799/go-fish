@@ -1,0 +1,25 @@
+{{define "user.id"}}
+
+<h1>View User</h1>
+
+<h3>
+    {{if .}}
+    {{ .LastName }}, {{ .FirstName }}
+    {{else}}
+    No User
+    {{end}}
+</h3>
+
+{{ template "_nav" }}
+
+{{if .}}
+<p>
+    Viewing a single user. <a href="/user/{{ .ID }}/edit">Edit</a>
+</p>
+{{else}}
+<p>
+    <a href="..">See Users</a>
+</p>
+{{end}}
+
+{{end}}

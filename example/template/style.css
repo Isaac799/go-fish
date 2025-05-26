@@ -2,3 +2,14 @@ h1 {
     color: red;
     font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
+
+nav {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+}
+
+a {
+    text-decoration: none;
+    columns: blue;
+}

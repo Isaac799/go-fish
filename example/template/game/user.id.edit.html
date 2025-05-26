@@ -1,0 +1,27 @@
+{{define "user.id.edit"}}
+
+<h1>Edit User</h1>
+
+<h3>
+    {{if .}}
+    {{ .LastName }}, {{ .FirstName }}
+    {{else}}
+    No User
+    {{end}}
+</h3>
+
+{{ template "_nav" }}
+
+{{if .}}
+
+<p>
+    Now we are editing a user...
+</p>
+
+{{else}}
+<p>
+    Nothing to edit. <a href="../..">View Users</a>
+</p>
+{{end}}
+
+{{end}}
