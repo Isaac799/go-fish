@@ -30,19 +30,17 @@ func setupPond() gofish.Pond {
 func main() {
 	pond := setupPond()
 
-	home := page{
-		pattern:    "/home",
-		data:       incrementQueryCount,
-		middleware: []gofish.License{springOnly},
-	}
-	about := page{
-		pattern:    "/about-page",
-		middleware: []gofish.License{springOnly},
+	stock := map[string]gofish.Fish{
+		"/home": {
+			Bait:     incrementQueryCount,
+			Licenses: []gofish.License{springOnly},
+		},
+		"/about-page": {
+			Bait: incrementQueryCount,
+		},
 	}
 
-	pages := []page{home, about}
-
-	setupPages(&pond, pages)
+	pond.Stock(stock)
 
 	verbose := true
 	mux := pond.CastLines(verbose)

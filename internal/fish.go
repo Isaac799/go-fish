@@ -37,12 +37,21 @@ type Fish struct {
 	// order added. To catch a fish all pond and fish licenses
 	// must be met.
 	Licenses []License
-	Bait     Bait
+
+	// Bait fn is called and the result is passed into the
+	// executed template, or eaten by the fish before caught
+	Bait Bait
 }
 
 // AddLicense appends a license required to catch a fish
 func (f *Fish) AddLicense(l License) {
 	f.Licenses = append(f.Licenses, l)
+}
+
+// Gobble has one fish gobble up another. Gaining its Licenses and Bait.
+func (f *Fish) Gobble(f2 Fish) {
+	f.Licenses = f2.Licenses
+	f.Bait = f2.Bait
 }
 
 // Kind reads back the kind of a fish

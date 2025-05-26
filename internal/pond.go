@@ -17,6 +17,10 @@ func htmlxHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Write(htmlx)
 }
 
+// Stock enables developer to provide what fish they think
+// the pond should have.
+type Stock map[string]Fish
+
 // NewPondOptions gives the options available when creating a new pond
 type NewPondOptions struct {
 	// Licenses for a pond are applied to all fish in the pond
@@ -35,6 +39,26 @@ type Pond struct {
 	fish map[string][]Fish
 	// licenses are required for any fish to be caught
 	licenses []License
+}
+
+// Stock puts a stock into the pond. They will find their equal
+// and be gobbled. So you can set fish bait and licenses, and
+// feed then into the pond so the ponds fish inherit their stuff
+func (p *Pond) Stock(stock Stock) {
+	for stockPattern, stockFish := range stock {
+		found := false
+		for _, pondFish := range p.FishFinder() {
+			if stockPattern != pondFish.pattern {
+				continue
+			}
+			found = true
+			pondFish.Gobble(stockFish)
+		}
+		if !found {
+			fmt.Println("did not find matching fish for page")
+			os.Exit(1)
+		}
+	}
 }
 
 // FishFinder provides a slice of all fish
