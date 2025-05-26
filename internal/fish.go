@@ -155,19 +155,58 @@ func newFish(entry os.DirEntry, pathBase string, pond *Pond) (*Fish, error) {
 	}, nil
 }
 
+// TemplateBuffer will wrap a file content in the define syntax.
+// Enforcing template name scheme and reducing template lines n - 2.
+func (f *Fish) templateBuffer() (*bytes.Buffer, error) {
+	file, err := os.Open(f.filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	fileBytes, err := io.ReadAll(file)
+	if err != nil {
+		return nil, err
+	}
+
+	// buffer for wrap file in define
+	fileBuffer := bytes.NewBuffer([]byte{})
+
+	start := fmt.Appendf(nil, "{{define \"%s\"}}", f.templateName)
+	fileBuffer.Grow(len(start))
+	fileBuffer.Write(start)
+
+	fileBuffer.Grow(len(fileBytes))
+	fileBuffer.Write(fileBytes)
+
+	end := []byte("{{end}}")
+	fileBuffer.Grow(len(end))
+	fileBuffer.Write(end)
+
+	return fileBuffer, nil
+}
+
 func (f *Fish) handlerSardine(w http.ResponseWriter, r *http.Request) {
 	t := template.New(f.templateName)
-	parsed, err := t.ParseFiles(f.filePath)
 
-	// buffer for html doc
-	b := []byte{}
-	buff := bytes.NewBuffer(b)
+	buff, err := f.templateBuffer()
+	if err != nil {
+		fmt.Print(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	parsed, err := t.Parse(buff.String())
 
 	var pageData any
 	if f.Bait != nil {
 		pageData = f.Bait(r)
 	}
-	err = parsed.ExecuteTemplate(buff, f.templateName, pageData)
+
+	// want to exe template into this to get len for res
+	resBytes := []byte{}
+	resBuff := bytes.NewBuffer(resBytes)
+
+	err = parsed.ExecuteTemplate(resBuff, f.templateName, pageData)
 	if err != nil {
 		fmt.Print(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -175,8 +214,8 @@ func (f *Fish) handlerSardine(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Add("Content-Type", "text/html")
-	w.Header().Add("Content-Length", strconv.Itoa(len(buff.Bytes())))
-	w.Write(buff.Bytes())
+	w.Header().Add("Content-Length", strconv.Itoa(len(resBuff.Bytes())))
+	w.Write(resBuff.Bytes())
 }
 
 func (f *Fish) handlerClownAnchovy(w http.ResponseWriter) {
@@ -216,23 +255,44 @@ func (f *Fish) handlerTuna(w http.ResponseWriter, r *http.Request) {
 <body>`)
 	htmlEndBody := []byte(`</body></html>`)
 
-	// gather islands
-	collectedFilePaths := []string{}
+	t := template.New(f.templateName)
+
+	allFishBuff := bytes.NewBuffer([]byte{})
+
+	// Define the sardines first
 	for _, e := range f.children {
 		if e.kind != FishKindSardine {
 			continue
 		}
-		collectedFilePaths = append(collectedFilePaths, e.filePath)
+		buff, err := e.templateBuffer()
+		if err != nil {
+			fmt.Print(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		allFishBuff.Grow(buff.Len())
+		allFishBuff.Write(buff.Bytes())
 	}
-	collectedFilePaths = append(collectedFilePaths, f.filePath)
 
-	t := template.New(f.templateName)
-	parsed, err := t.ParseFiles(collectedFilePaths...)
+	// Define the tuna last
+	buff, err := f.templateBuffer()
+	if err != nil {
+		fmt.Print(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	allFishBuff.Grow(buff.Len())
+	allFishBuff.Write(buff.Bytes())
 
-	// buffer for html doc
-	b := []byte{}
-	buff := bytes.NewBuffer(b)
-	buff.Write(htmlStartHead)
+	parsed, err := t.Parse(allFishBuff.String())
+
+	// buffer for html doc we will wrap in html5 syntax
+	// want to exec template into this to get len for res
+	resBytes := []byte{}
+	resBuff := bytes.NewBuffer(resBytes)
+
+	resBuff.Grow(len(htmlStartHead))
+	resBuff.Write(htmlStartHead)
 
 	// styling
 	for _, e := range f.children {
@@ -241,30 +301,36 @@ func (f *Fish) handlerTuna(w http.ResponseWriter, r *http.Request) {
 		}
 		if strings.HasPrefix(e.mime, "text/css") {
 			b := fmt.Appendf(nil, `<link rel="stylesheet" href="%s">`, e.pattern)
-			buff.Write(b)
+			resBuff.Grow(len(b))
+			resBuff.Write(b)
 		}
 		if strings.HasPrefix(e.mime, "text/javascript") {
 			b := fmt.Appendf(nil, `<script src="%s"></script>`, e.pattern)
-			buff.Write(b)
+			resBuff.Grow(len(b))
+			resBuff.Write(b)
 		}
 	}
-	buff.Write(htmlEndHeadStartBody)
+	resBuff.Grow(len(htmlEndHeadStartBody))
+	resBuff.Write(htmlEndHeadStartBody)
 
 	var pageData any
 	if f.Bait != nil {
 		pageData = f.Bait(r)
 	}
-	err = parsed.ExecuteTemplate(buff, f.templateName, pageData)
+
+	err = parsed.ExecuteTemplate(resBuff, f.templateName, pageData)
 	if err != nil {
 		fmt.Print(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	buff.Write(htmlEndBody)
+
+	resBuff.Grow(len(htmlEndBody))
+	resBuff.Write(htmlEndBody)
 
 	w.Header().Add("Content-Type", "text/html")
-	w.Header().Add("Content-Length", strconv.Itoa(len(buff.Bytes())))
-	w.Write(buff.Bytes())
+	w.Header().Add("Content-Length", strconv.Itoa(len(resBuff.Bytes())))
+	w.Write(resBuff.Bytes())
 }
 
 func (f *Fish) handler(w http.ResponseWriter, r *http.Request) {

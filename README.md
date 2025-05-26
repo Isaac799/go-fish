@@ -44,5 +44,7 @@ How is this useful?
 
 Name things whatever you like, put them wherever you like. Just know this:
 
-- **Patterns** are lower kebab case. So if a file is called `My photo.jpg` I will recognize that to `my-photo.jpg`.
-- **Template Names** are the same as file, without extension. So `about page.html` should be defined as `about page` in template.
+- **Patterns** to for mux to match are lower kebab case. So if a file is called `My photo.jpg` I will recognize that to `my-photo.jpg`.
+- **Template Names** are the same as file, without extension. You should not define these as I do this before the template is executed. Examples: 
+  - `_nav.html` is accessible via `{{ template "_nav" }}`
+  - `user.id.edit.html` is accessible via `{{ template "user.id.edit" }}`
