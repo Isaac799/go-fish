@@ -21,11 +21,16 @@ type NewPondOptions struct {
 	// and are checked before a fish license in the order added.
 	// To catch a fish all pond and fish licenses must be met.
 	Licenses []License
+	// GlobalAnchovyAndClown makes all Anchovy and Clown fish (assets)
+	// global scoped no matter where they are. Useful for an assets pond
+	// that flows into another pond.
+	GlobalAnchovyAndClown bool
 }
 
 // Pond is a collection of files from a dir with functions
 // to get a server running
 type Pond struct {
+	options        NewPondOptions
 	pathBase       string
 	templateDir    string
 	globalChildren []Fish
@@ -33,6 +38,22 @@ type Pond struct {
 	fish map[string][]Fish
 	// licenses are required for any fish to be caught
 	licenses []License
+}
+
+// FlowsInto can make global fish in one pond apply to another pond
+// Note that only anchovy and clown are allowed to flow (assets)
+// Useful to setup 2 ponds. one for assets, one for pages
+func (p *Pond) FlowsInto(bigPond *Pond) {
+	feederPond := p
+
+	for _, feederPondFish := range feederPond.globalChildren {
+		if feederPondFish.kind != FiskKindAnchovy && feederPondFish.kind != FiskKindClown {
+			continue
+		}
+		for _, bigPondFish := range bigPond.FishFinder() {
+			bigPondFish.children = append(bigPondFish.children, feederPondFish)
+		}
+	}
 }
 
 // Stock puts a stock into the pond. They will find their matches
@@ -74,6 +95,8 @@ func NewPond(templateDirPath string, options NewPondOptions) (Pond, error) {
 		fish:     map[string][]Fish{},
 		licenses: options.Licenses,
 	}
+
+	p.options = options
 
 	if p.licenses == nil {
 		// do this to avoid nil deref in handle funcs
@@ -158,6 +181,13 @@ func (p *Pond) collect(pathBase string) error {
 
 	if p.globalChildren == nil && isRoot {
 		p.globalChildren = children
+	} else if p.options.GlobalAnchovyAndClown {
+		if p.globalChildren == nil {
+			p.globalChildren = []Fish{}
+		}
+		for _, c := range children {
+			p.globalChildren = append(p.globalChildren, c)
+		}
 	}
 
 	// now we can look at nested dirs

@@ -9,27 +9,32 @@ import (
 	gofish "github.com/Isaac799/go-fish/internal"
 )
 
-func setupPond() gofish.Pond {
-	options := gofish.NewPondOptions{
-		Licenses: []gofish.License{
-			visitorLog,
-		},
-	}
-
-	pond, err := gofish.NewPond(
+func setupPonds() (gofish.Pond, gofish.Pond) {
+	appPond, err := gofish.NewPond(
 		"template",
-		options,
+		gofish.NewPondOptions{
+			Licenses: []gofish.License{
+				visitorLog,
+			},
+		},
+	)
+
+	assetPond, err := gofish.NewPond(
+		"asset",
+		gofish.NewPondOptions{
+			GlobalAnchovyAndClown: true,
+		},
 	)
 
 	if err != nil {
 		panic(err)
 	}
 
-	return pond
+	return appPond, assetPond
 }
 
 func main() {
-	pond := setupPond()
+	appPond, assetPond := setupPonds()
 
 	stockFish := map[*regexp.Regexp]gofish.Fish{
 		regexp.MustCompile("blog"): {
@@ -47,11 +52,12 @@ func main() {
 		},
 	}
 
-	pond.Stock(stockFish)
+	appPond.Stock(stockFish)
+	assetPond.FlowsInto(&appPond)
 
-	verbose := false
+	verbose := true
 
-	mux := pond.CastLines(verbose)
+	mux := appPond.CastLines(verbose)
 
 	fmt.Println("gone fishing")
 	http.ListenAndServe(":8080", mux)
