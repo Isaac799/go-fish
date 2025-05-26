@@ -14,12 +14,10 @@
 
 {{if .}}
 <p>
-    Viewing a single user. <a href="/user/{{ .ID }}/edit">Edit</a>
+    Viewing a single user. <a href="{{.ID}}/edit">Edit</a>
 </p>
 {{else}}
-<p>
-    <a href="..">See Users</a>
-</p>
+
 {{end}}
 
 {{end}}
