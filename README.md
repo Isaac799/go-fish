@@ -1,11 +1,14 @@
 # Go Fish
 
-a fish themed ssr framework using go templating and htmlx
+a fish themed ssr framework using go templating
+
+## Complementary
+
+Consider using htmlx as it works great for this sort of thing. I kept it in the example.
 
 ## Concepts
 
-The main 3 things are:
-
+The main 4 things are:
 
 - **Tuna** is a big fish. Served as a page. Consumes Sardines
 	- Identified by mime `[ text/html ]`

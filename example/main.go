@@ -49,6 +49,7 @@ func main() {
 	pond.Stock(stock)
 
 	verbose := true
+
 	mux := pond.CastLines(verbose)
 
 	fmt.Println("gone fishing")

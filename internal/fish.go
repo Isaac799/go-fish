@@ -248,7 +248,6 @@ func (f *Fish) handlerTuna(w http.ResponseWriter, r *http.Request) {
 	htmlStartHead := []byte(`<!DOCTYPE html><html lang="en">
 <head>
     <meta charset="UTF-8">
-	<script src="/assets/htmlx.2.0.4.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" >`)
 	htmlEndHeadStartBody := []byte(`
 </head>
