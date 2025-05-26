@@ -33,7 +33,7 @@ func main() {
 	stock := map[string]gofish.Fish{
 		"home": {
 			Bait:     incrementQueryCount,
-			Licenses: []gofish.License{springOnly},
+			Licenses: []gofish.License{requireSeason, springOnly},
 		},
 		"about page": {
 			Bait: incrementQueryCount,

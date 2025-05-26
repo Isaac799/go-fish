@@ -17,7 +17,7 @@ import (
 
 // License is a requirement to catch a fish.
 // acts as a middleware. Return true if license is passed
-type License = func(w http.ResponseWriter, r *http.Request) bool
+type License = func(next http.Handler) http.Handler
 
 // Bait is to be gobbled up by a fish before catching it.
 // A func that has access to the request and returns template data
@@ -218,7 +218,7 @@ func (f *Fish) handlerSardine(w http.ResponseWriter, r *http.Request) {
 	w.Write(resBuff.Bytes())
 }
 
-func (f *Fish) handlerClownAnchovy(w http.ResponseWriter) {
+func (f *Fish) handlerClownAnchovy(w http.ResponseWriter, _ *http.Request) {
 	file, err := os.Open(f.filePath)
 	if errors.Is(err, os.ErrNotExist) {
 		fmt.Print(err)
@@ -333,35 +333,41 @@ func (f *Fish) handlerTuna(w http.ResponseWriter, r *http.Request) {
 	w.Write(resBuff.Bytes())
 }
 
-func (f *Fish) handler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
+// chainLicense essentially is a Russian nesting doll like so
+// (fin, A, B) is ran as A(B(fin))
+// get it? fish have fin. do you get it?
+func chainLicenses(fin http.Handler, licenses ...License) http.Handler {
+	for i := len(licenses) - 1; i >= 0; i-- {
+		license := licenses[i]
+		fin = license(fin)
 	}
+	return fin
+}
+
+// reel enables catching a fish. It will chain license
+// together to ensure you are allowed to catch
+func (f *Fish) reel() http.Handler {
+	licenses := []License{}
 
 	for _, license := range f.pond.licenses {
-		allowed := license(w, r)
-		if !allowed {
-			return
-		}
+		licenses = append(licenses, license)
 	}
 
 	for _, license := range f.Licenses {
-		allowed := license(w, r)
-		if !allowed {
-			return
-		}
+		licenses = append(licenses, license)
 	}
 
-	if f.kind == FishKindSardine {
-		f.handlerSardine(w, r)
-		return
+	handlerMap := map[int]http.HandlerFunc{
+		FishKindSardine: f.handlerSardine,
+		FiskKindClown:   f.handlerClownAnchovy,
+		FiskKindAnchovy: f.handlerClownAnchovy,
+		FishKindTuna:    f.handlerTuna,
 	}
 
-	if f.kind == FiskKindClown || f.kind == FiskKindAnchovy {
-		f.handlerClownAnchovy(w)
-		return
+	finalHandler, exists := handlerMap[f.kind]
+	if !exists {
+		panic("no valid handler for fish kind")
 	}
 
-	f.handlerTuna(w, r)
+	return chainLicenses(finalHandler, licenses...)
 }

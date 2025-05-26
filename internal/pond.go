@@ -207,7 +207,7 @@ func (p *Pond) CastLines(verbose bool) *http.ServeMux {
 				tw.Write(fmt.Appendf(nil, "tuna\t%s\n", item.pattern))
 			}
 
-			mux.HandleFunc(item.pattern, item.handler)
+			mux.Handle(item.pattern, item.reel())
 			pattensAdded[item.pattern] = true
 
 			for _, child := range item.children {
@@ -233,7 +233,7 @@ func (p *Pond) CastLines(verbose bool) *http.ServeMux {
 						tw.Write(fmt.Appendf(nil, "anchovy\t%s\n", child.pattern))
 					}
 				}
-				mux.HandleFunc(child.pattern, child.handler)
+				mux.Handle(child.pattern, child.reel())
 				pattensAdded[child.pattern] = true
 			}
 		}
