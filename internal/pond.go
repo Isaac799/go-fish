@@ -181,12 +181,18 @@ func (p *Pond) collect(pathBase string) error {
 
 	if p.globalChildren == nil && isRoot {
 		p.globalChildren = children
+		for i := range p.globalChildren {
+			p.globalChildren[i].isGlobal = true
+		}
 	} else if p.options.GlobalAnchovyAndClown {
 		if p.globalChildren == nil {
 			p.globalChildren = []Fish{}
 		}
 		for _, c := range children {
 			p.globalChildren = append(p.globalChildren, c)
+		}
+		for i := range p.globalChildren {
+			p.globalChildren[i].isGlobal = true
 		}
 	}
 

@@ -28,6 +28,7 @@ type Fish struct {
 	pond           *Pond
 	kind           int
 	isLanding      bool
+	isGlobal       bool
 	mime           string
 	templateName   string
 	pattern        string
@@ -152,7 +153,6 @@ func newFish(entry os.DirEntry, pathBase string, pond *Pond) (*Fish, error) {
 			newPatternParts = append(newPatternParts, e)
 		}
 		pattern = strings.Join(newPatternParts, "/")
-
 	}
 
 	return &Fish{
@@ -271,9 +271,14 @@ func (f *Fish) handlerTuna(w http.ResponseWriter, r *http.Request) {
 
 	allFishBuff := bytes.NewBuffer([]byte{})
 
-	// Define the sardines first
+	sardinesEaten := map[string]bool{}
+
+	// Define the local sardines first
 	for _, e := range f.children {
 		if e.kind != FishKindSardine {
+			continue
+		}
+		if e.isGlobal {
 			continue
 		}
 		buff, err := e.templateBuffer()
@@ -284,6 +289,35 @@ func (f *Fish) handlerTuna(w http.ResponseWriter, r *http.Request) {
 		}
 		allFishBuff.Grow(buff.Len())
 		allFishBuff.Write(buff.Bytes())
+		sardinesEaten[e.templateName] = true
+	}
+
+	// Define the global sardines second, not to overwrite the local ones
+	for _, e := range f.children {
+		if e.kind != FishKindSardine {
+			continue
+		}
+		if !e.isGlobal {
+			continue
+		}
+		if _, exists := sardinesEaten[e.templateName]; exists {
+			continue
+		}
+		buff, err := e.templateBuffer()
+		if err != nil {
+			fmt.Print(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		allFishBuff.Grow(buff.Len())
+		allFishBuff.Write(buff.Bytes())
+		sardinesEaten[e.templateName] = true
+	}
+
+	if _, exists := sardinesEaten[f.templateName]; exists {
+		fmt.Println("sardine name conflicts with tuna name: ", f.templateName)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	// Define the tuna last
