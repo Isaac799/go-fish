@@ -199,14 +199,23 @@ func (f *Fish) templateBuffer() (*bytes.Buffer, error) {
 
 	start := fmt.Appendf(nil, "{{define \"%s\"}}", f.templateName)
 	fileBuffer.Grow(len(start))
-	fileBuffer.Write(start)
+	_, err = fileBuffer.Write(start)
+	if err != nil {
+		return fileBuffer, err
+	}
 
 	fileBuffer.Grow(len(fileBytes))
-	fileBuffer.Write(fileBytes)
+	_, err = fileBuffer.Write(fileBytes)
+	if err != nil {
+		return fileBuffer, err
+	}
 
 	end := []byte("{{end}}")
 	fileBuffer.Grow(len(end))
-	fileBuffer.Write(end)
+	_, err = fileBuffer.Write(end)
+	if err != nil {
+		return fileBuffer, err
+	}
 
 	return fileBuffer, nil
 }
@@ -226,6 +235,11 @@ func (f *Fish) handlerSardine(w http.ResponseWriter, r *http.Request) {
 	}
 
 	parsed, err := t.Parse(buff.String())
+	if err != nil {
+		fmt.Print(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	var pageData any
 	if f.Bait != nil {
@@ -245,7 +259,12 @@ func (f *Fish) handlerSardine(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Add("Content-Type", "text/html")
 	w.Header().Add("Content-Length", strconv.Itoa(len(resBuff.Bytes())))
-	w.Write(resBuff.Bytes())
+	_, err = w.Write(resBuff.Bytes())
+	if err != nil {
+		fmt.Print(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }
 
 func (f *Fish) handlerClownAnchovy(w http.ResponseWriter, _ *http.Request) {
@@ -270,7 +289,12 @@ func (f *Fish) handlerClownAnchovy(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Add("Content-Type", f.mime)
 	w.Header().Add("Content-Length", strconv.Itoa(len(b)))
 	w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", browserCacheDurationSeconds))
-	w.Write(b)
+	_, err = w.Write(b)
+	if err != nil {
+		fmt.Print(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }
 
 func (f *Fish) handlerTuna(w http.ResponseWriter, r *http.Request) {
@@ -352,6 +376,11 @@ func (f *Fish) handlerTuna(w http.ResponseWriter, r *http.Request) {
 	}
 
 	parsed, err := t.Parse(allFishBuff.String())
+	if err != nil {
+		fmt.Print(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	// buffer for html doc we will wrap in html5 syntax
 	// want to exec template into this to get len for res
@@ -359,7 +388,12 @@ func (f *Fish) handlerTuna(w http.ResponseWriter, r *http.Request) {
 	resBuff := bytes.NewBuffer(resBytes)
 
 	resBuff.Grow(len(htmlStartHead))
-	resBuff.Write(htmlStartHead)
+	_, err = resBuff.Write(htmlStartHead)
+	if err != nil {
+		fmt.Print(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	// styling
 	for _, e := range f.children {
@@ -369,16 +403,31 @@ func (f *Fish) handlerTuna(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(e.mime, "text/css") {
 			b := fmt.Appendf(nil, `<link rel="stylesheet" href="%s">`, e.pattern)
 			resBuff.Grow(len(b))
-			resBuff.Write(b)
+			_, err = resBuff.Write(b)
+			if err != nil {
+				fmt.Print(err)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
 		}
 		if strings.HasPrefix(e.mime, "text/javascript") {
 			b := fmt.Appendf(nil, `<script src="%s"></script>`, e.pattern)
 			resBuff.Grow(len(b))
-			resBuff.Write(b)
+			_, err = resBuff.Write(b)
+			if err != nil {
+				fmt.Print(err)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
 		}
 	}
 	resBuff.Grow(len(htmlEndHeadStartBody))
-	resBuff.Write(htmlEndHeadStartBody)
+	_, err = resBuff.Write(htmlEndHeadStartBody)
+	if err != nil {
+		fmt.Print(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	var pageData any
 	if f.Bait != nil {
@@ -397,7 +446,12 @@ func (f *Fish) handlerTuna(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Add("Content-Type", "text/html")
 	w.Header().Add("Content-Length", strconv.Itoa(len(resBuff.Bytes())))
-	w.Write(resBuff.Bytes())
+	_, err = w.Write(resBuff.Bytes())
+	if err != nil {
+		fmt.Print(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }
 
 // chainLicense essentially is a Russian nesting doll like so
