@@ -13,8 +13,8 @@ type user struct {
 }
 
 type water struct {
-	ServerTimeStr string
-	RotateDeg     int
+	ServerTime time.Time
+	RotateDeg  int
 }
 
 func queriedSeason(r *http.Request) any {
@@ -38,8 +38,8 @@ func waterInfo(r *http.Request) any {
 	offsetStr := r.URL.Query().Get("off")
 
 	w := water{
-		RotateDeg:     0,
-		ServerTimeStr: time.Now().Format(time.RFC1123),
+		RotateDeg:  0,
+		ServerTime: time.Now(),
 	}
 
 	off, err := strconv.Atoi(offsetStr)

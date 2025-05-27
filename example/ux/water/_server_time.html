@@ -4,10 +4,6 @@
     hx-trigger="every 5s"
 >
     <span>
-        {{if .ServerTimeStr}}
-        <strong> Server Time:</strong> {{.ServerTimeStr}}
-        {{else}}
-        No Time
-        {{end}}
+        <strong> Server Time:</strong> {{ printTime .ServerTime}}
     </span>
 </div>

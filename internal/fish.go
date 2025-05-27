@@ -45,6 +45,10 @@ type Fish struct {
 	// Bait fn is called and the result is passed into the
 	// executed template, or eaten by the fish before caught
 	Bait Bait
+
+	// Tackle helps catch a fish.
+	// Given to a template to help transform the data.
+	Tackle template.FuncMap
 }
 
 // AddLicense appends a license required to catch a fish
@@ -52,15 +56,17 @@ func (f *Fish) AddLicense(l License) {
 	f.Licenses = append(f.Licenses, l)
 }
 
-// Gobble has one fish gobble up another. Gaining its Licenses and Bait.
+// Gobble has one fish gobble up another. Gaining its Licenses, Bait, and Tackle.
 func (f *Fish) Gobble(f2 Fish) {
 	f.Licenses = f2.Licenses
 	f.Bait = f2.Bait
+	f.Tackle = f2.Tackle
 	for i := range f.children {
 		if f.children[i].kind != FishKindSardine {
 			continue
 		}
 		f.children[i].Bait = f2.Bait
+		f.children[i].Tackle = f2.Tackle
 	}
 }
 
@@ -215,6 +221,10 @@ func (f *Fish) handlerSardine(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if f.Tackle != nil {
+		t.Funcs(f.Tackle)
+	}
+
 	parsed, err := t.Parse(buff.String())
 
 	var pageData any
@@ -336,6 +346,10 @@ func (f *Fish) handlerTuna(w http.ResponseWriter, r *http.Request) {
 	}
 	allFishBuff.Grow(buff.Len())
 	allFishBuff.Write(buff.Bytes())
+
+	if f.Tackle != nil {
+		t.Funcs(f.Tackle)
+	}
 
 	parsed, err := t.Parse(allFishBuff.String())
 

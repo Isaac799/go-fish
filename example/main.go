@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"text/template"
 
 	gofish "github.com/Isaac799/go-fish/internal"
 )
@@ -45,6 +46,9 @@ func setupPond() gofish.Pond {
 		},
 		regexp.MustCompile("water"): {
 			Bait: waterInfo,
+			Tackle: template.FuncMap{
+				"printTime": printTime,
+			},
 		},
 	}
 
