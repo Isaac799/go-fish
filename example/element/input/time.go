@@ -25,7 +25,6 @@ type HTMLInputTime struct {
 }
 
 func NewHTMLInputTime(name string) HTMLInputTime {
-	a := time.Now()
 	return HTMLInputTime{
 		ID:       fmt.Sprintf("id-%s", name),
 		Label:    name,
@@ -33,7 +32,7 @@ func NewHTMLInputTime(name string) HTMLInputTime {
 		Required: false,
 		Readonly: false,
 		Key:      name,
-		Value:    &a,
+		Value:    nil,
 		Min:      nil,
 		Max:      nil,
 	}
