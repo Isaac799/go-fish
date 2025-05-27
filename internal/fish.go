@@ -56,6 +56,12 @@ func (f *Fish) AddLicense(l License) {
 func (f *Fish) Gobble(f2 Fish) {
 	f.Licenses = f2.Licenses
 	f.Bait = f2.Bait
+	for i := range f.children {
+		if f.children[i].kind != FishKindSardine {
+			continue
+		}
+		f.children[i].Bait = f2.Bait
+	}
 }
 
 // Kind reads back the kind of a fish
@@ -90,7 +96,8 @@ func newFish(entry os.DirEntry, pathBase string, pond *Pond) (*Fish, error) {
 		kind = FiskKindClown
 	} else if strings.HasPrefix(mime, "image") ||
 		strings.HasPrefix(mime, "audio") ||
-		strings.HasPrefix(mime, "video") {
+		strings.HasPrefix(mime, "video") ||
+		strings.HasPrefix(mime, "font") {
 		kind = FiskKindAnchovy
 	}
 

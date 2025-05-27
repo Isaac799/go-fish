@@ -15,6 +15,7 @@ The main 4 things are:
 	- Not cahced
 - **Sardine** is a small fish. Used by tuna. Smaller templates, served standalone too
 	- Identified by mime `[ text/html ]` & `_` name prefix
+	- Children of a tuna share its bait
 	- Not cahced
 - **Clown** is a decorative fish. Used in head of document
 	- Identified by mime `[ text/css | text/javascript ]`
