@@ -1,0 +1,33 @@
+package element
+
+import "fmt"
+
+type HTMLInputTextArea struct {
+	ID          string
+	Label       string
+	Placeholder string
+	Key         string
+	Value       string
+	Disabled    bool
+	Pattern     string
+	MinLen      int
+	MaxLen      int
+	Col         uint
+	Row         uint
+}
+
+func NewHTMLInputTextArea(name string) HTMLInputTextArea {
+	return HTMLInputTextArea{
+		ID:          fmt.Sprintf("id-%s", name),
+		Label:       name,
+		Placeholder: "",
+		Key:         fmt.Sprintf("%s", name),
+		Value:       "",
+		Disabled:    false,
+		Pattern:     "",
+		MinLen:      0,
+		MaxLen:      200,
+		Col:         30,
+		Row:         10,
+	}
+}

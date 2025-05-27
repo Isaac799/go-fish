@@ -21,10 +21,10 @@ type NewPondOptions struct {
 	// and are checked before a fish license in the order added.
 	// To catch a fish all pond and fish licenses must be met.
 	Licenses []License
-	// GlobalAnchovyAndClown makes all Anchovy and Clown fish (assets)
+	// GlobalSmallFish makes all Anchovy, Sardine, and Clown fish
 	// global scoped no matter where they are. Useful for an assets pond
 	// that flows into another pond.
-	GlobalAnchovyAndClown bool
+	GlobalSmallFish bool
 }
 
 // Pond is a collection of files from a dir with functions
@@ -47,7 +47,7 @@ func (p *Pond) FlowsInto(bigPond *Pond) {
 	feederPond := p
 
 	for _, feederPondFish := range feederPond.globalChildren {
-		if feederPondFish.kind != FiskKindAnchovy && feederPondFish.kind != FiskKindClown {
+		if feederPondFish.kind == FishKindTuna {
 			continue
 		}
 		for _, bigPondFish := range bigPond.FishFinder() {
@@ -118,7 +118,9 @@ func NewPond(templateDirPath string, options NewPondOptions) (Pond, error) {
 	return p, nil
 }
 
-// collect will gather html and css from template dir
+// collect will gather html and css from template dir.
+// TODO: prevent duplicate fish in children as not of use, consider
+// their overlap when gobble takes place. Perhaps a deep copy needed.
 func (p *Pond) collect(pathBase string) error {
 	if p.fish == nil {
 		p.fish = map[string][]Fish{}
@@ -184,7 +186,7 @@ func (p *Pond) collect(pathBase string) error {
 		for i := range p.globalChildren {
 			p.globalChildren[i].isGlobal = true
 		}
-	} else if p.options.GlobalAnchovyAndClown {
+	} else if p.options.GlobalSmallFish {
 		if p.globalChildren == nil {
 			p.globalChildren = []Fish{}
 		}

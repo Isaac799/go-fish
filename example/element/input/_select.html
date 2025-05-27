@@ -1,0 +1,23 @@
+<div>
+    {{if .Label}}
+    <label for="{{.ID}}">
+        {{.Label}}
+    </label>
+    {{end}}
+
+    <select
+        name="{{.Key}}"
+        id="{{.ID}}"
+    >
+        {{if .PromptSelect}}
+        <option value="">--Please choose an option--</option>
+        {{end}}
+
+        {{range $i, $item := .Options}}
+        <option value="{{$item.Value}}">
+            {{$item.Print}}
+        </option>
+        {{end}}
+    </select>
+
+</div>

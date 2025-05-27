@@ -1,0 +1,24 @@
+<div>
+    {{if .Label}}
+    <label for="{{.ID}}">
+        {{.Label}}
+    </label>
+    {{end}}
+    <textarea 
+        cols="{{.Col}}" 
+        rows="{{.Row}}"
+        type="text"
+        name="{{.Key}}"
+        id="{{.ID}}"
+        minlength="{{.MinLen}}"
+        maxlength="{{.MaxLen}}"
+        {{if .Pattern}} 
+        pattern="{{.Pattern}}"
+        {{end}}
+        {{if .Placeholder}} 
+        placeholder="{{.Placeholder}}"
+        {{end}}
+    >
+       {{.Value}}
+    </textarea>
+</div>

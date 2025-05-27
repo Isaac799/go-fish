@@ -6,6 +6,7 @@ Actions kept with data to maintain current rotation state
 
 <div
     id="smilePhotoAndActions"
+    hx-swap-oob="true"
     class="fc g2"
 >
     <div style="transform: rotate({{.RotateDeg}}deg)">
@@ -17,7 +18,6 @@ Actions kept with data to maintain current rotation state
 
     <div class="fr g2">
         <button
-            hx-target="#smilePhotoAndActions"
             hx-get="/water/_smile_photo?off=-45&pos={{.RotateDeg}}"
             hx-swap="innerHTML"
         >
@@ -27,7 +27,6 @@ Actions kept with data to maintain current rotation state
         </button>
 
         <button
-            hx-target="#smilePhotoAndActions"
             hx-get="/water/_smile_photo?off=45&pos={{.RotateDeg}}"
             hx-swap="innerHTML"
         >

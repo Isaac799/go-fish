@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+
+	element "github.com/Isaac799/go-fish/example/element/input"
 )
 
 type user struct {
@@ -54,4 +56,48 @@ func waterInfo(r *http.Request) any {
 	w.RotateDeg = pos + off
 
 	return w
+}
+
+type simpleSelect struct {
+	label string
+	value string
+}
+
+func (s simpleSelect) Print() string {
+	return s.label
+}
+func (s simpleSelect) Value() any {
+	return s.value
+}
+
+type variousInputs struct {
+	Text     element.HTMLInputText
+	Textarea element.HTMLInputTextArea
+	Num      element.HTMLInputNumber
+	Sel      element.HTMLInputSelect[simpleSelect]
+	Radio    element.HTMLInputRadio[simpleSelect]
+}
+
+func inputs(_ *http.Request) any {
+	text := element.NewHTMLInputText("name")
+	num := element.NewHTMLInputNumber("age")
+	textarea := element.NewHTMLInputTextArea("bio")
+	sel := element.NewHTMLInputSelect("favorite color", []simpleSelect{
+		{label: "red", value: "#FF0000"},
+		{label: "blue", value: "#0000FF"},
+		{label: "green", value: "#00FF00"},
+	})
+	radio := element.NewHTMLInputRadio("second favorite color", []simpleSelect{
+		{label: "red", value: "#FF0000"},
+		{label: "blue", value: "#0000FF"},
+		{label: "green", value: "#00FF00"},
+	})
+
+	return variousInputs{
+		Text:     text,
+		Textarea: textarea,
+		Num:      num,
+		Sel:      sel,
+		Radio:    radio,
+	}
 }

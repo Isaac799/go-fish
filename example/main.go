@@ -26,7 +26,18 @@ func setupPond() gofish.Pond {
 	assetPond, err := gofish.NewPond(
 		"asset",
 		gofish.NewPondOptions{
-			GlobalAnchovyAndClown: true,
+			GlobalSmallFish: true,
+		},
+	)
+
+	if err != nil {
+		panic(err)
+	}
+
+	elementPond, err := gofish.NewPond(
+		"element",
+		gofish.NewPondOptions{
+			GlobalSmallFish: true,
 		},
 	)
 	if err != nil {
@@ -34,6 +45,7 @@ func setupPond() gofish.Pond {
 	}
 
 	assetPond.FlowsInto(&uxPond)
+	elementPond.FlowsInto(&uxPond)
 
 	stockFish := map[*regexp.Regexp]gofish.Fish{
 		regexp.MustCompile("season"): {
@@ -49,6 +61,9 @@ func setupPond() gofish.Pond {
 			Tackle: template.FuncMap{
 				"printTime": printTime,
 			},
+		},
+		regexp.MustCompile("interact"): {
+			Bait: inputs,
 		},
 	}
 

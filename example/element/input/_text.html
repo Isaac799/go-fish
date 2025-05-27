@@ -1,0 +1,21 @@
+<div>
+    {{if .Label}}
+    <label for="{{.ID}}">
+        {{.Label}}
+    </label>
+    {{end}}
+    <input
+        type="text"
+        name="{{.Key}}"
+        id="{{.ID}}"
+        value="{{.Value}}"
+        minlength="{{.MinLen}}"
+        maxlength="{{.MaxLen}}"
+        {{if .Pattern}} 
+        pattern="{{.Pattern}}"
+        {{end}}
+        {{if .Placeholder}} 
+        placeholder="{{.Placeholder}}"
+        {{end}}
+    >
+</div>
