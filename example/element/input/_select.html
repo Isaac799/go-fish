@@ -8,6 +8,14 @@
     <select
         name="{{.Key}}"
         id="{{.ID}}"
+
+        {{if .Disabled}} 
+        disabled
+        {{end}}
+
+        {{if .Required}} 
+        required
+        {{end}}
     >
         {{if .PromptSelect}}
         <option value="">--Please choose an option--</option>

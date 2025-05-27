@@ -11,12 +11,20 @@
         min="{{.Min}}"
         max="{{.Max}}"
         value="{{.Value}}"
-        {{if
-        .Pattern}}
-        pattern="{{.Pattern}}"
+
+        {{if .Disabled}} 
+        disabled
         {{end}}
-        {{if
-        .Placeholder}}
+
+        {{if .Required}} 
+        required
+        {{end}}
+
+        {{if .Readonly}} 
+        readonly
+        {{end}}
+
+        {{if .Placeholder}}
         placeholder="{{.Placeholder}}"
         {{end}}
     >

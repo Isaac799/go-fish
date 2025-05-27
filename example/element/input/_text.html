@@ -11,9 +11,23 @@
         value="{{.Value}}"
         minlength="{{.MinLen}}"
         maxlength="{{.MaxLen}}"
+
+        {{if .Disabled}} 
+        disabled
+        {{end}}
+
+        {{if .Required}} 
+        required
+        {{end}}
+
+        {{if .Readonly}} 
+        readonly
+        {{end}}
+
         {{if .Pattern}} 
         pattern="{{.Pattern}}"
         {{end}}
+        
         {{if .Placeholder}} 
         placeholder="{{.Placeholder}}"
         {{end}}

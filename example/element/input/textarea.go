@@ -9,6 +9,8 @@ type HTMLInputTextArea struct {
 	Key         string
 	Value       string
 	Disabled    bool
+	Required    bool
+	Readonly    bool
 	Pattern     string
 	MinLen      int
 	MaxLen      int
@@ -21,9 +23,11 @@ func NewHTMLInputTextArea(name string) HTMLInputTextArea {
 		ID:          fmt.Sprintf("id-%s", name),
 		Label:       name,
 		Placeholder: "",
-		Key:         fmt.Sprintf("%s", name),
+		Key:         name,
 		Value:       "",
 		Disabled:    false,
+		Required:    false,
+		Readonly:    false,
 		Pattern:     "",
 		MinLen:      0,
 		MaxLen:      200,

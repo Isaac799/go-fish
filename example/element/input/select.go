@@ -14,6 +14,7 @@ type HTMLInputSelect[T HTMLChoice] struct {
 	PromptSelect bool
 	Key          string
 	Disabled     bool
+	Required     bool
 	Value        *T
 	Options      []T
 }
@@ -25,7 +26,8 @@ func NewHTMLInputSelect[T HTMLChoice](name string, Options []T) HTMLInputSelect[
 		Placeholder:  "",
 		PromptSelect: true,
 		Disabled:     false,
-		Key:          fmt.Sprintf("%s", name),
+		Required:     false,
+		Key:          name,
 		Value:        nil,
 		Options:      Options,
 	}

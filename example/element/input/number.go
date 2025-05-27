@@ -9,7 +9,8 @@ type HTMLInputNumber struct {
 	Key         string
 	Value       string
 	Disabled    bool
-	Pattern     string
+	Required    bool
+	Readonly    bool
 	Min         int
 	Max         int
 }
@@ -20,9 +21,10 @@ func NewHTMLInputNumber(name string) HTMLInputNumber {
 		Label:       name,
 		Placeholder: "",
 		Disabled:    false,
-		Key:         fmt.Sprintf("%s", name),
+		Required:    false,
+		Readonly:    false,
+		Key:         name,
 		Value:       "",
-		Pattern:     "",
 		Min:         -100,
 		Max:         100,
 	}

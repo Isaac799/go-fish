@@ -10,6 +10,14 @@
             name="{{$root.Key}}"
             id="{{$root.ID}}-{{$i}}"
             value="{{$item.Value}}"
+
+            {{if $root.Disabled}} 
+            disabled
+            {{end}}
+
+            {{if $root.Required}} 
+            required
+            {{end}}
         >
         <label for="{{$root.ID}}-{{$i}}">{{$item.Print}}</label>
     </div>

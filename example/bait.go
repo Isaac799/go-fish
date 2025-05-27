@@ -76,28 +76,38 @@ type variousInputs struct {
 	Num      element.HTMLInputNumber
 	Sel      element.HTMLInputSelect[simpleSelect]
 	Radio    element.HTMLInputRadio[simpleSelect]
+	Date     element.HTMLInputDate
+	Time     element.HTMLInputTime
+	DateTime element.HTMLInputDateTime
 }
 
 func inputs(_ *http.Request) any {
-	text := element.NewHTMLInputText("name")
-	num := element.NewHTMLInputNumber("age")
-	textarea := element.NewHTMLInputTextArea("bio")
-	sel := element.NewHTMLInputSelect("favorite color", []simpleSelect{
+	textEl := element.NewHTMLInputText("name")
+	numberEl := element.NewHTMLInputNumber("age")
+	textareaEl := element.NewHTMLInputTextArea("bio")
+	selectEl := element.NewHTMLInputSelect("favorite color", []simpleSelect{
 		{label: "red", value: "#FF0000"},
 		{label: "blue", value: "#0000FF"},
 		{label: "green", value: "#00FF00"},
 	})
-	radio := element.NewHTMLInputRadio("second favorite color", []simpleSelect{
+	radioEl := element.NewHTMLInputRadio("second favorite color", []simpleSelect{
 		{label: "red", value: "#FF0000"},
 		{label: "blue", value: "#0000FF"},
 		{label: "green", value: "#00FF00"},
 	})
 
+	dateEl := element.NewHTMLInputDate("birthday")
+	timeEl := element.NewHTMLInputTime("clock in")
+	datetimeEl := element.NewHTMLInputDateTime("vacation start")
+
 	return variousInputs{
-		Text:     text,
-		Textarea: textarea,
-		Num:      num,
-		Sel:      sel,
-		Radio:    radio,
+		Text:     textEl,
+		Textarea: textareaEl,
+		Num:      numberEl,
+		Sel:      selectEl,
+		Radio:    radioEl,
+		Date:     dateEl,
+		Time:     timeEl,
+		DateTime: datetimeEl,
 	}
 }

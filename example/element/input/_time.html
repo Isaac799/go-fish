@@ -4,14 +4,11 @@
         {{.Label}}
     </label>
     {{end}}
-    <textarea 
-        cols="{{.Col}}" 
-        rows="{{.Row}}"
-        type="text"
+    <input
+        type="time"
         name="{{.Key}}"
         id="{{.ID}}"
-        minlength="{{.MinLen}}"
-        maxlength="{{.MaxLen}}"
+        value="{{HTMLPrintTime .Value}}"
 
         {{if .Disabled}} 
         disabled
@@ -25,14 +22,12 @@
         readonly
         {{end}}
 
-        {{if .Pattern}} 
-        pattern="{{.Pattern}}"
+        {{if .Min}}
+        min="{{HTMLPrintTime .Min}}"
         {{end}}
         
-        {{if .Placeholder}} 
-        placeholder="{{.Placeholder}}"
+        {{if .Max}}
+        max="{{HTMLPrintTime .Max}}"
         {{end}}
     >
-       {{.Value}}
-    </textarea>
 </div>
