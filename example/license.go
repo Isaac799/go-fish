@@ -4,49 +4,71 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 )
 
 type contextKey string
 
 const seasonCtxKey contextKey = "season"
+const userCtxKey contextKey = "user"
+const queryCtxKey contextKey = "q"
+const rotateCtxKey contextKey = "rotate"
 
-func springOnly(next http.Handler) http.Handler {
+const (
+	right = "right"
+	left  = "left"
+)
+
+var userDB = map[int]user{
+	1: {
+		ID:        1,
+		FirstName: "John",
+		LastName:  "Doe",
+	},
+	2: {
+		ID:        2,
+		FirstName: "Jane",
+		LastName:  "Doe",
+	},
+	3: {
+		ID:        3,
+		FirstName: "Sally",
+		LastName:  "Sue",
+	},
+}
+
+func requireUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		season, ok := r.Context().Value(seasonCtxKey).(string)
-
-		if !ok {
+		id := r.PathValue("id")
+		if len(id) == 0 {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("season must be valid string"))
+			w.Write([]byte("a user id is required"))
+			return
+		}
+		i, err := strconv.Atoi(id)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("user id must be an integer"))
 			return
 		}
 
-		if season != "spring" {
-			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte("cannot fish outside of spring"))
+		u, exists := userDB[i]
+		if !exists {
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte("user not found"))
 			return
 		}
 
-		next.ServeHTTP(w, r)
+		ctx := context.WithValue(r.Context(), userCtxKey, u)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-func requireSeason(next http.Handler) http.Handler {
+func optionQuery(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !r.URL.Query().Has("season") {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("a season is required"))
-			return
-		}
-
-		season := r.URL.Query().Get("season")
-		if len(season) == 0 {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("a season is required"))
-			return
-		}
-
-		ctx := context.WithValue(r.Context(), seasonCtxKey, season)
+		q := r.URL.Query().Get("q")
+		ctx := context.WithValue(r.Context(), queryCtxKey, q)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

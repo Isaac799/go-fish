@@ -1,0 +1,13 @@
+<div
+    hx-get="/water/_server_time"
+    hx-swap="innerHTML"
+    hx-trigger="every 5s"
+>
+    <span>
+        {{if .ServerTimeStr}}
+        <strong> Server Time:</strong> {{.ServerTimeStr}}
+        {{else}}
+        No Time
+        {{end}}
+    </span>
+</div>

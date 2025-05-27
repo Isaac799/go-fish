@@ -1,0 +1,39 @@
+<!-- 
+
+Actions kept with data to maintain current rotation state 
+
+-->
+
+<div
+    id="smilePhotoAndActions"
+    class="fc g2"
+>
+    <div style="transform: rotate({{.RotateDeg}}deg)">
+        <img
+            src="/image/a-simple-smile.png"
+            alt="a simple smile face"
+        >
+    </div>
+
+    <div class="fr g2">
+        <button
+            hx-target="#smilePhotoAndActions"
+            hx-get="/water/_smile_photo?off=-45&pos={{.RotateDeg}}"
+            hx-swap="innerHTML"
+        >
+            <span class="material-icons">
+                rotate_left
+            </span>
+        </button>
+
+        <button
+            hx-target="#smilePhotoAndActions"
+            hx-get="/water/_smile_photo?off=45&pos={{.RotateDeg}}"
+            hx-swap="innerHTML"
+        >
+            <span class="material-icons">
+                rotate_right
+            </span>
+        </button>
+    </div>
+</div>

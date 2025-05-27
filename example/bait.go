@@ -3,34 +3,8 @@ package main
 import (
 	"net/http"
 	"strconv"
+	"time"
 )
-
-type counter struct {
-	Value int
-}
-
-func (c *counter) increment() {
-	c.Value++
-	if c.Value > 3 {
-		c.Value = 0
-	}
-}
-
-func incrementQueryCount(r *http.Request) any {
-	count := r.URL.Query().Get("count")
-	if len(count) == 0 {
-		return counter{}
-	}
-	i, err := strconv.Atoi(count)
-	if err != nil {
-		return counter{}
-	}
-	c := counter{
-		Value: i,
-	}
-	c.increment()
-	return c
-}
 
 type user struct {
 	ID        int
@@ -38,36 +12,46 @@ type user struct {
 	LastName  string
 }
 
-func findUser(r *http.Request) any {
-	count := r.PathValue("id")
-	if len(count) == 0 {
+type water struct {
+	ServerTimeStr string
+	RotateDeg     int
+}
+
+func queriedSeason(r *http.Request) any {
+	season, ok := r.Context().Value(queryCtxKey).(string)
+	if !ok {
 		return nil
 	}
-	i, err := strconv.Atoi(count)
+	return season
+}
+
+func userInfo(r *http.Request) any {
+	user, ok := r.Context().Value(userCtxKey).(user)
+	if !ok {
+		return nil
+	}
+	return user
+}
+
+func waterInfo(r *http.Request) any {
+	posStr := r.URL.Query().Get("pos")
+	offsetStr := r.URL.Query().Get("off")
+
+	w := water{
+		RotateDeg:     0,
+		ServerTimeStr: time.Now().Format(time.RFC1123),
+	}
+
+	off, err := strconv.Atoi(offsetStr)
 	if err != nil {
-		return nil
+		return w
+	}
+	pos, err := strconv.Atoi(posStr)
+	if err != nil {
+		return w
 	}
 
-	users := map[int]user{
-		1: {
-			ID:        1,
-			FirstName: "John",
-			LastName:  "Doe",
-		},
-		2: {
-			ID:        2,
-			FirstName: "Jane",
-			LastName:  "Doe",
-		},
-		3: {
-			ID:        3,
-			FirstName: "Sally",
-			LastName:  "Sue",
-		},
-	}
+	w.RotateDeg = pos + off
 
-	if u, exists := users[i]; exists {
-		return u
-	}
-	return nil
+	return w
 }

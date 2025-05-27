@@ -1,0 +1,30 @@
+<div class="fc g2 m2">
+    <!-- Top Bar -->
+    <div class="fc g1">
+        <h1>
+            View User
+        </h1>
+
+        {{ template "_nav" }}
+    </div>
+
+    <div class="fr g2">
+        <!-- Body -->
+        <div class="fc g2">
+            {{if .}}
+            <h3>
+                {{ .LastName }}, {{ .FirstName }}
+            </h3>
+            <div>
+                <a href="{{.ID}}/edit">Edit</a>
+            </div>
+            {{else}}
+            <div>
+                <span>
+                    No user
+                </span>
+            </div>
+            {{end}}
+        </div>
+    </div>
+</div>

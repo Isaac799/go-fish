@@ -9,15 +9,18 @@ import (
 	gofish "github.com/Isaac799/go-fish/internal"
 )
 
-func setupPonds() (gofish.Pond, gofish.Pond) {
-	appPond, err := gofish.NewPond(
-		"template",
+func setupPond() gofish.Pond {
+	uxPond, err := gofish.NewPond(
+		"ux",
 		gofish.NewPondOptions{
 			Licenses: []gofish.License{
 				visitorLog,
 			},
 		},
 	)
+	if err != nil {
+		panic(err)
+	}
 
 	assetPond, err := gofish.NewPond(
 		"asset",
@@ -25,39 +28,37 @@ func setupPonds() (gofish.Pond, gofish.Pond) {
 			GlobalAnchovyAndClown: true,
 		},
 	)
-
 	if err != nil {
 		panic(err)
 	}
 
-	return appPond, assetPond
-}
-
-func main() {
-	appPond, assetPond := setupPonds()
+	assetPond.FlowsInto(&uxPond)
 
 	stockFish := map[*regexp.Regexp]gofish.Fish{
-		regexp.MustCompile("blog"): {
-			Bait: incrementQueryCount,
+		regexp.MustCompile("season"): {
+			Licenses: []gofish.License{optionQuery},
+			Bait:     queriedSeason,
 		},
-		regexp.MustCompile("home"): {
-			Bait:     incrementQueryCount,
-			Licenses: []gofish.License{requireSeason, springOnly},
+		regexp.MustCompile("user.id"): {
+			Bait:     userInfo,
+			Licenses: []gofish.License{requireUser},
 		},
-		regexp.MustCompile("about page"): {
-			Bait: incrementQueryCount,
-		},
-		regexp.MustCompile("user"): {
-			Bait: findUser,
+		regexp.MustCompile("water"): {
+			Bait: waterInfo,
 		},
 	}
 
-	appPond.Stock(stockFish)
-	assetPond.FlowsInto(&appPond)
+	uxPond.Stock(stockFish)
+
+	return uxPond
+}
+
+func main() {
+	pond := setupPond()
 
 	verbose := true
 
-	mux := appPond.CastLines(verbose)
+	mux := pond.CastLines(verbose)
 
 	fmt.Println("gone fishing")
 	http.ListenAndServe(":8080", mux)

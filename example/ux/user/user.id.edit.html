@@ -1,0 +1,42 @@
+<div class="fc g2 m2">
+    <!-- Top Bar -->
+    <div class="fc g1">
+        <h1>
+            Edit User
+        </h1>
+
+        {{ template "_nav" }}
+    </div>
+
+    <div class="fr g2">
+        <!-- Body -->
+        <div class="fc g2">
+            {{if .}}
+            <div class="fc g1">
+                <label for="lastName">Last Name</label>
+                <input
+                    type="text"
+                    name="last_name"
+                    id="lastName"
+                    value="{{ .LastName }}"
+                >
+            </div>
+            <div class="fc g1">
+                <label for="firstName">First Name</label>
+                <input
+                    type="text"
+                    name="first_name"
+                    id="firstName"
+                    value="{{ .FirstName }}"
+                >
+            </div>
+            {{else}}
+            <div>
+                <span>
+                    No user
+                </span>
+            </div>
+            {{end}}
+        </div>
+    </div>
+</div>

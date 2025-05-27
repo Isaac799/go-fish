@@ -1,0 +1,26 @@
+<div class="fc g2 m2">
+    <!-- Top Bar -->
+    <div class="fc g2">
+        <h1>
+            Season
+        </h1>
+
+        {{ template "_nav" }}
+    </div>
+    <p>
+        this page demos how a query param can change how the page is rendered
+    </p>
+    {{if .}}
+    <span>
+        You queried: {{ . }}
+    </span>
+    {{else}}
+    <span>
+        No season selected
+    </span>
+    {{end}}
+</div>
+
+{{if not .}}
+{{template "_dialog_season"}}
+{{end}}
