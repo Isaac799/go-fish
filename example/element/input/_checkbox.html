@@ -8,13 +8,13 @@
     {{range $i, $item := .Options}}
     <div>
         <input
-            type="radio"
+            type="checkbox"
             name="{{$root.Key}}"
             id="{{$root.ID}}-{{$i}}"
             value="{{$i}}"
             {{if $root.Disabled}} disabled {{end}}
             {{if $root.Required}} required {{end}}
-            {{if InputPickOne $root.Value $i}} checked {{end}}
+            {{if InputPickMany $root.Value $i}} checked {{end}}
         >
         <label for="{{$root.ID}}-{{$i}}">{{$item.Print}}</label>
     </div>

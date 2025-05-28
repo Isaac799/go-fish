@@ -1,34 +1,53 @@
 package element
 
-import "fmt"
+import (
+	"fmt"
+	"slices"
+)
 
-type HTMLChoice interface {
+type Printable interface {
 	Print() string
-	Value() any
 }
 
-type HTMLInputSelect[T HTMLChoice] struct {
+func InputPickOne(a, b int) bool {
+	return a == b
+}
+
+func InputPickMany(a []int, b int) bool {
+	return slices.Contains(a, b)
+}
+
+type InputSelect[T Printable] struct {
 	ID           string
 	Label        string
 	Placeholder  string
 	PromptSelect bool
 	Key          string
 	Disabled     bool
+	Multiple     bool
 	Required     bool
-	Value        *T
-	Options      []T
+	Size         int
+	// Value is selected index(s) of Options. Typically just one, unless Multiple is true
+	Value   []int
+	Options []T
 }
 
-func NewHTMLInputSelect[T HTMLChoice](name string, Options []T) HTMLInputSelect[T] {
-	return HTMLInputSelect[T]{
+func NewInputSelect[T Printable](name string, Options []T) InputSelect[T] {
+	return InputSelect[T]{
 		ID:           fmt.Sprintf("id-%s", name),
 		Label:        name,
 		Placeholder:  "",
 		PromptSelect: true,
 		Disabled:     false,
 		Required:     false,
+		Multiple:     false,
 		Key:          name,
-		Value:        nil,
+		Size:         0,
+		Value:        []int{},
 		Options:      Options,
 	}
+}
+
+func (el *InputSelect[T]) Listbox() {
+	el.Size = len(el.Options)
 }

@@ -1,4 +1,6 @@
 <div>
+    {{ $root := . }}
+
     {{if .Label}}
     <label for="{{.ID}}">
         {{.Label}}
@@ -8,21 +10,20 @@
     <select
         name="{{.Key}}"
         id="{{.ID}}"
-
-        {{if .Disabled}} 
-        disabled
-        {{end}}
-
-        {{if .Required}} 
-        required
-        {{end}}
+        {{if .Disabled}} disabled {{end}}
+        {{if .Multiple}} multiple {{end}}
+        {{if .Size}} size="{{.Size}}" {{end}}
+        {{if .Required}} required {{end}}
     >
         {{if .PromptSelect}}
         <option value="">--Please choose an option--</option>
         {{end}}
 
         {{range $i, $item := .Options}}
-        <option value="{{$item.Value}}">
+        <option 
+            value="{{$i}}"
+            {{if InputPickMany $root.Value $i}} selected {{end}}
+        >
             {{$item.Print}}
         </option>
         {{end}}

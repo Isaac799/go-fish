@@ -2,9 +2,21 @@ package element
 
 import "fmt"
 
-type HTMLInputText struct {
+type InputTextKind = string
+
+const (
+	InputTextKindText     InputTextKind = "text"
+	InputTextKindPassword InputTextKind = "password"
+	InputTextKindEmail    InputTextKind = "email"
+	InputTextKindSearch   InputTextKind = "search"
+	InputTextKindTel      InputTextKind = "tel"
+	InputTextKindUrl      InputTextKind = "url"
+)
+
+type InputText struct {
 	ID          string
 	Label       string
+	Kind        InputTextKind
 	Placeholder string
 	Key         string
 	Value       string
@@ -16,10 +28,11 @@ type HTMLInputText struct {
 	MaxLen      int
 }
 
-func NewHTMLInputText(name string) HTMLInputText {
-	return HTMLInputText{
+func NewInputText(name string) InputText {
+	return InputText{
 		ID:          fmt.Sprintf("id-%s", name),
 		Label:       name,
+		Kind:        InputTextKindText,
 		Placeholder: "",
 		Key:         name,
 		Value:       "",

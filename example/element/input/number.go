@@ -2,7 +2,7 @@ package element
 
 import "fmt"
 
-type HTMLInputNumber struct {
+type InputNumber struct {
 	ID          string
 	Label       string
 	Placeholder string
@@ -11,12 +11,13 @@ type HTMLInputNumber struct {
 	Disabled    bool
 	Required    bool
 	Readonly    bool
+	Step        float32
 	Min         int
 	Max         int
 }
 
-func NewHTMLInputNumber(name string) HTMLInputNumber {
-	return HTMLInputNumber{
+func NewInputNumber(name string) InputNumber {
+	return InputNumber{
 		ID:          fmt.Sprintf("id-%s", name),
 		Label:       name,
 		Placeholder: "",
@@ -24,6 +25,7 @@ func NewHTMLInputNumber(name string) HTMLInputNumber {
 		Required:    false,
 		Readonly:    false,
 		Key:         name,
+		Step:        0,
 		Value:       "",
 		Min:         -100,
 		Max:         100,

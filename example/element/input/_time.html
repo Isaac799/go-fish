@@ -8,26 +8,11 @@
         type="time"
         name="{{.Key}}"
         id="{{.ID}}"
-        value="{{HTMLPrintTime .Value}}"
-
-        {{if .Disabled}} 
-        disabled
-        {{end}}
-
-        {{if .Required}} 
-        required
-        {{end}}
-
-        {{if .Readonly}} 
-        readonly
-        {{end}}
-
-        {{if .Min}}
-        min="{{HTMLPrintTime .Min}}"
-        {{end}}
-        
-        {{if .Max}}
-        max="{{HTMLPrintTime .Max}}"
-        {{end}}
+        value="{{PrintTime .Value}}"
+        {{if .Disabled}} disabled {{end}}
+        {{if .Required}} required {{end}}
+        {{if .Readonly}} readonly {{end}}
+        {{if .Min}} min="{{PrintTime .Min}}" {{end}}
+        {{if .Max}} max="{{PrintTime .Max}}" {{end}}
     >
 </div>

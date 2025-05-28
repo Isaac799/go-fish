@@ -71,34 +71,40 @@ func (s simpleSelect) Value() any {
 }
 
 type variousInputs struct {
-	Text     element.HTMLInputText
-	Textarea element.HTMLInputTextArea
-	Num      element.HTMLInputNumber
-	Sel      element.HTMLInputSelect[simpleSelect]
-	Radio    element.HTMLInputRadio[simpleSelect]
-	Date     element.HTMLInputDate
-	Time     element.HTMLInputTime
-	DateTime element.HTMLInputDateTime
+	Text     element.InputText
+	Textarea element.InputTextArea
+	Num      element.InputNumber
+	Sel      element.InputSelect[simpleSelect]
+	Radio    element.InputRadio[simpleSelect]
+	Checkbox element.InputCheckbox[simpleSelect]
+	Date     element.InputDate
+	Time     element.InputTime
+	DateTime element.InputDateTime
 }
 
 func inputs(_ *http.Request) any {
-	textEl := element.NewHTMLInputText("name")
-	numberEl := element.NewHTMLInputNumber("age")
-	textareaEl := element.NewHTMLInputTextArea("bio")
-	selectEl := element.NewHTMLInputSelect("favorite color", []simpleSelect{
+	textEl := element.NewInputText("name")
+	numberEl := element.NewInputNumber("age")
+	textareaEl := element.NewInputTextArea("bio")
+	selectEl := element.NewInputSelect("favorite color", []simpleSelect{
 		{label: "red", value: "#FF0000"},
 		{label: "blue", value: "#0000FF"},
 		{label: "green", value: "#00FF00"},
 	})
-	radioEl := element.NewHTMLInputRadio("second favorite color", []simpleSelect{
+	radioEl := element.NewInputRadio("second favorite color", []simpleSelect{
+		{label: "red", value: "#FF0000"},
+		{label: "blue", value: "#0000FF"},
+		{label: "green", value: "#00FF00"},
+	})
+	cbEl := element.NewInputCheckbox("third favorite color", []simpleSelect{
 		{label: "red", value: "#FF0000"},
 		{label: "blue", value: "#0000FF"},
 		{label: "green", value: "#00FF00"},
 	})
 
-	dateEl := element.NewHTMLInputDate("birthday")
-	timeEl := element.NewHTMLInputTime("clock in")
-	datetimeEl := element.NewHTMLInputDateTime("vacation start")
+	dateEl := element.NewInputDate("birthday")
+	timeEl := element.NewInputTime("clock in")
+	datetimeEl := element.NewInputDateTime("vacation start")
 
 	return variousInputs{
 		Text:     textEl,
@@ -106,6 +112,7 @@ func inputs(_ *http.Request) any {
 		Num:      numberEl,
 		Sel:      selectEl,
 		Radio:    radioEl,
+		Checkbox: cbEl,
 		Date:     dateEl,
 		Time:     timeEl,
 		DateTime: datetimeEl,

@@ -4,27 +4,27 @@ import (
 	"fmt"
 )
 
-type InputRadio[T Printable] struct {
+type InputCheckbox[T Printable] struct {
 	ID       string
 	Label    string
 	Key      string
 	Legend   string
 	Disabled bool
 	Required bool
-	// Value is selected index of Options. Just one.
-	Value   int
+	// Value is checked index(s) of Options.
+	Value   []int
 	Options []T
 }
 
-func NewInputRadio[T Printable](name string, Options []T) InputRadio[T] {
-	return InputRadio[T]{
+func NewInputCheckbox[T Printable](name string, Options []T) InputCheckbox[T] {
+	return InputCheckbox[T]{
 		ID:       fmt.Sprintf("id-%s", name),
-		Legend:   fmt.Sprintf("Choose a %s:", name),
+		Legend:   fmt.Sprintf("Choose %s:", name),
 		Label:    name,
 		Disabled: false,
 		Required: false,
 		Key:      name,
-		Value:    0,
+		Value:    []int{},
 		Options:  Options,
 	}
 }

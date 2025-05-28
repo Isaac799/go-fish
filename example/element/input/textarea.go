@@ -2,7 +2,7 @@ package element
 
 import "fmt"
 
-type HTMLInputTextArea struct {
+type InputTextArea struct {
 	ID          string
 	Label       string
 	Placeholder string
@@ -18,8 +18,8 @@ type HTMLInputTextArea struct {
 	Row         uint
 }
 
-func NewHTMLInputTextArea(name string) HTMLInputTextArea {
-	return HTMLInputTextArea{
+func NewInputTextArea(name string) InputTextArea {
+	return InputTextArea{
 		ID:          fmt.Sprintf("id-%s", name),
 		Label:       name,
 		Placeholder: "",

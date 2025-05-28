@@ -11,21 +11,9 @@
         min="{{.Min}}"
         max="{{.Max}}"
         value="{{.Value}}"
-
-        {{if .Disabled}} 
-        disabled
-        {{end}}
-
-        {{if .Required}} 
-        required
-        {{end}}
-
-        {{if .Readonly}} 
-        readonly
-        {{end}}
-
-        {{if .Placeholder}}
-        placeholder="{{.Placeholder}}"
-        {{end}}
+        {{if .Disabled}} disabled {{end}}
+        {{if .Required}} required {{end}}
+        {{if .Readonly}} readonly {{end}}
+        {{if .Placeholder}} placeholder="{{.Placeholder}}" {{end}}
     >
 </div>

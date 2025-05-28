@@ -5,14 +5,14 @@ import (
 	"time"
 )
 
-func HTMLPrintDateTime(t *time.Time) string {
+func PrintDateTime(t *time.Time) string {
 	if t == nil {
 		return ""
 	}
 	return t.Format("2006-01-02T15:04")
 }
 
-type HTMLInputDateTime struct {
+type InputDateTime struct {
 	ID       string
 	Label    string
 	Key      string
@@ -24,8 +24,8 @@ type HTMLInputDateTime struct {
 	Max      *time.Time
 }
 
-func NewHTMLInputDateTime(name string) HTMLInputDateTime {
-	return HTMLInputDateTime{
+func NewInputDateTime(name string) InputDateTime {
+	return InputDateTime{
 		ID:       fmt.Sprintf("id-%s", name),
 		Label:    name,
 		Disabled: false,
