@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"text/template"
 
-	element "github.com/Isaac799/go-fish/example/element/input"
 	gofish "github.com/Isaac799/go-fish/internal"
 )
 
@@ -65,14 +64,6 @@ func setupPond() gofish.Pond {
 		},
 		regexp.MustCompile("[input]"): {
 			Bait: inputs,
-			Tackle: template.FuncMap{
-				"PrintDateTime":  element.PrintDateTime,
-				"PrintDate":      element.PrintDate,
-				"PrintTime":      element.PrintTime,
-				"InputPickOne":   element.InputPickOne,
-				"InputPickMany":  element.InputPickMany,
-				"InputJoinComma": element.InputJoinComma,
-			},
 		},
 	}
 

@@ -71,59 +71,42 @@ func (s simpleSelect) Value() any {
 }
 
 type variousInputs struct {
-	Text     element.InputText
-	Textarea element.InputTextArea
-	Num      element.InputNumber
-	Sel      element.InputSelect[simpleSelect]
-	Radio    element.InputRadio[simpleSelect]
-	Checkbox element.InputCheckbox[simpleSelect]
-	Date     element.InputDate
-	Time     element.InputTime
-	DateTime element.InputDateTime
-	Color    element.InputColor
-	Hidden   element.InputHidden
-	File     element.InputFile
+	Text     element.HTMLElement
+	Textarea element.HTMLElement
+	Num      element.HTMLElement
+	Sel      element.HTMLElement
+	Radio    element.HTMLElement
+	Checkbox element.HTMLElement
+	Date     element.HTMLElement
+	Time     element.HTMLElement
+	DateTime element.HTMLElement
+	Color    element.HTMLElement
+	Hidden   element.HTMLElement
+	File     element.HTMLElement
 }
 
 func inputs(_ *http.Request) any {
-	textEl := element.NewInputText("name")
-	numberEl := element.NewInputNumber("age")
-	textareaEl := element.NewInputTextArea("bio")
-	selectEl := element.NewInputSelect("favorite color", []simpleSelect{
+	options := []simpleSelect{
 		{label: "red", value: "#FF0000"},
 		{label: "blue", value: "#0000FF"},
 		{label: "green", value: "#00FF00"},
-	})
-	radioEl := element.NewInputRadio("second favorite color", []simpleSelect{
-		{label: "red", value: "#FF0000"},
-		{label: "blue", value: "#0000FF"},
-		{label: "green", value: "#00FF00"},
-	})
-	cbEl := element.NewInputCheckbox("third favorite color", []simpleSelect{
-		{label: "red", value: "#FF0000"},
-		{label: "blue", value: "#0000FF"},
-		{label: "green", value: "#00FF00"},
-	})
-
-	dateEl := element.NewInputDate("birthday")
-	timeEl := element.NewInputTime("clock in")
-	datetimeEl := element.NewInputDateTime("vacation start")
-	colorEl := element.NewInputColor("backup color")
-	hiddenEl := element.NewInputHidden("secret", "cat and mouse")
-	fileEl := element.NewInputFile("profile photo")
-
-	return variousInputs{
-		Text:     textEl,
-		Textarea: textareaEl,
-		Num:      numberEl,
-		Sel:      selectEl,
-		Radio:    radioEl,
-		Checkbox: cbEl,
-		Date:     dateEl,
-		Time:     timeEl,
-		DateTime: datetimeEl,
-		Color:    colorEl,
-		File:     fileEl,
-		Hidden:   hiddenEl,
 	}
+
+	b := variousInputs{
+		Text:     element.NewInputText("name", 0, 30),
+		Textarea: element.NewInputTextarea("bio", 0, 30, 30, 5),
+		Num:      element.NewInputNumber("cell", 0, 30),
+		Color:    element.NewInputColor("favorite color"),
+		File:     element.NewInputFile("profile picture"),
+		Hidden:   element.NewInputHidden("shh", "cat and mouse"),
+
+		Date:     element.NewInputDate("birthday", nil, nil),
+		Time:     element.NewInputTime("clock in", nil, nil),
+		DateTime: element.NewInputDateTime("vacation start", nil, nil),
+
+		Sel:      element.NewInputSel("favorite color", options),
+		Radio:    element.NewInputRadio("favorite color", options),
+		Checkbox: element.NewInputCheckbox("favorite colors", options),
+	}
+	return b
 }
