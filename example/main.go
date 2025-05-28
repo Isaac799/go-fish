@@ -66,11 +66,12 @@ func setupPond() gofish.Pond {
 		regexp.MustCompile("[input]"): {
 			Bait: inputs,
 			Tackle: template.FuncMap{
-				"PrintDateTime": element.PrintDateTime,
-				"PrintDate":     element.PrintDate,
-				"PrintTime":     element.PrintTime,
-				"InputPickOne":  element.InputPickOne,
-				"InputPickMany": element.InputPickMany,
+				"PrintDateTime":  element.PrintDateTime,
+				"PrintDate":      element.PrintDate,
+				"PrintTime":      element.PrintTime,
+				"InputPickOne":   element.InputPickOne,
+				"InputPickMany":  element.InputPickMany,
+				"InputJoinComma": element.InputJoinComma,
 			},
 		},
 	}

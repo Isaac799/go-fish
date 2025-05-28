@@ -81,6 +81,8 @@ type variousInputs struct {
 	Time     element.InputTime
 	DateTime element.InputDateTime
 	Color    element.InputColor
+	Hidden   element.InputHidden
+	File     element.InputFile
 }
 
 func inputs(_ *http.Request) any {
@@ -107,6 +109,8 @@ func inputs(_ *http.Request) any {
 	timeEl := element.NewInputTime("clock in")
 	datetimeEl := element.NewInputDateTime("vacation start")
 	colorEl := element.NewInputColor("backup color")
+	hiddenEl := element.NewInputHidden("secret", "cat and mouse")
+	fileEl := element.NewInputFile("profile photo")
 
 	return variousInputs{
 		Text:     textEl,
@@ -119,5 +123,7 @@ func inputs(_ *http.Request) any {
 		Time:     timeEl,
 		DateTime: datetimeEl,
 		Color:    colorEl,
+		File:     fileEl,
+		Hidden:   hiddenEl,
 	}
 }
