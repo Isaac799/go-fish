@@ -80,6 +80,7 @@ type variousInputs struct {
 	Date     element.InputDate
 	Time     element.InputTime
 	DateTime element.InputDateTime
+	Color    element.InputColor
 }
 
 func inputs(_ *http.Request) any {
@@ -105,6 +106,7 @@ func inputs(_ *http.Request) any {
 	dateEl := element.NewInputDate("birthday")
 	timeEl := element.NewInputTime("clock in")
 	datetimeEl := element.NewInputDateTime("vacation start")
+	colorEl := element.NewInputColor("backup color")
 
 	return variousInputs{
 		Text:     textEl,
@@ -116,5 +118,6 @@ func inputs(_ *http.Request) any {
 		Date:     dateEl,
 		Time:     timeEl,
 		DateTime: datetimeEl,
+		Color:    colorEl,
 	}
 }

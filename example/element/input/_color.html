@@ -1,0 +1,15 @@
+<div>
+    {{if .Label}}
+    <label for="{{.ID}}">
+        {{.Label}}
+    </label>
+    {{end}}
+    <input
+        type="color"
+        name="{{.Key}}"
+        id="{{.ID}}"
+        value="{{.Value}}"
+        {{if .Disabled}} disabled {{end}}
+        {{if .Required}} required {{end}}
+    >
+</div>
