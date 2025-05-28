@@ -225,30 +225,6 @@ func newRadioCheckbox[T Printable](kind InputKind, name string, options []T) HTM
 	return div
 }
 
-// PrintDate prints date in the way HTML expects
-func PrintDate(t *time.Time) string {
-	if t == nil {
-		return ""
-	}
-	return t.Format("2006-01-02")
-}
-
-// PrintTime prints time in the way HTML expects
-func PrintTime(t *time.Time) string {
-	if t == nil {
-		return ""
-	}
-	return t.Format("15:04")
-}
-
-// PrintDateTime prints date time in the way HTML expects
-func PrintDateTime(t *time.Time) string {
-	if t == nil {
-		return ""
-	}
-	return t.Format("2006-01-02T15:04")
-}
-
 // InputPickOne allows comparison in templates of a a single selection
 // say from select or radio
 func InputPickOne(a, b int) bool {
@@ -270,125 +246,10 @@ func InputJoinComma(s []string) string {
 	return strings.Join(s, ",")
 }
 
-// Value returns the raw string value of an element
-func (el *HTMLElement) Value() string {
-	if el.Attributes == nil {
-		return ""
-	}
-	s, exists := el.Attributes["value"]
-	if !exists {
-		return ""
-	}
-	return s
-}
-
-// SetValue sets the value attribute of an element.
-// If its attributes are nil it will create them.
-func (el *HTMLElement) SetValue(s string) {
-	if el.Attributes == nil {
-		el.Attributes = make(map[AttributeKey]string, 1)
-	}
-	el.Attributes["value"] = s
-}
-
-// InputChild gives the first child with the input related tag
-func (el *HTMLElement) InputChild() *HTMLElement {
-	if el.Children == nil {
-		return nil
-	}
-	for _, c := range el.Children {
-		if c.Tag == "input" {
-			return &c
-		}
-		if c.Tag == "select" {
-			return &c
-		}
-		if c.Tag == "textarea" {
-			return &c
-		}
-	}
-	return nil
-}
-
-// SetTime will set the value attribute of an element to a specific time
-// depending on the type of input. Err only if the input is not a time.
-// If its attributes are nil it will create them.
-// Nil times are empty string, which HTML treats as empty.
-func (el *HTMLElement) SetTime(t *time.Time) error {
-	if el.Attributes == nil {
-		el.Attributes = make(map[AttributeKey]string)
-	}
-	if t == nil {
-		_, exists := el.Attributes["value"]
-		if !exists {
-			return nil
-		}
-		el.Attributes["value"] = ""
-		return nil
-	}
-	if el.Tag == string(InputKindDate) {
-		el.Attributes["value"] = PrintDate(t)
-		return nil
-	}
-	if el.Tag == string(InputKindTime) {
-		el.Attributes["value"] = PrintTime(t)
-		return nil
-	}
-	if el.Tag == string(InputKindDateTime) {
-		el.Attributes["value"] = PrintDateTime(t)
-		return nil
-	}
-	return ErrNotInputKindTime
-}
-
 // NewInputText is a div element with labeled text child
-func NewInputText(name string, minLen, maxLen uint) HTMLElement {
-	el := newInput(InputKindText, name)
-	input := el.InputChild()
-	input.Attributes["minLength"] = fmt.Sprintf("%d", minLen)
-	input.Attributes["maxLength"] = fmt.Sprintf("%d", maxLen)
-	return el
-}
-
-// NewInputPassword is a div element with labeled password child
-func NewInputPassword(name string, minLen, maxLen uint) HTMLElement {
-	el := newInput(InputKindPassword, name)
-	input := el.InputChild()
-	input.Attributes["minLength"] = fmt.Sprintf("%d", minLen)
-	input.Attributes["maxLength"] = fmt.Sprintf("%d", maxLen)
-	return el
-}
-
-// NewInputEmail is a div element with labeled email child
-func NewInputEmail(name string, minLen, maxLen uint) HTMLElement {
-	el := newInput(InputKindEmail, name)
-	input := el.InputChild()
-	input.Attributes["minLength"] = fmt.Sprintf("%d", minLen)
-	input.Attributes["maxLength"] = fmt.Sprintf("%d", maxLen)
-	return el
-}
-
-// NewInputSearch is a div element with labeled search child
-func NewInputSearch(name string, minLen, maxLen uint) HTMLElement {
-	el := newInput(InputKindSearch, name)
-	input := el.InputChild()
-	input.Attributes["minLength"] = fmt.Sprintf("%d", minLen)
-	input.Attributes["maxLength"] = fmt.Sprintf("%d", maxLen)
-	return el
-}
-
-// NewInputTel is a div element with labeled tel child
-func NewInputTel(name string, minLen, maxLen uint) HTMLElement {
-	el := newInput(InputKindTel, name)
-	input := el.InputChild()
-	input.Attributes["minLength"] = fmt.Sprintf("%d", minLen)
-	input.Attributes["maxLength"] = fmt.Sprintf("%d", maxLen)
-	return el
-}
-
-// NewInputURL is a div element with labeled url child
-func NewInputURL(name string, minLen, maxLen uint) HTMLElement {
-	el := newInput(InputKindURL, name)
+// To be called with [ text | password | email | search | tel | url ]
+func NewInputText(name string, kind InputKind, minLen, maxLen uint) HTMLElement {
+	el := newInput(kind, name)
 	input := el.InputChild()
 	input.Attributes["minLength"] = fmt.Sprintf("%d", minLen)
 	input.Attributes["maxLength"] = fmt.Sprintf("%d", maxLen)
@@ -422,7 +283,7 @@ func NewInputColor(name string) HTMLElement {
 // NewInputHidden gives a hidden input element
 func NewInputHidden(name string, value string) HTMLElement {
 	el := newInput(InputKindHidden, name)
-	el.InputChild().SetValue(value)
+	el.InputChild().Attributes.SetValue(value)
 	return el
 }
 

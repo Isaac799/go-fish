@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	element "github.com/Isaac799/go-fish/example/element/input"
+	element "github.com/Isaac799/go-fish/example/element"
 )
 
 type user struct {
@@ -93,7 +93,7 @@ func inputs(_ *http.Request) any {
 	}
 
 	b := variousInputs{
-		Text:     element.NewInputText("name", 0, 30),
+		Text:     element.NewInputText("name", element.InputKindText, 0, 30),
 		Textarea: element.NewInputTextarea("bio", 0, 30, 30, 5),
 		Num:      element.NewInputNumber("cell", 0, 30),
 		Color:    element.NewInputColor("favorite color"),
