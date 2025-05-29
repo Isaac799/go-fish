@@ -97,6 +97,20 @@ func (a Attributes) SetValue(s string) error {
 	return nil
 }
 
+// SetChecked sets the checked attribute of an element.
+// If its attributes are nil it will create them.
+func (a Attributes) SetChecked(b bool) error {
+	if a == nil {
+		return ErrAttributesNil
+	}
+	if b {
+		a["checked"] = "true"
+	} else {
+		a["checked"] = "false"
+	}
+	return nil
+}
+
 // SetTime will set the value attribute of an element to a specific time
 // depending on the type of input. Err only if the input is not a time.
 // If its attributes are nil it will create them.

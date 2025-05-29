@@ -2,11 +2,13 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"regexp"
 	"text/template"
 
+	"github.com/Isaac799/go-fish/example/bridge"
 	gofish "github.com/Isaac799/go-fish/internal"
 )
 
@@ -63,7 +65,10 @@ func setupPond() gofish.Pond {
 			},
 		},
 		regexp.MustCompile("[input]"): {
-			Bait: inputs,
+			Bait: func(_ *http.Request) any {
+				form := exampleForm()
+				return form
+			},
 		},
 	}
 
@@ -78,6 +83,19 @@ func main() {
 	verbose := true
 
 	mux := pond.CastLines(verbose)
+
+	mux.HandleFunc("/submit/test", func(w http.ResponseWriter, r *http.Request) {
+		form := exampleForm()
+		s := bridge.FormFromRequest(r, form)
+		b, err := json.Marshal(s)
+		if err != nil {
+			fmt.Print(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(b)
+	})
 
 	fmt.Println("gone fishing")
 	http.ListenAndServe(":8080", mux)

@@ -1,17 +1,1 @@
-{{if .Tag}}
-    {{if .SelfClosing}}
-        <{{.Tag}} {{range $key, $value := .Attributes}} {{$key}}="{{$value}}" {{end}} />
-        {{if .Children}}
-            {{range $key, $value := .Children}} 
-                {{template "_element" $value}} 
-            {{end}}
-        {{end}}
-    {{else}}
-        <{{.Tag}} {{range $key, $value := .Attributes}} {{$key}}="{{$value}}" {{end}}> 
-            {{.InnerText}}
-            {{range $key, $value := .Children}} 
-                {{template "_element" $value}} 
-            {{end}}
-        </{{.Tag}}>
-    {{end}}
-{{end}}
+{{if .Tag}}{{if .SelfClosing}}<{{.Tag}}{{range $key, $value := .Attributes}} {{$key}}="{{$value}}" {{end}} />{{if .Children}}{{range $key, $value := .Children}}{{template "_element" $value}}{{end}}{{end}}{{else}}<{{.Tag}} {{range $key, $value := .Attributes}} {{$key}}="{{$value}}" {{end}}>{{.InnerText}}{{range $key, $value := .Children}} {{template "_element" $value}}{{end}}</{{.Tag}}>{{end}}{{end}}

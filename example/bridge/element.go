@@ -1,5 +1,7 @@
 package bridge
 
+import "slices"
+
 // HTMLElement is key-value pairs that make up an element
 type HTMLElement struct {
 	// Tag is the html tag
@@ -23,19 +25,72 @@ func NewHTMLElement(tag string) HTMLElement {
 	}
 }
 
-// InputChild gives the first child with the input related tag
-func (el *HTMLElement) InputChild() *HTMLElement {
+// EnsureAttributes ensures attributes are not nil before usage
+func (el *HTMLElement) EnsureAttributes() {
+	if el.Attributes != nil {
+		return
+	}
+	el.Attributes = make(Attributes)
+}
+
+func (el *HTMLElement) findInput(count *uint, occurrence uint) *HTMLElement {
 	inputTags := []string{"input", "select", "textarea"}
 
-	if el.Children == nil {
-		return nil
-	}
-	for _, c := range el.Children {
-		for _, tag := range inputTags {
-			if c.Tag == tag {
-				return &c
+	if el.Children != nil {
+		for i := range el.Children {
+			d := el.Children[i].findInput(count, occurrence)
+			if d == nil {
+				continue
 			}
+			return d
 		}
 	}
-	return nil
+
+	if !slices.Contains(inputTags, el.Tag) {
+		return nil
+	}
+
+	if *count != occurrence {
+		*count++
+		return nil
+	}
+
+	return el
+}
+
+// FindInput finds the nth occurrence of an input searching nested
+// Useful when working with checkboxes and such
+func (el *HTMLElement) FindInput(occurrence uint) *HTMLElement {
+	var c uint = 1
+	return el.findInput(&c, occurrence)
+}
+
+// SetValue finds the nth occurrence of an input searching nested
+// and modifies the value attribute.
+func (el *HTMLElement) SetValue(occurrence uint, s string) {
+	var c uint = 1
+	input := el.findInput(&c, occurrence)
+	if input == nil {
+		return
+	}
+	if input.Tag == "textarea" {
+		input.InnerText = s
+		return
+	}
+	input.EnsureAttributes()
+	input.Attributes.SetValue(s)
+	return
+}
+
+// SetChecked finds the nth occurrence of an input searching nested
+// and modifies the checked attribute
+func (el *HTMLElement) SetChecked(occurrence uint, b bool) {
+	var c uint = 1
+	input := el.findInput(&c, occurrence)
+	if input == nil {
+		return
+	}
+	input.EnsureAttributes()
+	input.Attributes.SetChecked(b)
+	return
 }
