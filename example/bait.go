@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	element "github.com/Isaac799/go-fish/example/element"
+	bridge "github.com/Isaac799/go-fish/example/bridge"
 )
 
 type user struct {
@@ -71,18 +71,18 @@ func (s simpleSelect) Value() any {
 }
 
 type variousInputs struct {
-	Text     element.HTMLElement
-	Textarea element.HTMLElement
-	Num      element.HTMLElement
-	Sel      element.HTMLElement
-	Radio    element.HTMLElement
-	Checkbox element.HTMLElement
-	Date     element.HTMLElement
-	Time     element.HTMLElement
-	DateTime element.HTMLElement
-	Color    element.HTMLElement
-	Hidden   element.HTMLElement
-	File     element.HTMLElement
+	Text     bridge.HTMLElement
+	Textarea bridge.HTMLElement
+	Num      bridge.HTMLElement
+	Sel      bridge.HTMLElement
+	Radio    bridge.HTMLElement
+	Checkbox bridge.HTMLElement
+	Date     bridge.HTMLElement
+	Time     bridge.HTMLElement
+	DateTime bridge.HTMLElement
+	Color    bridge.HTMLElement
+	Hidden   bridge.HTMLElement
+	File     bridge.HTMLElement
 }
 
 func inputs(_ *http.Request) any {
@@ -93,20 +93,20 @@ func inputs(_ *http.Request) any {
 	}
 
 	b := variousInputs{
-		Text:     element.NewInputText("name", element.InputKindText, 0, 30),
-		Textarea: element.NewInputTextarea("bio", 0, 30, 30, 5),
-		Num:      element.NewInputNumber("cell", 0, 30),
-		Color:    element.NewInputColor("favorite color"),
-		File:     element.NewInputFile("profile picture"),
-		Hidden:   element.NewInputHidden("shh", "cat and mouse"),
+		Text:     bridge.NewInputText("name", bridge.InputKindText, 0, 30),
+		Textarea: bridge.NewInputTextarea("bio", 0, 30, 30, 5),
+		Num:      bridge.NewInputNumber("cell", 0, 30),
+		Color:    bridge.NewInputColor("favorite color"),
+		File:     bridge.NewInputFile("profile picture"),
+		Hidden:   bridge.NewInputHidden("shh", "cat and mouse"),
 
-		Date:     element.NewInputDate("birthday", nil, nil),
-		Time:     element.NewInputTime("clock in", nil, nil),
-		DateTime: element.NewInputDateTime("vacation start", nil, nil),
+		Date:     bridge.NewInputDate("birthday", nil, nil),
+		Time:     bridge.NewInputTime("clock in", nil, nil),
+		DateTime: bridge.NewInputDateTime("vacation start", nil, nil),
 
-		Sel:      element.NewInputSel("favorite color", options),
-		Radio:    element.NewInputRadio("favorite color", options),
-		Checkbox: element.NewInputCheckbox("favorite colors", options),
+		Sel:      bridge.NewInputSel("favorite color", options),
+		Radio:    bridge.NewInputRadio("favorite color", options),
+		Checkbox: bridge.NewInputCheckbox("favorite colors", options),
 	}
 	return b
 }

@@ -1,4 +1,4 @@
-package element
+package bridge
 
 import (
 	"errors"
@@ -64,6 +64,19 @@ const (
 
 func newInput(kind InputKind, name string) HTMLElement {
 	id := fmt.Sprintf("id-%s", name)
+
+	if kind == InputKindHidden {
+		return HTMLElement{
+			Tag:         "input",
+			SelfClosing: true,
+			Attributes: map[AttributeKey]string{
+				ID:    id,
+				Type:  string(kind),
+				Name:  name,
+				Value: "",
+			},
+		}
+	}
 
 	label := HTMLElement{
 		Tag:       "label",
@@ -283,7 +296,7 @@ func NewInputColor(name string) HTMLElement {
 // NewInputHidden gives a hidden input element
 func NewInputHidden(name string, value string) HTMLElement {
 	el := newInput(InputKindHidden, name)
-	el.InputChild().Attributes.SetValue(value)
+	el.Attributes.SetValue(value)
 	return el
 }
 

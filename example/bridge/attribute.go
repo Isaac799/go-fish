@@ -1,4 +1,10 @@
-package element
+// Package bridge is an simple abstract on HTML concepts to close the gap
+// between Go and HTML. It can generate the HTML and provide functionality
+// to grantee the user experience matches what the server expects.
+// Imagine a well defined form with seamless front-back validation, or a
+// powerful table with features (e.g. pagination) implemented directly. Or
+// even navigation links that match our available routes.
+package bridge
 
 import (
 	"errors"

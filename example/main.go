@@ -35,7 +35,7 @@ func setupPond() gofish.Pond {
 	}
 
 	elementPond, err := gofish.NewPond(
-		"element",
+		"bridge",
 		gofish.NewPondOptions{
 			GlobalSmallFish: true,
 		},

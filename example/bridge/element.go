@@ -1,5 +1,4 @@
-// Package element is an simple abstract on HTML element
-package element
+package bridge
 
 // HTMLElement is key-value pairs that make up an element
 type HTMLElement struct {
@@ -26,18 +25,16 @@ func NewHTMLElement(tag string) HTMLElement {
 
 // InputChild gives the first child with the input related tag
 func (el *HTMLElement) InputChild() *HTMLElement {
+	inputTags := []string{"input", "select", "textarea"}
+
 	if el.Children == nil {
 		return nil
 	}
 	for _, c := range el.Children {
-		if c.Tag == "input" {
-			return &c
-		}
-		if c.Tag == "select" {
-			return &c
-		}
-		if c.Tag == "textarea" {
-			return &c
+		for _, tag := range inputTags {
+			if c.Tag == tag {
+				return &c
+			}
 		}
 	}
 	return nil
