@@ -7,9 +7,12 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
+	"time"
 )
 
 var (
+	errFoundErr         = errors.New("an err was found")
+	errNotEqual         = errors.New("a and b where not equal")
 	errUnexpectedValue  = errors.New("value was not as expected")
 	errUnexpectedLength = errors.New("length was not as expected")
 )
@@ -82,7 +85,30 @@ func formValEq(t *testing.T, m map[string][]string, i int, key string, value str
 	}
 }
 
-func TestFormAgainstRequest(t *testing.T) {
+func eq[T comparable](t *testing.T, a, b T) {
+	if a == b {
+		return
+	}
+	fmt.Println(a, b)
+	t.Fatal(errNotEqual)
+}
+
+func eqIndexes(t *testing.T, a, b []int) {
+	eq(t, len(a), len(b))
+	for i := range a {
+		eq(t, a[i], b[i])
+	}
+}
+
+func noErr(t *testing.T, err error) {
+	if err == nil {
+		return
+	}
+	fmt.Printf(err.Error())
+	t.Fatal(errFoundErr)
+}
+
+func TestParseRequest(t *testing.T) {
 	form := mockEmptyForm()
 	r := mockFormSubmitReq()
 	formValues := FormFromRequest(r, form)
@@ -98,4 +124,83 @@ func TestFormAgainstRequest(t *testing.T) {
 	formValEq(t, formValues, 0, "radio color", "1")
 	formValEq(t, formValues, 0, "cb color", "0")
 	formValEq(t, formValues, 1, "cb color", "2")
+}
+
+func TestParseString(t *testing.T) {
+	form := mockEmptyForm()
+	r := mockFormSubmitReq()
+	formValues := FormFromRequest(r, form)
+
+	s, err := formValues.String("name")
+	noErr(t, err)
+	eq(t, s, "Jane Doe")
+}
+
+func TestParseNumber(t *testing.T) {
+	form := mockEmptyForm()
+	r := mockFormSubmitReq()
+	formValues := FormFromRequest(r, form)
+
+	n, err := formValues.Number("favorite number")
+	noErr(t, err)
+	eq(t, n, 27)
+}
+
+func TestParseDate(t *testing.T) {
+	form := mockEmptyForm()
+	r := mockFormSubmitReq()
+	formValues := FormFromRequest(r, form)
+
+	d, err := formValues.Date("birthday")
+	noErr(t, err)
+	expectedTime, _ := time.Parse(TimeFormatHTMLDate, "1980-01-01")
+	eq(t, *d, expectedTime)
+}
+
+func TestParseTime(t *testing.T) {
+	form := mockEmptyForm()
+	r := mockFormSubmitReq()
+	formValues := FormFromRequest(r, form)
+
+	d, err := formValues.Time("clock in")
+	noErr(t, err)
+	expectedTime, _ := time.Parse(TimeFormatHTMLTime, "10:15")
+	eq(t, *d, expectedTime)
+}
+
+func TestParseDateTime(t *testing.T) {
+	form := mockEmptyForm()
+	r := mockFormSubmitReq()
+	formValues := FormFromRequest(r, form)
+
+	d, err := formValues.DateTime("vacation start")
+	noErr(t, err)
+	expectedTime, _ := time.Parse(TimeFormatHTMLDateTime, "1999-01-01T10:15")
+	eq(t, *d, expectedTime)
+}
+
+func TestFormIndex(t *testing.T) {
+	form := mockEmptyForm()
+	r := mockFormSubmitReq()
+	formValues := FormFromRequest(r, form)
+
+	indexes, err := formValues.Indexes("cb color")
+	noErr(t, err)
+	expectedIndexes := []int{0, 2}
+	eqIndexes(t, indexes, expectedIndexes)
+}
+
+func TestParseSelection(t *testing.T) {
+	form := mockEmptyForm()
+	r := mockFormSubmitReq()
+	formValues := FormFromRequest(r, form)
+
+	selectedColor, err := FormSelected(formValues, "sel color", mockColors)
+	noErr(t, err)
+
+	if len(selectedColor) != 1 {
+		t.Fatal(errUnexpectedLength)
+	}
+
+	eq(t, selectedColor[0].Print(), mockColors[0].Print())
 }
