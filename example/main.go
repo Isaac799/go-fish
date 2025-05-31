@@ -18,6 +18,7 @@ type anchors struct {
 	Season     bridge.HTMLElement
 	User       bridge.HTMLElement
 	Form       bridge.HTMLElement
+	Table      bridge.HTMLElement
 	UserID     bridge.HTMLElement
 	UserIDEdit bridge.HTMLElement
 }
@@ -27,6 +28,7 @@ func newAnchors[T, K any](p *gofish.Pond[T, K]) anchors {
 		Home:       bridge.NewAnchor("Home", "/", p),
 		Water:      bridge.NewAnchor("Water", "/water", p),
 		Season:     bridge.NewAnchor("Seasons", "/season", p),
+		Table:      bridge.NewAnchor("Table", "/table", p),
 		Form:       bridge.NewAnchor("Form", "/form", p),
 		User:       bridge.NewAnchor("User", "/user", p),
 		UserID:     bridge.NewAnchor("View User", "/user/3", p),
@@ -98,6 +100,9 @@ func main() {
 		},
 		regexp.MustCompile("/form"): {
 			Bait: exampleFormBait,
+		},
+		regexp.MustCompile("/table"): {
+			Bait: tableInfo,
 		},
 	}
 

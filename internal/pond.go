@@ -129,9 +129,9 @@ func collect[T, K any](p *Pond[T, K], pathBase string) error {
 
 	isRoot := pathBase == p.templateDir
 
-	smallFishes := []Fish[K]{}
+	smallFishes := []*Fish[K]{}
+	bigFishes := []*Fish[K]{}
 
-	pageItems := []*Fish[K]{}
 	dirs := []os.DirEntry{}
 
 	for _, e := range entries {
@@ -149,11 +149,11 @@ func collect[T, K any](p *Pond[T, K], pathBase string) error {
 		}
 
 		if item.kind == FishKindTuna {
-			pageItems = append(pageItems, item)
+			bigFishes = append(bigFishes, item)
 			continue
 		}
 
-		smallFishes = append(smallFishes, *item)
+		smallFishes = append(smallFishes, item)
 	}
 
 	if p.globalSmallFish == nil && isRoot {
@@ -161,7 +161,7 @@ func collect[T, K any](p *Pond[T, K], pathBase string) error {
 			p.globalSmallFish = make(map[string]*Fish[K], len(smallFishes))
 		}
 		for _, f := range smallFishes {
-			p.globalSmallFish[f.filePath] = &f
+			p.globalSmallFish[f.filePath] = f
 		}
 
 	} else if p.options.GlobalSmallFish {
@@ -169,13 +169,13 @@ func collect[T, K any](p *Pond[T, K], pathBase string) error {
 			p.globalSmallFish = make(map[string]*Fish[K], len(smallFishes))
 		}
 		for _, c := range smallFishes {
-			p.globalSmallFish[c.filePath] = &c
+			p.globalSmallFish[c.filePath] = c
 		}
 	}
 
-	for _, pageItem := range pageItems {
+	for _, pageItem := range bigFishes {
 		for _, c := range smallFishes {
-			pageItem.children = append(pageItem.children, c)
+			pageItem.children = append(pageItem.children, *c)
 		}
 
 		itemsDeref := p.fish
