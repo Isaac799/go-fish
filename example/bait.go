@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/Isaac799/go-fish/example/bridge"
 )
 
 type user struct {
@@ -17,23 +19,35 @@ type water struct {
 	RotateDeg  int
 }
 
-func queriedSeason(r *http.Request) any {
+type fishData struct {
+	Season string
+	User   *user
+	Water  *water
+	Form   *bridge.HTMLElement
+}
+
+func queriedSeason(r *http.Request) *fishData {
+	data := fishData{}
 	season, ok := r.Context().Value(queryCtxKey).(string)
 	if !ok {
 		return nil
 	}
-	return season
+	data.Season = season
+	return &data
 }
 
-func userInfo(r *http.Request) any {
+func userInfo(r *http.Request) *fishData {
+	data := fishData{}
 	user, ok := r.Context().Value(userCtxKey).(user)
 	if !ok {
 		return nil
 	}
-	return user
+	data.User = &user
+	return &data
 }
 
-func waterInfo(r *http.Request) any {
+func waterInfo(r *http.Request) *fishData {
+	data := fishData{}
 	posStr := r.URL.Query().Get("pos")
 	offsetStr := r.URL.Query().Get("off")
 
@@ -44,14 +58,17 @@ func waterInfo(r *http.Request) any {
 
 	off, err := strconv.Atoi(offsetStr)
 	if err != nil {
-		return w
+		data.Water = &w
+		return &data
 	}
 	pos, err := strconv.Atoi(posStr)
 	if err != nil {
-		return w
+		data.Water = &w
+		return &data
 	}
 
 	w.RotateDeg = pos + off
 
-	return w
+	data.Water = &w
+	return &data
 }

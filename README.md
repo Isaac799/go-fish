@@ -19,7 +19,7 @@ The main 4 things are:
 	- Not cahced
 - **Clown** is a decorative fish. Used in head of document
 	- Identified by mime `[ text/css | text/javascript ]`
-	- Is cached & name from hash
+	- Is cached & use version as hash
 - **Anchovy** is supportive of the tuna
 	- Identified by mime `[ image | audio | video ]`
 	- Is cached

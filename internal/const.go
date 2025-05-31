@@ -35,3 +35,10 @@ var (
 	// ErrInvalidExtension is given if a file is discoverd that I did not anticipate
 	ErrInvalidExtension = errors.New("invalid file extension")
 )
+
+var fishKindStr = map[int]string{
+	FishKindTuna:    "Tuna",
+	FishKindSardine: "Sardine",
+	FiskKindClown:   "Clown",
+	FiskKindAnchovy: "Anchovy",
+}

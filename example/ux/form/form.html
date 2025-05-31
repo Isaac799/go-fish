@@ -1,1 +1,14 @@
-{{template "_element" .}}
+<div class="fc g2 m2">
+    <!-- Top Bar -->
+    <div class="fc g2">
+        <h1>
+            From
+        </h1>
+
+        {{ template "_nav" . }}
+    </div>
+    <p>
+        this page demos a form with various inputs
+    </p>
+    {{template "_element" .Local.Form }}
+</div>

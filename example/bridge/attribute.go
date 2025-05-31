@@ -65,6 +65,8 @@ const (
 	Pattern AttributeKey = "pattern"
 	// Placeholder is the html attribute placeholder
 	Placeholder AttributeKey = "placeholder"
+	// HRef is the html attribute href
+	HRef AttributeKey = "href"
 )
 
 // Ensure helps safe access of attributes.

@@ -12,8 +12,34 @@ import (
 	gofish "github.com/Isaac799/go-fish/internal"
 )
 
-func setupPond() gofish.Pond {
-	uxPond, err := gofish.NewPond(
+type anchors struct {
+	Home       bridge.HTMLElement
+	Water      bridge.HTMLElement
+	Season     bridge.HTMLElement
+	User       bridge.HTMLElement
+	Form       bridge.HTMLElement
+	UserID     bridge.HTMLElement
+	UserIDEdit bridge.HTMLElement
+}
+
+func newAnchors[T, K any](p *gofish.Pond[T, K]) anchors {
+	return anchors{
+		Home:       bridge.NewAnchor("Home", "/", p),
+		Water:      bridge.NewAnchor("Water", "/water", p),
+		Season:     bridge.NewAnchor("Seasons", "/season", p),
+		Form:       bridge.NewAnchor("Form", "/form", p),
+		User:       bridge.NewAnchor("User", "/user", p),
+		UserID:     bridge.NewAnchor("View User", "/user/3", p),
+		UserIDEdit: bridge.NewAnchor("Edit User", "/user/3/edit", p),
+	}
+}
+
+type GlobalData struct {
+	Anchors anchors
+}
+
+func setupPond[T, K any]() gofish.Pond[T, K] {
+	uxPond, err := gofish.NewPond[T, K](
 		"ux",
 		gofish.NewPondOptions{
 			Licenses: []gofish.License{
@@ -25,7 +51,7 @@ func setupPond() gofish.Pond {
 		panic(err)
 	}
 
-	assetPond, err := gofish.NewPond(
+	assetPond, err := gofish.NewPond[T, K](
 		"asset",
 		gofish.NewPondOptions{
 			GlobalSmallFish: true,
@@ -36,7 +62,7 @@ func setupPond() gofish.Pond {
 		panic(err)
 	}
 
-	elementPond, err := gofish.NewPond(
+	elementPond, err := gofish.NewPond[T, K](
 		"bridge",
 		gofish.NewPondOptions{
 			GlobalSmallFish: true,
@@ -46,15 +72,21 @@ func setupPond() gofish.Pond {
 		panic(err)
 	}
 
-	assetPond.FlowsInto(&uxPond)
-	elementPond.FlowsInto(&uxPond)
+	gofish.FlowsInto(&assetPond, &uxPond)
+	gofish.FlowsInto(&elementPond, &uxPond)
 
-	stockFish := map[*regexp.Regexp]gofish.Fish{
+	return uxPond
+}
+
+func main() {
+	pond := setupPond[GlobalData, *fishData]()
+
+	stockFish := map[*regexp.Regexp]gofish.Fish[*fishData]{
 		regexp.MustCompile("season"): {
 			Licenses: []gofish.License{optionQuery},
 			Bait:     queriedSeason,
 		},
-		regexp.MustCompile("user.id"): {
+		regexp.MustCompile("user/.id"): {
 			Bait:     userInfo,
 			Licenses: []gofish.License{requireUser},
 		},
@@ -64,25 +96,25 @@ func setupPond() gofish.Pond {
 				"printTime": printTime,
 			},
 		},
-		regexp.MustCompile("[input]"): {
-			Bait: func(_ *http.Request) any {
-				form := exampleForm()
-				return form
-			},
+		regexp.MustCompile("/form"): {
+			Bait: exampleFormBait,
 		},
 	}
 
-	uxPond.Stock(stockFish)
+	gofish.StockPond(&pond, stockFish)
 
-	return uxPond
-}
+	gd := GlobalData{
+		Anchors: newAnchors(&pond),
+	}
 
-func main() {
-	pond := setupPond()
+	pond.GlobalBait = func(_ *http.Request) GlobalData {
+		a := gd
+		return a
+	}
 
 	verbose := true
 
-	mux := pond.CastLines(verbose)
+	mux := gofish.CastLines(&pond, verbose)
 
 	mux.HandleFunc("/submit/test", func(w http.ResponseWriter, r *http.Request) {
 		form := exampleForm()

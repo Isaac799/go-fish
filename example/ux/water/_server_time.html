@@ -1,9 +1,13 @@
+{{if .Local.Water}} 
 <div
     hx-get="/water/_server_time"
     hx-swap="innerHTML"
     hx-trigger="every 5s"
 >
     <span>
-        <strong> Server Time:</strong> {{ printTime .ServerTime}}
+        <strong> Server Time:</strong> {{ printTime .Local.Water.ServerTime}}
     </span>
 </div>
+{{else}}
+Missing data
+{{end}}

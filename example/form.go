@@ -1,6 +1,10 @@
 package main
 
-import "github.com/Isaac799/go-fish/example/bridge"
+import (
+	"net/http"
+
+	"github.com/Isaac799/go-fish/example/bridge"
+)
 
 type exampleColor struct {
 	label string
@@ -9,6 +13,13 @@ type exampleColor struct {
 
 func (s exampleColor) Print() string {
 	return s.label
+}
+
+func exampleFormBait(r *http.Request) *fishData {
+	data := fishData{}
+	form := exampleForm()
+	data.Form = &form
+	return &data
 }
 
 func exampleForm() bridge.HTMLElement {

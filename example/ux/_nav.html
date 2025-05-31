@@ -1,11 +1,18 @@
-<div class="fr g1 border-bottom pb2">
-    <a href="/">Home</a>
+<div
+    class="fr fr-center g2 border-bottom pb2"
+    id="navTest"
+>
+    {{ template "_element" .Global.Anchors.Home }}
+    {{ template "_element" .Global.Anchors.Water }}
+    {{ template "_element" .Global.Anchors.Season }}
+    {{ template "_element" .Global.Anchors.User }}
+    {{ template "_element" .Global.Anchors.Form }}
 
-    <a href="/user">Users</a>
-
-    <a href="/season">Season</a>
-
-    <a href="/water">Water</a>
-
-    <a href="/form">Form Test</a>
+    <button
+        hx-get="/_nav"
+        hx-swap="outerHTML"
+        hx-target="#navTest"
+    >
+        Reload Nav
+    </button>
 </div>

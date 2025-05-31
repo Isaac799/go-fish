@@ -5,14 +5,14 @@
             Season
         </h1>
 
-        {{ template "_nav" }}
+        {{ template "_nav" . }}
     </div>
     <p>
         this page demos how a query param can change how the page is rendered
     </p>
     {{if .}}
     <span>
-        You queried: {{ . }}
+        You queried: {{ .Local.Season }}
     </span>
     {{else}}
     <span>
@@ -21,6 +21,6 @@
     {{end}}
 </div>
 
-{{if not .}}
+{{if not .Local.Season }}
 {{template "_dialog_season"}}
 {{end}}

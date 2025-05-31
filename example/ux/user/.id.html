@@ -5,7 +5,7 @@
             View User
         </h1>
 
-        {{ template "_nav" }}
+        {{ template "_nav" . }}
     </div>
 
     <div class="fr g2">
@@ -13,10 +13,10 @@
         <div class="fc g2">
             {{if .}}
             <h3>
-                {{ .LastName }}, {{ .FirstName }}
+                {{ .Local.User.LastName }}, {{ .Local.User.FirstName }}
             </h3>
             <div>
-                <a href="{{.ID}}/edit">Edit</a>
+                <a href="{{.Local.User.ID}}/edit">Edit</a>
             </div>
             {{else}}
             <div>
