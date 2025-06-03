@@ -27,21 +27,6 @@ var (
 // with helpful methods for parsing values.
 type ParsedForm map[string][]string
 
-// flatten recursively grabs elements
-func flatten(elements []HTMLElement) []*HTMLElement {
-	collected := []*HTMLElement{}
-	for _, el := range elements {
-		if el.Children != nil {
-			childKeys := flatten(el.Children)
-			for _, c := range childKeys {
-				collected = append(collected, c)
-			}
-		}
-		collected = append(collected, &el)
-	}
-	return collected
-}
-
 // FormKeys looks at all the children (recursively) and grabs the name-value
 // pairs. These attributes are expected for a form.
 func (el *HTMLElement) FormKeys() []string {

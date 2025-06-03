@@ -1,7 +1,5 @@
 package bridge
 
-import "slices"
-
 // HTMLElement is key-value pairs that make up an element
 type HTMLElement struct {
 	// Tag is the html tag
@@ -33,43 +31,11 @@ func (el *HTMLElement) EnsureAttributes() {
 	el.Attributes = make(Attributes)
 }
 
-func (el *HTMLElement) findInput(count *uint, occurrence uint) *HTMLElement {
-	inputTags := []string{"input", "select", "textarea"}
-
-	if el.Children != nil {
-		for i := range el.Children {
-			d := el.Children[i].findInput(count, occurrence)
-			if d == nil {
-				continue
-			}
-			return d
-		}
-	}
-
-	if !slices.Contains(inputTags, el.Tag) {
-		return nil
-	}
-
-	if *count != occurrence {
-		*count++
-		return nil
-	}
-
-	return el
-}
-
-// FindInput finds the nth occurrence of an input searching nested
-// Useful when working with checkboxes and such
-func (el *HTMLElement) FindInput(occurrence uint) *HTMLElement {
-	var c uint = 1
-	return el.findInput(&c, occurrence)
-}
-
 // SetValue finds the nth occurrence of an input searching nested
 // and modifies the value attribute.
 func (el *HTMLElement) SetValue(occurrence uint, s string) {
 	var c uint = 1
-	input := el.findInput(&c, occurrence)
+	input := el.findNth(&c, occurrence)
 	if input == nil {
 		return
 	}
@@ -78,7 +44,7 @@ func (el *HTMLElement) SetValue(occurrence uint, s string) {
 		return
 	}
 	input.EnsureAttributes()
-	input.Attributes.SetValue(s)
+	input.Attributes["value"] = s
 	return
 }
 
@@ -86,7 +52,7 @@ func (el *HTMLElement) SetValue(occurrence uint, s string) {
 // and modifies the checked attribute
 func (el *HTMLElement) SetChecked(occurrence uint, b bool) {
 	var c uint = 1
-	input := el.findInput(&c, occurrence)
+	input := el.findNth(&c, occurrence)
 	if input == nil {
 		return
 	}

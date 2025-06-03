@@ -263,7 +263,7 @@ func InputJoinComma(s []string) string {
 // To be called with [ text | password | email | search | tel | url ]
 func NewInputText(name string, kind InputKind, minLen, maxLen uint) HTMLElement {
 	el := newInput(kind, name)
-	input := el.FindInput(1)
+	input := el.FindFirst(LikeInput)
 	input.Attributes["minLength"] = fmt.Sprintf("%d", minLen)
 	input.Attributes["maxLength"] = fmt.Sprintf("%d", maxLen)
 	return el
@@ -272,7 +272,7 @@ func NewInputText(name string, kind InputKind, minLen, maxLen uint) HTMLElement 
 // NewInputTextarea is a div element with labeled textarea child
 func NewInputTextarea(name string, minLen, maxLen, col, row uint) HTMLElement {
 	el := newTextArea(name, col, row)
-	input := el.FindInput(1)
+	input := el.FindFirst(LikeInput)
 	input.Attributes["minLength"] = fmt.Sprintf("%d", minLen)
 	input.Attributes["maxLength"] = fmt.Sprintf("%d", maxLen)
 	return el
@@ -281,7 +281,7 @@ func NewInputTextarea(name string, minLen, maxLen, col, row uint) HTMLElement {
 // NewInputNumber is a div element with labeled number child
 func NewInputNumber(name string, min, max float32) HTMLElement {
 	el := newInput(InputKindNum, name)
-	input := el.FindInput(1)
+	input := el.FindFirst(LikeInput)
 	input.Attributes["min"] = fmt.Sprintf("%f", min)
 	input.Attributes["max"] = fmt.Sprintf("%f", max)
 	return el
@@ -296,7 +296,7 @@ func NewInputColor(name string) HTMLElement {
 // NewInputHidden gives a hidden input element
 func NewInputHidden(name string, value string) HTMLElement {
 	el := newInput(InputKindHidden, name)
-	el.Attributes.SetValue(value)
+	el.Attributes["value"] = value
 	return el
 }
 
@@ -309,7 +309,7 @@ func NewInputFile(name string) HTMLElement {
 // NewInputDate is a div element with labeled date child
 func NewInputDate(name string, min, max *time.Time) HTMLElement {
 	el := newInput(InputKindDate, name)
-	input := el.FindInput(1)
+	input := el.FindFirst(LikeInput)
 	input.Attributes["min"] = PrintDate(min)
 	input.Attributes["max"] = PrintDate(max)
 	return el
@@ -318,7 +318,7 @@ func NewInputDate(name string, min, max *time.Time) HTMLElement {
 // NewInputTime is a div element with labeled time child
 func NewInputTime(name string, min, max *time.Time) HTMLElement {
 	el := newInput(InputKindTime, name)
-	input := el.FindInput(1)
+	input := el.FindFirst(LikeInput)
 	input.Attributes["min"] = PrintTime(min)
 	input.Attributes["max"] = PrintTime(max)
 	return el
@@ -327,7 +327,7 @@ func NewInputTime(name string, min, max *time.Time) HTMLElement {
 // NewInputDateTime is a div element with labeled datetime-local child
 func NewInputDateTime(name string, min, max *time.Time) HTMLElement {
 	el := newInput(InputKindDateTime, name)
-	input := el.FindInput(1)
+	input := el.FindFirst(LikeInput)
 	input.Attributes["min"] = PrintDateTime(min)
 	input.Attributes["max"] = PrintDateTime(max)
 	return el

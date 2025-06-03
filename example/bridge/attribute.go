@@ -77,28 +77,6 @@ func (a Attributes) Ensure() Attributes {
 	return make(map[AttributeKey]string, 0)
 }
 
-// Value returns the raw string value of an element
-func (a Attributes) Value() (string, error) {
-	if a == nil {
-		return "", ErrAttributesNil
-	}
-	s, exists := a["value"]
-	if !exists {
-		return "", ErrValueDoesNotExist
-	}
-	return s, nil
-}
-
-// SetValue sets the value attribute of an element.
-// If its attributes are nil it will create them.
-func (a Attributes) SetValue(s string) error {
-	if a == nil {
-		return ErrAttributesNil
-	}
-	a["value"] = s
-	return nil
-}
-
 // SetChecked sets the checked attribute of an element.
 // If its attributes are nil it will create them.
 func (a Attributes) SetChecked(b bool) error {
