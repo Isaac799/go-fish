@@ -70,9 +70,20 @@ func tableInfo(_ *http.Request) *fishData {
 	if err != nil {
 		return nil
 	}
-	fd := fishData{
-		Table: tableEl,
+
+	state := map[string]string{
+		"page":        "0",
+		"limit":       "0",
+		"sort_name":   "0",
+		"filter_name": "0",
 	}
+
+	statefulTable := bridge.Stateful(*tableEl, state)
+
+	fd := fishData{
+		Table: &statefulTable,
+	}
+
 	return &fd
 }
 
