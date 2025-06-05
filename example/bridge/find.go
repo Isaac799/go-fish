@@ -84,7 +84,7 @@ var LikeTag = func(tag string) ElementLike {
 
 // HasAttribute is a small alias to see elements where an attribute is
 // non empty value
-var HasAttribute = func(key AttributeKey) ElementLike {
+var HasAttribute = func(key AttributeKey, value string) ElementLike {
 	return ElementLike(func(element *HTMLElement) bool {
 		if element.Attributes == nil {
 			return false
@@ -93,7 +93,22 @@ var HasAttribute = func(key AttributeKey) ElementLike {
 		if !exists {
 			return false
 		}
-		return v != ""
+		return v == value
+	})
+}
+
+// HasName is a small alias to find an element with a name
+// non empty value
+var HasName = func(name string) ElementLike {
+	return ElementLike(func(element *HTMLElement) bool {
+		if element.Attributes == nil {
+			return false
+		}
+		v, exists := element.Attributes["name"]
+		if !exists {
+			return false
+		}
+		return v == name
 	})
 }
 

@@ -109,9 +109,10 @@ func noErr(t *testing.T, err error) {
 }
 
 func TestParseRequest(t *testing.T) {
-	form := mockEmptyForm()
+	el := mockEmptyForm()
 	r := mockFormSubmitReq()
-	formValues := FormFromRequest(r, form)
+	el.FillForm(r)
+	formValues := el.Form()
 	formValEq(t, formValues, 0, "name", "Jane Doe")
 	formValEq(t, formValues, 0, "bio", "I am a writer")
 	formValEq(t, formValues, 0, "favorite number", "27")
@@ -129,7 +130,8 @@ func TestParseRequest(t *testing.T) {
 func TestParseString(t *testing.T) {
 	form := mockEmptyForm()
 	r := mockFormSubmitReq()
-	formValues := FormFromRequest(r, form)
+	form.FillForm(r)
+	formValues := form.Form()
 
 	s, err := formValues.String("name")
 	noErr(t, err)
@@ -139,9 +141,10 @@ func TestParseString(t *testing.T) {
 func TestParseNumber(t *testing.T) {
 	form := mockEmptyForm()
 	r := mockFormSubmitReq()
-	formValues := FormFromRequest(r, form)
+	form.FillForm(r)
+	formValues := form.Form()
 
-	n, err := formValues.Number("favorite number")
+	n, err := formValues.Int("favorite number")
 	noErr(t, err)
 	eq(t, n, 27)
 }
@@ -149,7 +152,8 @@ func TestParseNumber(t *testing.T) {
 func TestParseDate(t *testing.T) {
 	form := mockEmptyForm()
 	r := mockFormSubmitReq()
-	formValues := FormFromRequest(r, form)
+	form.FillForm(r)
+	formValues := form.Form()
 
 	d, err := formValues.Date("birthday")
 	noErr(t, err)
@@ -160,7 +164,8 @@ func TestParseDate(t *testing.T) {
 func TestParseTime(t *testing.T) {
 	form := mockEmptyForm()
 	r := mockFormSubmitReq()
-	formValues := FormFromRequest(r, form)
+	form.FillForm(r)
+	formValues := form.Form()
 
 	d, err := formValues.Time("clock in")
 	noErr(t, err)
@@ -171,7 +176,8 @@ func TestParseTime(t *testing.T) {
 func TestParseDateTime(t *testing.T) {
 	form := mockEmptyForm()
 	r := mockFormSubmitReq()
-	formValues := FormFromRequest(r, form)
+	form.FillForm(r)
+	formValues := form.Form()
 
 	d, err := formValues.DateTime("vacation start")
 	noErr(t, err)
@@ -182,7 +188,8 @@ func TestParseDateTime(t *testing.T) {
 func TestFormIndex(t *testing.T) {
 	form := mockEmptyForm()
 	r := mockFormSubmitReq()
-	formValues := FormFromRequest(r, form)
+	form.FillForm(r)
+	formValues := form.Form()
 
 	indexes, err := formValues.Indexes("cb color")
 	noErr(t, err)
@@ -193,7 +200,8 @@ func TestFormIndex(t *testing.T) {
 func TestParseSelection(t *testing.T) {
 	form := mockEmptyForm()
 	r := mockFormSubmitReq()
-	formValues := FormFromRequest(r, form)
+	form.FillForm(r)
+	formValues := form.Form()
 
 	selectedColor, err := FormSelected(formValues, "sel color", mockColors)
 	noErr(t, err)

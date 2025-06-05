@@ -1,6 +1,8 @@
 package bridge
 
-import "encoding/csv"
+import (
+	"encoding/csv"
+)
 
 // NewTable takes in a csv reader to build an HTML table.
 // Giving th consumer of this function all the power on how to

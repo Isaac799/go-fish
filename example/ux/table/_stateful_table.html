@@ -1,0 +1,7 @@
+{{if .Local.Table.Stateful}}
+<div>
+    {{ template "_element" .Local.Table.Stateful }}
+</div>
+{{else}}
+<p>No stateful table</p>
+{{end}}

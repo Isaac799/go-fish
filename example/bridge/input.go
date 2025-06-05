@@ -60,6 +60,9 @@ const (
 	InputKindRadio InputKind = "radio"
 	// InputKindCheckbox is for input tags with attribute type of checkbox
 	InputKindCheckbox InputKind = "checkbox"
+
+	// InputKindSubmit is for input tags with attribute type of submit
+	InputKindSubmit InputKind = "submit"
 )
 
 func newInput(kind InputKind, name string) HTMLElement {
@@ -158,9 +161,8 @@ func newSelect[T Printable](name string, options []T) HTMLElement {
 	input := HTMLElement{
 		Tag: "select",
 		Attributes: map[AttributeKey]string{
-			ID:    id,
-			Name:  name,
-			Value: "",
+			ID:   id,
+			Name: name,
 		},
 	}
 
