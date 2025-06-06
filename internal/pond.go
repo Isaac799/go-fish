@@ -97,7 +97,7 @@ func NewPond[T, K any](templateDirPath string, options NewPondOptions) (Pond[T, 
 	if p.licenses == nil {
 		// do this to avoid nil deref in handle funcs
 		// prefer this to checking for nil
-		p.licenses = make([]License, 0)
+		p.licenses = make([]License, 0, 0)
 	}
 
 	wd, err := os.Getwd()

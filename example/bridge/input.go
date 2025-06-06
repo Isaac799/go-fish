@@ -100,9 +100,8 @@ func newInput(kind InputKind, name string) HTMLElement {
 		},
 	}
 
-	children := make([]HTMLElement, 2)
-	children[0] = label
-	children[1] = input
+	children := make([]HTMLElement, 0, 2)
+	children = append(children, label, input)
 
 	div := HTMLElement{
 		Tag:      "div",
@@ -135,9 +134,8 @@ func newTextArea(name string, col, row uint) HTMLElement {
 		},
 	}
 
-	children := make([]HTMLElement, 2)
-	children[0] = label
-	children[1] = input
+	children := make([]HTMLElement, 0, 2)
+	children = append(children, label, input)
 
 	div := HTMLElement{
 		Tag:      "div",
@@ -180,9 +178,8 @@ func newSelect[T Printable](name string, options []T) HTMLElement {
 		input.Children = append(input.Children, el)
 	}
 
-	children := make([]HTMLElement, 2)
-	children[0] = label
-	children[1] = input
+	children := make([]HTMLElement, 0, 2)
+	children = append(children, label, input)
 
 	div := HTMLElement{
 		Tag:      "div",
@@ -198,8 +195,8 @@ func newRadioCheckbox[T Printable](kind InputKind, name string, options []T) HTM
 		InnerText: fmt.Sprintf("Choose %s:", name),
 	}
 
-	children := make([]HTMLElement, len(options)+1)
-	children[0] = legend
+	children := make([]HTMLElement, 0, len(options)+1)
+	children = append(children, legend)
 
 	for i, option := range options {
 		label := HTMLElement{
@@ -221,15 +218,14 @@ func newRadioCheckbox[T Printable](kind InputKind, name string, options []T) HTM
 			},
 		}
 
-		optionChildren := make([]HTMLElement, 2)
-		optionChildren[0] = label
-		optionChildren[1] = input
+		optionChildren := make([]HTMLElement, 0, 2)
+		optionChildren = append(optionChildren, label, input)
 
 		div := HTMLElement{
 			Tag:      "div",
 			Children: optionChildren,
 		}
-		children[i+1] = div
+		children = append(children, div)
 	}
 
 	div := HTMLElement{

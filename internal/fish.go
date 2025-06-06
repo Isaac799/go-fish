@@ -73,7 +73,7 @@ func Gobble[T any](f *Fish[T], f2 *Fish[T]) {
 		f.Bait = f2.Bait
 	}
 	if f.Licenses == nil {
-		f.Licenses = make([]License, len(f2.Licenses))
+		f.Licenses = make([]License, 0, len(f2.Licenses))
 	}
 	for _, l := range f2.Licenses {
 		f.Licenses = append(f.Licenses, l)
@@ -90,7 +90,7 @@ func Gobble[T any](f *Fish[T], f2 *Fish[T]) {
 			continue
 		}
 		if f.children[i].Licenses == nil {
-			f.children[i].Licenses = make([]License, len(f2.Licenses))
+			f.children[i].Licenses = make([]License, 0, len(f2.Licenses))
 		}
 		for _, l := range f2.Licenses {
 			f.children[i].Licenses = append(f.children[i].Licenses, l)

@@ -48,7 +48,7 @@ func (p *Pagination) Element(hxTarget, formPageKey, hxPost string) HTMLElement {
 		Attributes: Attributes{
 			"class": "fr fr-center g2",
 		},
-		Children: make([]HTMLElement, 7),
+		Children: make([]HTMLElement, 0, 7),
 	}
 
 	spreadIcon := HTMLElement{
@@ -72,8 +72,7 @@ func (p *Pagination) Element(hxTarget, formPageKey, hxPost string) HTMLElement {
 			},
 			InnerText: strconv.FormatUint(1, 10),
 		}
-		paginationDiv.Children[0] = pageFirst
-		paginationDiv.Children[1] = spreadIcon
+		paginationDiv.Children = append(paginationDiv.Children, pageFirst, spreadIcon)
 	}
 
 	if p.ShowPrevious {
@@ -89,7 +88,7 @@ func (p *Pagination) Element(hxTarget, formPageKey, hxPost string) HTMLElement {
 			},
 			InnerText: strconv.FormatUint(p.PreviousPage, 10),
 		}
-		paginationDiv.Children[2] = pagePrev
+		paginationDiv.Children = append(paginationDiv.Children, pagePrev)
 	}
 
 	pageCurr := HTMLElement{
@@ -100,7 +99,7 @@ func (p *Pagination) Element(hxTarget, formPageKey, hxPost string) HTMLElement {
 		},
 		InnerText: strconv.FormatUint(p.CurrentPage, 10),
 	}
-	paginationDiv.Children[3] = pageCurr
+	paginationDiv.Children = append(paginationDiv.Children, pageCurr)
 
 	if p.ShowNext {
 		pageNext := HTMLElement{
@@ -115,7 +114,7 @@ func (p *Pagination) Element(hxTarget, formPageKey, hxPost string) HTMLElement {
 			},
 			InnerText: strconv.FormatUint(p.NextPage, 10),
 		}
-		paginationDiv.Children[4] = pageNext
+		paginationDiv.Children = append(paginationDiv.Children, pageNext)
 	}
 
 	if p.ShowLast {
@@ -131,8 +130,7 @@ func (p *Pagination) Element(hxTarget, formPageKey, hxPost string) HTMLElement {
 			},
 			InnerText: strconv.FormatUint(p.TotalPages, 10),
 		}
-		paginationDiv.Children[5] = spreadIcon
-		paginationDiv.Children[6] = pageLast
+		paginationDiv.Children = append(paginationDiv.Children, spreadIcon, pageLast)
 	}
 
 	// currentPage := NewInputHidden(formPageKey, strconv.FormatUint(p, 10CurrentPage)))

@@ -15,30 +15,30 @@ func NewTable(csvReader *csv.Reader) (*HTMLElement, error) {
 
 	table := HTMLElement{
 		Tag:      "table",
-		Children: make([]HTMLElement, 2),
+		Children: make([]HTMLElement, 0, 2),
 	}
 	tHead := HTMLElement{
 		Tag:      "thead",
-		Children: make([]HTMLElement, 1),
+		Children: make([]HTMLElement, 0, 1),
 	}
 	tBody := HTMLElement{
 		Tag:      "tbody",
-		Children: make([]HTMLElement, len(records)-1),
+		Children: make([]HTMLElement, 0, len(records)-1),
 	}
 	for y, row := range records {
 		tr := HTMLElement{
 			Tag:      "tr",
-			Children: make([]HTMLElement, len(row)),
+			Children: make([]HTMLElement, 0, len(row)),
 		}
 
-		for x, col := range row {
+		for _, col := range row {
 			if y == 0 {
 				// header
 				th := HTMLElement{
 					Tag:       "th",
 					InnerText: col,
 				}
-				tr.Children[x] = th
+				tr.Children = append(tr.Children, th)
 				continue
 			}
 			// row
@@ -46,19 +46,18 @@ func NewTable(csvReader *csv.Reader) (*HTMLElement, error) {
 				Tag:       "td",
 				InnerText: col,
 			}
-			tr.Children[x] = td
+			tr.Children = append(tr.Children, td)
 		}
 		if y == 0 {
 			// header
-			tHead.Children[0] = tr
+			tHead.Children = append(tHead.Children, tr)
 			continue
 		}
 		// row
-		tBody.Children[y-1] = tr
+		tBody.Children = append(tBody.Children, tr)
 	}
 
-	table.Children[0] = tHead
-	table.Children[1] = tBody
+	table.Children = append(table.Children, tHead, tBody)
 
 	return &table, nil
 }

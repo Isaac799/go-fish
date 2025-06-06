@@ -191,8 +191,8 @@ func (el *HTMLElement) Form() ParsedForm {
 			indexStr := strconv.Itoa(selectOptionIndex)
 
 			if m[key] == nil {
-				m[key] = make([]string, 1)
-				m[key][0] = indexStr
+				m[key] = make([]string, 0, 1)
+				m[key] = append(m[key], indexStr)
 			} else {
 				m[key] = append(m[key], indexStr)
 			}
@@ -251,8 +251,8 @@ func (el *HTMLElement) Form() ParsedForm {
 			}
 			indexStr := strconv.Itoa(index)
 			if m[key] == nil {
-				m[key] = make([]string, 1)
-				m[key][0] = indexStr
+				m[key] = make([]string, 0, 1)
+				m[key] = append(m[key], indexStr)
 			} else {
 				m[key] = append(m[key], indexStr)
 			}
@@ -273,8 +273,8 @@ func (el *HTMLElement) Form() ParsedForm {
 			}
 			indexStr := strconv.Itoa(index)
 			if m[key] == nil {
-				m[key] = make([]string, 1)
-				m[key][0] = indexStr
+				m[key] = make([]string, 0, 1)
+				m[key] = append(m[key], indexStr)
 			} else {
 				m[key] = append(m[key], indexStr)
 			}
@@ -290,8 +290,8 @@ func (el *HTMLElement) Form() ParsedForm {
 		if !exists {
 			continue
 		}
-		m[key] = make([]string, 1)
-		m[key][0] = input.InnerText
+		m[key] = make([]string, 0, 1)
+		m[key] = append(m[key], input.InnerText)
 	}
 
 	// for most other inputs we can look at the value attribute
@@ -317,8 +317,8 @@ func (el *HTMLElement) Form() ParsedForm {
 		if !exists {
 			continue
 		}
-		m[key] = make([]string, 1)
-		m[key][0] = value
+		m[key] = make([]string, 0, 1)
+		m[key] = append(m[key], value)
 	}
 
 	return m
@@ -395,18 +395,18 @@ func (el *HTMLElement) FillForm(r *http.Request) {
 		}
 		if kind == "radio" {
 			if radioGroups[key] == nil {
-				radioGroups[key] = make([]*HTMLElement, 1)
-				radioGroups[key][0] = input
+				radioGroups[key] = make([]*HTMLElement, 0, 1)
+				radioGroups[key] = append(radioGroups[key], input)
 			} else {
 				radioGroups[key] = append(radioGroups[key], input)
 			}
 			continue
 		}
-		if checkboxGroups[key] == nil {
-			checkboxGroups[key] = make([]*HTMLElement, 1)
-			checkboxGroups[key][0] = input
+		if radioGroups[key] == nil {
+			radioGroups[key] = make([]*HTMLElement, 0, 1)
+			radioGroups[key] = append(radioGroups[key], input)
 		} else {
-			checkboxGroups[key] = append(checkboxGroups[key], input)
+			radioGroups[key] = append(radioGroups[key], input)
 		}
 	}
 

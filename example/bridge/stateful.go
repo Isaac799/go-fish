@@ -6,14 +6,14 @@ package bridge
 func Stateful(el *HTMLElement, state map[string]string) *HTMLElement {
 	form := HTMLElement{
 		Tag:      "form",
-		Children: make([]HTMLElement, len(state)+1),
+		Children: make([]HTMLElement, 0, len(state)+1),
 	}
-	form.Children[0] = *el
+	form.Children = append(form.Children, *el)
 
 	if state != nil {
 		i := 1
 		for k, v := range state {
-			form.Children[i] = NewInputHidden(k, v)
+			form.Children = append(form.Children, NewInputHidden(k, v))
 			i++
 		}
 	}
