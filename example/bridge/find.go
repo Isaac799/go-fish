@@ -2,21 +2,6 @@ package bridge
 
 import "slices"
 
-// flatten recursively grabs elements
-func flatten(elements []HTMLElement) []*HTMLElement {
-	collected := []*HTMLElement{}
-	for _, el := range elements {
-		if el.Children != nil {
-			childKeys := flatten(el.Children)
-			for _, c := range childKeys {
-				collected = append(collected, c)
-			}
-		}
-		collected = append(collected, &el)
-	}
-	return collected
-}
-
 // ElementLike helps narrow down filtering for a specific element
 type ElementLike = func(el *HTMLElement) bool
 
