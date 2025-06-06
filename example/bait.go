@@ -7,9 +7,8 @@ import (
 	"net/http"
 	"slices"
 	"strconv"
-	"time"
 
-	"github.com/Isaac799/go-fish/example/bridge"
+	"github.com/Isaac799/go-fish/pkg/bridge"
 )
 
 type user struct {
@@ -23,15 +22,9 @@ type tables struct {
 	Stateful bridge.HTMLElement
 }
 
-type water struct {
-	ServerTime time.Time
-	RotateDeg  int
-}
-
 type fishData struct {
 	Season string
 	User   *user
-	Water  *water
 	Table  *tables
 	Form   *bridge.HTMLElement
 }
@@ -317,31 +310,4 @@ func buildStatefulTable(csvReader2 *csv.Reader, r *http.Request) *bridge.HTMLEle
 	form.Children = append(form.Children, paginationEl)
 
 	return form
-}
-
-func waterInfo(r *http.Request) *fishData {
-	data := fishData{}
-	posStr := r.URL.Query().Get("pos")
-	offsetStr := r.URL.Query().Get("off")
-
-	w := water{
-		RotateDeg:  0,
-		ServerTime: time.Now(),
-	}
-
-	off, err := strconv.Atoi(offsetStr)
-	if err != nil {
-		data.Water = &w
-		return &data
-	}
-	pos, err := strconv.Atoi(posStr)
-	if err != nil {
-		data.Water = &w
-		return &data
-	}
-
-	w.RotateDeg = pos + off
-
-	data.Water = &w
-	return &data
 }

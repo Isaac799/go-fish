@@ -62,7 +62,7 @@ func (el *HTMLElement) EnsureAttributes() {
 // SetValue finds the nth occurrence of an input searching nested
 // and modifies the value attribute.
 func (el *HTMLElement) SetValue(occurrence uint, s string) {
-	var c uint = 1
+	var c uint
 	input := el.findNth(&c, occurrence)
 	if input == nil {
 		return
@@ -76,16 +76,41 @@ func (el *HTMLElement) SetValue(occurrence uint, s string) {
 	return
 }
 
-// SetChecked finds the nth occurrence of an input searching nested
-// and modifies the checked attribute
-func (el *HTMLElement) SetChecked(occurrence uint, b bool) {
-	var c uint = 1
-	input := el.findNth(&c, occurrence)
+// SetCheckedIndex finds the nth input element (index)
+// Modifies the checked attribute.
+func (el *HTMLElement) SetCheckedIndex(index uint, b bool) {
+	var c uint
+	input := el.findNth(&c, index, LikeTag("input"))
 	if input == nil {
 		return
 	}
 	input.EnsureAttributes()
-	input.Attributes.SetChecked(b)
+	if b {
+		input.Attributes["checked"] = "true"
+	} else {
+		input.Attributes["checked"] = "false"
+	}
+	return
+}
+
+// SetSelectedIndex finds an option based on index for the
+// first select element. Modifies the selected attribute.
+func (el *HTMLElement) SetSelectedIndex(index uint, b bool) {
+	var c uint
+	sel := el.FindFirst(LikeTag("select"))
+	if sel == nil {
+		return
+	}
+	option := sel.findNth(&c, index, LikeTag("option"))
+	if option == nil {
+		return
+	}
+	option.EnsureAttributes()
+	if b {
+		option.Attributes["selected"] = "true"
+	} else {
+		option.Attributes["selected"] = "false"
+	}
 	return
 }
 

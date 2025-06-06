@@ -3,7 +3,7 @@ package main
 import (
 	"net/http"
 
-	"github.com/Isaac799/go-fish/example/bridge"
+	"github.com/Isaac799/go-fish/pkg/bridge"
 )
 
 type exampleColor struct {
@@ -65,23 +65,23 @@ func exampleForm() bridge.HTMLElement {
 	}
 
 	elSel := bridge.NewInputSel("sel color", exampleColors)
-	elSel.SetValue(1, "2")
+	elSel.SetSelectedIndex(2, true)
 	form.Children[9] = elSel
 
 	elRadio := bridge.NewInputRadio("radio color", exampleColors)
-	elRadio.SetChecked(1, true)
+	elRadio.SetCheckedIndex(1, true)
 	form.Children[10] = elRadio
 
 	elCheckbox := bridge.NewInputCheckbox("cb color", exampleColors)
-	elCheckbox.SetChecked(1, true)
-	elCheckbox.SetChecked(3, true)
+	elCheckbox.SetCheckedIndex(0, true)
+	elCheckbox.SetCheckedIndex(2, true)
 	form.Children[11] = elCheckbox
 
-	form.Attributes = form.Attributes.Ensure()
+	form.EnsureAttributes()
 	form.Attributes["action"] = "/submit/test"
 
 	submit := bridge.NewHTMLElement("button")
-	submit.Attributes = submit.Attributes.Ensure()
+	submit.EnsureAttributes()
 	submit.Attributes["type"] = "submit"
 	submit.InnerText = "Submit Me!"
 

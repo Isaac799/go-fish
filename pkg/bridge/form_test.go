@@ -59,11 +59,11 @@ func mockEmptyForm() HTMLElement {
 	form.Children[10] = NewInputRadio("radio color", mockColors)
 	form.Children[11] = NewInputCheckbox("cb color", mockColors)
 
-	form.Attributes = form.Attributes.Ensure()
+	form.EnsureAttributes()
 	form.Attributes["action"] = "/submit/test"
 
 	submit := NewHTMLElement("button")
-	submit.Attributes = submit.Attributes.Ensure()
+	submit.EnsureAttributes()
 	submit.Attributes["type"] = "submit"
 	submit.InnerText = "Submit Me!"
 

@@ -4,6 +4,7 @@
 // Imagine a well defined form with seamless front-back validation, or a
 // powerful table with features (e.g. pagination) implemented directly. Or
 // even navigation links that match our available routes.
+// Also bridges are water related thus matching this fish themed repo :-)
 package bridge
 
 import (
@@ -68,28 +69,6 @@ const (
 	// HRef is the html attribute href
 	HRef AttributeKey = "href"
 )
-
-// Ensure helps safe access of attributes.
-func (a Attributes) Ensure() Attributes {
-	if a != nil {
-		return a
-	}
-	return make(map[AttributeKey]string, 0)
-}
-
-// SetChecked sets the checked attribute of an element.
-// If its attributes are nil it will create them.
-func (a Attributes) SetChecked(b bool) error {
-	if a == nil {
-		return ErrAttributesNil
-	}
-	if b {
-		a["checked"] = "true"
-	} else {
-		a["checked"] = "false"
-	}
-	return nil
-}
 
 // SetTime will set the value attribute of an element to a specific time
 // depending on the type of input. Err only if the input is not a time.

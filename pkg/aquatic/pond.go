@@ -1,4 +1,4 @@
-package internal
+package aquatic
 
 import (
 	"errors"
@@ -11,6 +11,20 @@ import (
 	"strings"
 	"text/tabwriter"
 )
+
+var (
+	// ErrNoTemplateDir is given if I cannot find the desired dir to setup a new mux
+	ErrNoTemplateDir = errors.New("cannot find template directory relative to working dir")
+	// ErrInvalidExtension is given if a file is discoverd that I did not anticipate
+	ErrInvalidExtension = errors.New("invalid file extension")
+)
+
+var fishKindStr = map[int]string{
+	FishKindTuna:    "Tuna",
+	FishKindSardine: "Sardine",
+	FiskKindClown:   "Clown",
+	FiskKindAnchovy: "Anchovy",
+}
 
 // Stock enables developer to provide what fish they think
 // the pond should have. Keyed by file name (without extension)
@@ -87,6 +101,7 @@ func FishFinder[T, K any](p *Pond[T, K]) []*Fish[K] {
 
 // NewPond provides a new pond based on dir
 func NewPond[T, K any](templateDirPath string, options NewPondOptions) (Pond[T, K], error) {
+
 	p := Pond[T, K]{
 		fish:     map[string][]Fish[K]{},
 		licenses: options.Licenses,
@@ -129,7 +144,10 @@ func collect[T, K any](p *Pond[T, K], pathBase string) error {
 
 	isRoot := pathBase == p.templateDir
 
-	smallFishes := []*Fish[K]{}
+	_elementFish := mackerelHTMLElement[K]()
+	smallFishes := []*Fish[K]{
+		&_elementFish,
+	}
 	bigFishes := []*Fish[K]{}
 
 	dirs := []os.DirEntry{}
@@ -209,6 +227,10 @@ func CastLines[T, K any](pond *Pond[T, K], verbose bool) *http.ServeMux {
 	fishToRegister := make(map[string]*Fish[K])
 
 	for _, child := range pond.globalSmallFish {
+		if child.kind == FishKindMackerel {
+			// not to be served
+			continue
+		}
 		if child.kind == FishKindTuna {
 			// unreachable
 			continue
@@ -242,14 +264,12 @@ func CastLines[T, K any](pond *Pond[T, K], verbose bool) *http.ServeMux {
 		}
 	}
 
-	sortedFish := make([]*Fish[K], len(fishToRegister))
-	i := 0
+	sortedFish := make([]*Fish[K], 0, len(fishToRegister))
 	for pattern, fish := range fishToRegister {
 		if len(pattern) == 0 {
 			continue
 		}
-		sortedFish[i] = fish
-		i++
+		sortedFish = append(sortedFish, fish)
 	}
 
 	// ensure more explicit routes matched first
