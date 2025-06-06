@@ -152,6 +152,9 @@ func buildStatefulTable(csvReader2 *csv.Reader, r *http.Request) *bridge.HTMLEle
 	)
 
 	var (
+		// Columns I want to add sort/filter
+		colsToSortAndFilter = []int{ColName, ColHabitat, ColPrice}
+
 		// Icons used after sort state is determined from request
 		icons = map[int]string{
 			SortNone: "unfold_more",
@@ -187,14 +190,11 @@ func buildStatefulTable(csvReader2 *csv.Reader, r *http.Request) *bridge.HTMLEle
 	headers := form.FindAll(bridge.LikeTag("th"))
 
 	for i := range headers {
-		colsToSortAndFilter := []int{ColName, ColHabitat, ColPrice}
 		if !slices.Contains(colsToSortAndFilter, i) {
 			continue
 		}
-		// Gives a button to change sort
-		sortKey := fmt.Sprintf("%s%d", formKeyPrefixSortBy, i)
-
 		// So we keep the sort of items even if not clicked
+		sortKey := fmt.Sprintf("%s%d", formKeyPrefixSortBy, i)
 		preservedSport := bridge.NewInputHidden(sortKey, "0")
 
 		// Gives a text input to filter by. We can define these now
@@ -202,24 +202,20 @@ func buildStatefulTable(csvReader2 *csv.Reader, r *http.Request) *bridge.HTMLEle
 		// Also, opted to not use my new text element fn since that adds a label
 		// that I don't want.
 		filterKey := fmt.Sprintf("%s%d", formKeyPrefixFilterBy, i)
-		filterBy := bridge.HTMLElement{
-			Tag:         "input",
-			SelfClosing: true,
-			Attributes: map[bridge.AttributeKey]string{
-				"hx-trigger":       "keyup changed delay:500ms",
-				"hx-post":          templatePath,
-				"hx-target":        fmt.Sprintf("#%s", formRootID),
-				"hx-swap":          "outerHTML",
-				bridge.Placeholder: "filter...",
-				bridge.Type:        string(bridge.InputKindText),
-				bridge.Name:        filterKey,
-				bridge.Value:       "",
-				bridge.MinLength:   "0",
-				bridge.MaxLength:   "20",
-			},
-		}
+		filterByDiv := bridge.NewInputText(filterKey, bridge.InputKindText, 0, 20)
+		filterByDiv.DeleteFirst(bridge.LikeTag("label"))
 
-		headers[i].Children = append(headers[i].Children, filterBy, preservedSport)
+		textBox := filterByDiv.FindFirst(bridge.LikeInput)
+		textBoxHTMLX := map[bridge.AttributeKey]string{
+			"hx-trigger":       "keyup changed delay:500ms",
+			"hx-post":          templatePath,
+			"hx-target":        fmt.Sprintf("#%s", formRootID),
+			"hx-swap":          "outerHTML",
+			bridge.Placeholder: "filter...",
+		}
+		textBox.GiveAttributes(textBoxHTMLX)
+
+		headers[i].Children = append(headers[i].Children, filterByDiv, preservedSport)
 	}
 
 	// Add pagination state to fill in from request
@@ -227,14 +223,20 @@ func buildStatefulTable(csvReader2 *csv.Reader, r *http.Request) *bridge.HTMLEle
 	form.Children = append(form.Children, pageHiddenEl)
 
 	// Add rout count to fill in from request
-	rowCountEl := bridge.NewInputSel(formKeyPaginationLimit, rowLimitOptions)
-	rowCountSel := rowCountEl.FindFirst(bridge.LikeInput)
-	rowCountSel.Attributes["hx-trigger"] = "change"
-	rowCountSel.Attributes["hx-post"] = templatePath
-	rowCountSel.Attributes["hx-target"] = fmt.Sprintf("#%s", formRootID)
-	rowCountSel.Attributes["hx-swap"] = "outerHTML"
+	rowCountDiv := bridge.NewInputSel(formKeyPaginationLimit, rowLimitOptions)
+	rowCountDiv.DeleteFirst(bridge.LikeTag("label"))
 
-	form.Children = append(form.Children, rowCountEl)
+	rowCountSel := rowCountDiv.FindFirst(bridge.LikeInput)
+	rowCountHTMLX := map[bridge.AttributeKey]string{
+		"hx-trigger":       "change",
+		"hx-post":          templatePath,
+		"hx-target":        fmt.Sprintf("#%s", formRootID),
+		"hx-swap":          "outerHTML",
+		bridge.Placeholder: "filter...",
+	}
+	rowCountSel.GiveAttributes(rowCountHTMLX)
+
+	form.Children = append(form.Children, rowCountDiv)
 
 	// 2: Populating the element form request
 	//
@@ -265,20 +267,6 @@ func buildStatefulTable(csvReader2 *csv.Reader, r *http.Request) *bridge.HTMLEle
 			continue
 		}
 
-		sortBtn := bridge.HTMLElement{
-			Tag: "button",
-			Attributes: bridge.Attributes{
-				"class":     "material-icons",
-				"type":      "submit",
-				"hx-post":   templatePath,
-				"name":      sortKey,
-				"value":     "0",
-				"hx-target": fmt.Sprintf("#%s", formRootID),
-				"hx-swap":   "outerHTML",
-			},
-			InnerText: icons[SortNone],
-		}
-
 		previousSort := SortNone
 		desiredSort, err := hiddenSort.ValueInt()
 		if err == nil {
@@ -286,11 +274,20 @@ func buildStatefulTable(csvReader2 *csv.Reader, r *http.Request) *bridge.HTMLEle
 				previousSort = desiredSort
 			}
 		}
-		sortBtn.EnsureAttributes()
 
-		previousSortIcon := icons[previousSort]
-		sortBtn.Attributes["value"] = strconv.Itoa(nextSort[previousSort])
-		sortBtn.InnerText = previousSortIcon
+		sortBtn := bridge.HTMLElement{
+			Tag: "button",
+			Attributes: bridge.Attributes{
+				"class":     "material-icons",
+				"type":      "submit",
+				"hx-post":   templatePath,
+				"name":      sortKey,
+				"value":     strconv.Itoa(nextSort[previousSort]),
+				"hx-target": fmt.Sprintf("#%s", formRootID),
+				"hx-swap":   "outerHTML",
+			},
+			InnerText: icons[previousSort],
+		}
 
 		headers[i].Children = append(headers[i].Children, sortBtn)
 	}
@@ -304,7 +301,7 @@ func buildStatefulTable(csvReader2 *csv.Reader, r *http.Request) *bridge.HTMLEle
 	// v, err := bridge.ValueElementSelected(rowCountSel, rowLimitOptions)
 	// fmt.Print(v)
 	var limit uint64 = 10
-	parsedLimit, err := bridge.ValueElementSelected(&rowCountEl, rowLimitOptions)
+	parsedLimit, err := bridge.ValueElementSelected(&rowCountDiv, rowLimitOptions)
 	if err == nil && len(parsedLimit) == 1 {
 		limit = parsedLimit[0].value
 	}

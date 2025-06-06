@@ -41,6 +41,16 @@ func NewHTMLElement(tag string) HTMLElement {
 	}
 }
 
+// GiveAttributes allows safely dumping several attributes at once.
+// Useful when wanting to alias a group of attributes (say htmlx attributes)
+// making the code a little more clear about why we are modifying the element.
+func (el *HTMLElement) GiveAttributes(attrs map[AttributeKey]string) {
+	el.EnsureAttributes()
+	for k, v := range attrs {
+		el.Attributes[k] = v
+	}
+}
+
 // EnsureAttributes ensures attributes are not nil before usage
 func (el *HTMLElement) EnsureAttributes() {
 	if el.Attributes != nil {
