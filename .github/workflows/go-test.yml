@@ -1,0 +1,19 @@
+name: Go Test
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    container:
+      image: golang:1.23.8-alpine
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install git
+        run: apk add --no-cache git
+
+      - name: Run tests
+        run: go test ./...
