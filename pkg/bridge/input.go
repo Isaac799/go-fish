@@ -38,8 +38,8 @@ const (
 
 	// InputKindTextarea is for textarea tag with col and row attributes
 	InputKindTextarea InputKind = "textarea"
-	// InputKindNum is for input tag with attribute type of num
-	InputKindNum InputKind = "number"
+	// InputKindNumber is for input tag with attribute type of num
+	InputKindNumber InputKind = "number"
 	// InputKindColor is for input tag with attribute type of color
 	InputKindColor InputKind = "color"
 	// InputKindHidden is for input tag with attribute type of hidden
@@ -54,8 +54,8 @@ const (
 	// InputKindDateTime is for input tag with attribute type of datetime
 	InputKindDateTime InputKind = "datetime-local"
 
-	// InputKindSel is for select tag with options
-	InputKindSel InputKind = "select"
+	// InputKindSelect is for select tag with options
+	InputKindSelect InputKind = "select"
 	// InputKindRadio is for input tags with attribute type of radio
 	InputKindRadio InputKind = "radio"
 	// InputKindCheckbox is for input tags with attribute type of checkbox
@@ -278,7 +278,7 @@ func NewInputTextarea(name string, minLen, maxLen, col, row uint) HTMLElement {
 
 // NewInputNumber is a div element with labeled number child
 func NewInputNumber(name string, min, max float32) HTMLElement {
-	el := newInput(InputKindNum, name)
+	el := newInput(InputKindNumber, name)
 	input := el.FindFirst(LikeInput)
 	input.Attributes["min"] = fmt.Sprintf("%f", min)
 	input.Attributes["max"] = fmt.Sprintf("%f", max)
@@ -331,9 +331,9 @@ func NewInputDateTime(name string, min, max *time.Time) HTMLElement {
 	return el
 }
 
-// NewInputSel is a div element with labeled select child
+// NewInputSelect is a div element with labeled select child
 // One to many selections allowed.
-func NewInputSel[T Printable](name string, options []T) HTMLElement {
+func NewInputSelect[T Printable](name string, options []T) HTMLElement {
 	el := newSelect(name, options)
 	return el
 }

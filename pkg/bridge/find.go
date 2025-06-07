@@ -24,8 +24,9 @@ func (el *HTMLElement) findNth(count *uint, occurrence uint, filters ...ElementL
 		return nil
 	}
 
+	*count++
+
 	if *count != occurrence {
-		*count++
 		return nil
 	}
 
@@ -67,9 +68,9 @@ var LikeTag = func(tag string) ElementLike {
 	})
 }
 
-// HasAttribute is a small alias to see elements where an attribute is
+// LikeAttribute is a small alias to see elements where an attribute is
 // non empty value
-var HasAttribute = func(key AttributeKey, value string) ElementLike {
+var LikeAttribute = func(key AttributeKey, value string) ElementLike {
 	return ElementLike(func(element *HTMLElement) bool {
 		if element.Attributes == nil {
 			return false
@@ -82,9 +83,9 @@ var HasAttribute = func(key AttributeKey, value string) ElementLike {
 	})
 }
 
-// HasName is a small alias to find an element with a name
+// LikeName is a small alias to find an element with a name
 // non empty value
-var HasName = func(name string) ElementLike {
+var LikeName = func(name string) ElementLike {
 	return ElementLike(func(element *HTMLElement) bool {
 		if element.Attributes == nil {
 			return false
@@ -97,22 +98,22 @@ var HasName = func(name string) ElementLike {
 	})
 }
 
-// FindFirst provides a consumer way to search for the first element matching
-// a criteria
+// FindFirst provides a consumer way to search for the first
+// element matching a criteria
 func (el *HTMLElement) FindFirst(filters ...ElementLike) *HTMLElement {
-	var c uint = 1
+	var c uint
 	return el.findNth(&c, 1, filters...)
 }
 
-// FindNth provides a consumer way to search for the nth element matching
-// a criteria
+// FindNth provides a consumer way to search for the nth
+// occurrence of an element matching a criteria
 func (el *HTMLElement) FindNth(occurrence uint, filters ...ElementLike) *HTMLElement {
-	var c uint = 1
+	var c uint
 	return el.findNth(&c, occurrence, filters...)
 }
 
-// FindAll provides a consumer way to search for the all element matching
-// a criteria
+// FindAll provides a consumer way to search for the all
+// elements matching a criteria
 func (el *HTMLElement) FindAll(filters ...ElementLike) []*HTMLElement {
 	items := make([]*HTMLElement, 0)
 	el.findAll(&items, filters...)

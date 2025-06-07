@@ -15,7 +15,7 @@ func (s exampleColor) Print() string {
 	return s.label
 }
 
-func exampleFormBait(r *http.Request) *fishData {
+func exampleFormBait(_ *http.Request) *fishData {
 	data := fishData{}
 	form := exampleForm()
 	data.Form = &form
@@ -27,19 +27,19 @@ func exampleForm() bridge.HTMLElement {
 	form.Children = make([]bridge.HTMLElement, 12)
 
 	elText := bridge.NewInputText("name", bridge.InputKindText, 0, 30)
-	elText.SetValue(1, "Jane Doe")
+	elText.SetFirstValue("Jane Doe")
 	form.Children[0] = elText
 
 	elTextarea := bridge.NewInputTextarea("bio", 0, 30, 30, 5)
-	elTextarea.SetValue(1, "I am a writer.")
+	elTextarea.SetFirstValue("I am a writer.")
 	form.Children[1] = elTextarea
 
 	elNumber := bridge.NewInputNumber("favorite number", 0, 30)
-	elNumber.SetValue(1, "27")
+	elNumber.SetFirstValue("27")
 	form.Children[2] = elNumber
 
 	elColor := bridge.NewInputColor("color")
-	elColor.SetValue(1, "#00FF00")
+	elColor.SetFirstValue("#00FF00")
 	form.Children[3] = elColor
 
 	form.Children[4] = bridge.NewInputFile("profile picture")
@@ -47,15 +47,15 @@ func exampleForm() bridge.HTMLElement {
 	form.Children[5] = bridge.NewInputHidden("shh", "cat and mouse")
 
 	elDate := bridge.NewInputDate("birthday", nil, nil)
-	elDate.SetValue(1, "1980-01-01")
+	elDate.SetFirstValue("1980-01-01")
 	form.Children[6] = elDate
 
 	elTime := bridge.NewInputTime("clock in", nil, nil)
-	elTime.SetValue(1, "10:15")
+	elTime.SetFirstValue("10:15")
 	form.Children[7] = elTime
 
 	elDateTime := bridge.NewInputDateTime("vacation start", nil, nil)
-	elDateTime.SetValue(1, "1999-01-01T10:15")
+	elDateTime.SetFirstValue("1999-01-01T10:15")
 	form.Children[8] = elDateTime
 
 	var exampleColors = []exampleColor{
@@ -64,17 +64,17 @@ func exampleForm() bridge.HTMLElement {
 		{label: "blue", value: "#0000FF"},
 	}
 
-	elSel := bridge.NewInputSel("sel color", exampleColors)
-	elSel.SetSelectedIndex(2, true)
+	elSel := bridge.NewInputSelect("sel color", exampleColors)
+	elSel.SetSelectOption(2, true)
 	form.Children[9] = elSel
 
 	elRadio := bridge.NewInputRadio("radio color", exampleColors)
-	elRadio.SetCheckedIndex(1, true)
+	elRadio.SetFirstValue("true")
 	form.Children[10] = elRadio
 
 	elCheckbox := bridge.NewInputCheckbox("cb color", exampleColors)
-	elCheckbox.SetCheckedIndex(0, true)
-	elCheckbox.SetCheckedIndex(2, true)
+	elCheckbox.SetFirstValue("true")
+	elCheckbox.SetNthValue(3, "true")
 	form.Children[11] = elCheckbox
 
 	form.EnsureAttributes()

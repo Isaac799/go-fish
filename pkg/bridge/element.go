@@ -2,7 +2,7 @@ package bridge
 
 import (
 	"errors"
-	"slices"
+	"maps"
 	"strconv"
 	"time"
 )
@@ -46,9 +46,7 @@ func NewHTMLElement(tag string) HTMLElement {
 // making the code a little more clear about why we are modifying the element.
 func (el *HTMLElement) GiveAttributes(attrs map[AttributeKey]string) {
 	el.EnsureAttributes()
-	for k, v := range attrs {
-		el.Attributes[k] = v
-	}
+	maps.Copy(el.Attributes, attrs)
 }
 
 // EnsureAttributes ensures attributes are not nil before usage
@@ -59,68 +57,65 @@ func (el *HTMLElement) EnsureAttributes() {
 	el.Attributes = make(Attributes)
 }
 
-// SetValue finds the nth occurrence of an input searching nested
-// and modifies the value attribute.
-func (el *HTMLElement) SetValue(occurrence uint, s string) {
+// SetFirstValue finds the first input element and sets its
+// value. Recommended use is with elements that utilize the
+// value attribute. Usage with a select, radio, or checkbox
+// will just set the first element value
+func (el *HTMLElement) SetFirstValue(s string) error {
+	return el.SetNthValue(1, s)
+}
+
+// SetNthValue finds the nth occurrence on an input element.
+// Depending on that element it will set the value accordingly.
+// Not for use with select as the option children are treated
+// differently, see SetSelectOption.
+func (el *HTMLElement) SetNthValue(occurrence uint, s string) error {
 	var c uint
-	input := el.findNth(&c, occurrence)
+	input := el.findNth(&c, occurrence, LikeInput)
 	if input == nil {
-		return
+		return ErrNoInputElement
 	}
-	if input.Tag == "textarea" {
+	if input.Tag == string(InputKindTextarea) {
 		input.InnerText = s
-		return
+		return nil
+	}
+	if input.Attributes["type"] == string(InputKindCheckbox) ||
+		input.Attributes["type"] == string(InputKindRadio) {
+		input.EnsureAttributes()
+		input.Attributes["checked"] = strconv.FormatBool(s == "t" || s == "true")
+		return nil
 	}
 	input.EnsureAttributes()
 	input.Attributes["value"] = s
-	return
+	return nil
 }
 
-// SetCheckedIndex finds the nth input element (index)
-// Modifies the checked attribute.
-func (el *HTMLElement) SetCheckedIndex(index uint, b bool) {
+// SetSelectOption modifies a select option's selected attribute
+func (el *HTMLElement) SetSelectOption(index uint, b bool) error {
 	var c uint
-	input := el.findNth(&c, index, LikeTag("input"))
+	input := el.findNth(&c, 1, LikeTag("select"))
 	if input == nil {
-		return
+		return ErrNoInputElement
 	}
-	input.EnsureAttributes()
-	if b {
-		input.Attributes["checked"] = "true"
-	} else {
-		input.Attributes["checked"] = "false"
+	if len(input.Children) < int(index) {
+		return ErrNoInputElement
 	}
-	return
-}
-
-// SetSelectedIndex finds an option based on index for the
-// first select element. Modifies the selected attribute.
-func (el *HTMLElement) SetSelectedIndex(index uint, b bool) {
-	var c uint
-	sel := el.FindFirst(LikeTag("select"))
-	if sel == nil {
-		return
-	}
-	option := sel.findNth(&c, index, LikeTag("option"))
-	if option == nil {
-		return
-	}
+	option := input.Children[index]
 	option.EnsureAttributes()
-	if b {
-		option.Attributes["selected"] = "true"
-	} else {
-		option.Attributes["selected"] = "false"
-	}
-	return
+	option.Attributes["selected"] = strconv.FormatBool(b)
+	return nil
 }
 
 // ValueString parses a string from the first input element found
 func (el *HTMLElement) ValueString() (string, error) {
-	el.FindFirst(LikeInput)
-	if el.Attributes == nil {
+	input := el.FindFirst(LikeInput)
+	if input.Attributes == nil {
 		return "", ErrNoInputElement
 	}
-	s, exists := el.Attributes["value"]
+	if input.Tag == string(InputKindTextarea) {
+		return input.InnerText, nil
+	}
+	s, exists := input.Attributes["value"]
 	if !exists {
 		return "", ErrNoValueOnInputElement
 	}
@@ -204,21 +199,9 @@ func (el *HTMLElement) ValueIndexes() ([]int, error) {
 	if !exists {
 		return nil, ErrKeyDoesNotExist
 	}
-	return el.Form().Indexes(name)
-}
-
-// ValueMarkSelected will att the selected attribute to all options in
-// the order that they appear, given the indexes. Useful for setting the
-// value of a select input
-func (el *HTMLElement) ValueMarkSelected(selected []int) {
-	options := el.FindAll(LikeTag("option"))
-	for i, option := range options {
-		option.EnsureAttributes()
-		if !slices.Contains(selected, i) {
-			continue
-		}
-		option.Attributes["checked"] = "true"
-	}
+	parsed := el.Form()
+	indexes, err := parsed.Indexes(name)
+	return indexes, err
 }
 
 // ValueElementSelected parses the chosen items of a select, checkbox, or radio

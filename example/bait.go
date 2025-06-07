@@ -216,7 +216,7 @@ func buildStatefulTable(csvReader2 *csv.Reader, r *http.Request) *bridge.HTMLEle
 	form.Children = append(form.Children, pageHiddenEl)
 
 	// Add rout count to fill in from request
-	rowCountDiv := bridge.NewInputSel(formKeyPaginationLimit, rowLimitOptions)
+	rowCountDiv := bridge.NewInputSelect(formKeyPaginationLimit, rowLimitOptions)
 	rowCountDiv.DeleteFirst(bridge.LikeTag("label"))
 
 	rowCountSel := rowCountDiv.FindFirst(bridge.LikeInput)
@@ -253,8 +253,8 @@ func buildStatefulTable(csvReader2 *csv.Reader, r *http.Request) *bridge.HTMLEle
 		// Gives a button to change sort
 		sortKey := fmt.Sprintf("%s%d", formKeyPrefixSortBy, i)
 		hiddenSort := headers[i].FindFirst(
-			bridge.HasAttribute("type", string(bridge.InputKindHidden)),
-			bridge.HasAttribute("name", sortKey),
+			bridge.LikeAttribute("type", string(bridge.InputKindHidden)),
+			bridge.LikeAttribute("name", sortKey),
 		)
 		if hiddenSort == nil {
 			continue

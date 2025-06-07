@@ -55,7 +55,7 @@ func mockEmptyForm() HTMLElement {
 	form.Children[6] = NewInputDate("birthday", nil, nil)
 	form.Children[7] = NewInputTime("clock in", nil, nil)
 	form.Children[8] = NewInputDateTime("vacation start", nil, nil)
-	form.Children[9] = NewInputSel("sel color", mockColors)
+	form.Children[9] = NewInputSelect("sel color", mockColors)
 	form.Children[10] = NewInputRadio("radio color", mockColors)
 	form.Children[11] = NewInputCheckbox("cb color", mockColors)
 
