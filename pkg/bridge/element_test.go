@@ -13,9 +13,9 @@ func TestGiveAttributes(t *testing.T) {
 	}
 	el := NewHTMLElement("input")
 	el.GiveAttributes(attrs)
-	eq(t, len(el.Attributes), 2)
-	eq(t, el.Attributes["style"], style)
-	eq(t, el.Attributes["placeholder"], placeholder)
+	assert(t, len(el.Attributes), 2)
+	assert(t, el.Attributes["style"], style)
+	assert(t, el.Attributes["placeholder"], placeholder)
 }
 
 func TestEnsureAttributes(t *testing.T) {
@@ -34,8 +34,8 @@ func TestSetValueAttribute(t *testing.T) {
 	elText.SetFirstValue("Jane Doe")
 
 	s, err := elText.FindFirst(LikeInput).ValueString()
-	noErr(t, err)
-	eq(t, "Jane Doe", s)
+	assertNoError(t, err)
+	assert(t, "Jane Doe", s)
 }
 
 func TestSetValueTextArea(t *testing.T) {
@@ -43,16 +43,16 @@ func TestSetValueTextArea(t *testing.T) {
 	elTextarea.SetFirstValue("I am a writer.")
 
 	s, err := elTextarea.ValueString()
-	noErr(t, err)
-	eq(t, "I am a writer.", s)
+	assertNoError(t, err)
+	assert(t, "I am a writer.", s)
 }
 
 func TestSetCheckedRadio(t *testing.T) {
 	elRadio := NewInputRadio("radio color", mockColors)
 	elRadio.SetFirstValue("true")
 	indexes, err := elRadio.ValueIndexes()
-	noErr(t, err)
-	eqIndexes(t, indexes, []int{0})
+	assertNoError(t, err)
+	assertIndexes(t, indexes, []int{0})
 }
 
 func TestSetCheckedCheckbox(t *testing.T) {
@@ -60,8 +60,8 @@ func TestSetCheckedCheckbox(t *testing.T) {
 	elCheckbox.SetNthValue(1, "true")
 	elCheckbox.SetNthValue(3, "true")
 	indexes, err := elCheckbox.ValueIndexes()
-	noErr(t, err)
-	eqIndexes(t, indexes, []int{0, 2})
+	assertNoError(t, err)
+	assertIndexes(t, indexes, []int{0, 2})
 }
 
 func TestSetValueSelectable(t *testing.T) {
@@ -69,8 +69,8 @@ func TestSetValueSelectable(t *testing.T) {
 	elSelect.SetSelectOption(1, true)
 
 	indexes, err := elSelect.ValueIndexes()
-	noErr(t, err)
-	eqIndexes(t, indexes, []int{1})
+	assertNoError(t, err)
+	assertIndexes(t, indexes, []int{1})
 }
 
 func TestValueElementSelected(t *testing.T) {
@@ -78,7 +78,7 @@ func TestValueElementSelected(t *testing.T) {
 	elSelect.SetSelectOption(1, true)
 
 	chosen, err := ValueElementSelected(&elSelect, mockColors)
-	noErr(t, err)
-	eq(t, len(chosen), 1)
-	eq(t, chosen[0].Print(), "green")
+	assertNoError(t, err)
+	assert(t, len(chosen), 1)
+	assert(t, chosen[0].Print(), "green")
 }

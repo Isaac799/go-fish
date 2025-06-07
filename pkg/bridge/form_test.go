@@ -85,7 +85,7 @@ func formValEq(t *testing.T, m map[string][]string, i int, key string, value str
 	}
 }
 
-func eq[T comparable](t *testing.T, a, b T) {
+func assert[T comparable](t *testing.T, a, b T) {
 	if a == b {
 		return
 	}
@@ -93,14 +93,14 @@ func eq[T comparable](t *testing.T, a, b T) {
 	t.Fatal(errNotEqual)
 }
 
-func eqIndexes(t *testing.T, a, b []int) {
-	eq(t, len(a), len(b))
+func assertIndexes(t *testing.T, a, b []int) {
+	assert(t, len(a), len(b))
 	for i := range a {
-		eq(t, a[i], b[i])
+		assert(t, a[i], b[i])
 	}
 }
 
-func noErr(t *testing.T, err error) {
+func assertNoError(t *testing.T, err error) {
 	if err == nil {
 		return
 	}
@@ -134,8 +134,8 @@ func TestParseString(t *testing.T) {
 	formValues := form.Form()
 
 	s, err := formValues.String("name")
-	noErr(t, err)
-	eq(t, s, "Jane Doe")
+	assertNoError(t, err)
+	assert(t, s, "Jane Doe")
 }
 
 func TestParseNumber(t *testing.T) {
@@ -145,8 +145,8 @@ func TestParseNumber(t *testing.T) {
 	formValues := form.Form()
 
 	n, err := formValues.Int("favorite number")
-	noErr(t, err)
-	eq(t, n, 27)
+	assertNoError(t, err)
+	assert(t, n, 27)
 }
 
 func TestParseDate(t *testing.T) {
@@ -156,9 +156,9 @@ func TestParseDate(t *testing.T) {
 	formValues := form.Form()
 
 	d, err := formValues.Date("birthday")
-	noErr(t, err)
+	assertNoError(t, err)
 	expectedTime, _ := time.Parse(TimeFormatHTMLDate, "1980-01-01")
-	eq(t, *d, expectedTime)
+	assert(t, *d, expectedTime)
 }
 
 func TestParseTime(t *testing.T) {
@@ -168,9 +168,9 @@ func TestParseTime(t *testing.T) {
 	formValues := form.Form()
 
 	d, err := formValues.Time("clock in")
-	noErr(t, err)
+	assertNoError(t, err)
 	expectedTime, _ := time.Parse(TimeFormatHTMLTime, "10:15")
-	eq(t, *d, expectedTime)
+	assert(t, *d, expectedTime)
 }
 
 func TestParseDateTime(t *testing.T) {
@@ -180,9 +180,9 @@ func TestParseDateTime(t *testing.T) {
 	formValues := form.Form()
 
 	d, err := formValues.DateTime("vacation start")
-	noErr(t, err)
+	assertNoError(t, err)
 	expectedTime, _ := time.Parse(TimeFormatHTMLDateTime, "1999-01-01T10:15")
-	eq(t, *d, expectedTime)
+	assert(t, *d, expectedTime)
 }
 
 func TestFormIndex(t *testing.T) {
@@ -192,9 +192,9 @@ func TestFormIndex(t *testing.T) {
 	formValues := form.Form()
 
 	indexes, err := formValues.Indexes("cb color")
-	noErr(t, err)
+	assertNoError(t, err)
 	expectedIndexes := []int{0, 2}
-	eqIndexes(t, indexes, expectedIndexes)
+	assertIndexes(t, indexes, expectedIndexes)
 }
 
 func TestParseSelection(t *testing.T) {
@@ -204,11 +204,11 @@ func TestParseSelection(t *testing.T) {
 	formValues := form.Form()
 
 	selectedColor, err := FormSelected(formValues, "sel color", mockColors)
-	noErr(t, err)
+	assertNoError(t, err)
 
 	if len(selectedColor) != 1 {
 		t.Fatal(errUnexpectedLength)
 	}
 
-	eq(t, selectedColor[0].Print(), mockColors[0].Print())
+	assert(t, selectedColor[0].Print(), mockColors[0].Print())
 }

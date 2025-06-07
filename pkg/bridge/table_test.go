@@ -22,16 +22,16 @@ func TestTable(t *testing.T) {
 	}
 
 	thead := tableEl.Children[0]
-	eq(t, len(thead.Children), 1)
+	assert(t, len(thead.Children), 1)
 
 	headRow := thead.Children[0]
 	headCol := headRow.Children[1]
-	eq(t, headCol.InnerText, "name")
+	assert(t, headCol.InnerText, "name")
 
 	tbody := tableEl.Children[1]
-	eq(t, len(tbody.Children), 4)
+	assert(t, len(tbody.Children), 4)
 
 	anchoviesRow := tbody.Children[1]
 	anchoviesCol := anchoviesRow.Children[1]
-	eq(t, anchoviesCol.InnerText, "Anchovies")
+	assert(t, anchoviesCol.InnerText, "Anchovies")
 }

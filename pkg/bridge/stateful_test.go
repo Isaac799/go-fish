@@ -14,6 +14,6 @@ func TestStateful(t *testing.T) {
 		Tag: "div",
 	}
 	form := Stateful(&divEl, state)
-	eq(t, len(form.Children), 5)
-	eq(t, form.Children[0].Tag, "div")
+	assert(t, len(form.Children), 5)
+	assert(t, form.Children[0].Tag, "div")
 }
