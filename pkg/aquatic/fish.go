@@ -4,7 +4,6 @@
 package aquatic
 
 import (
-	"bytes"
 	"crypto/md5"
 	"fmt"
 	"io"
@@ -96,7 +95,8 @@ type Fish[K any] struct {
 	filePath       string
 	children       []Fish[K]
 
-	// only to be used by FishKindMackerel
+	// FishKindMackerel have it pre-defined. Other fish
+	// cached read of template since it ony needs to be read once
 	bytes []byte
 
 	// Licenses is a collection of licenses a user must have
@@ -271,39 +271,35 @@ func newFish[T, K any](entry os.DirEntry, pathBase string, pond *Pond[T, K]) (*F
 
 // TemplateBuffer will wrap a file content in the define syntax.
 // Enforcing template name scheme and reducing template lines n - 2.
-func templateBuffer[K any](f *Fish[K]) (*bytes.Buffer, error) {
+func templateBytes[K any](f *Fish[K]) ([]byte, error) {
+	if f.bytes != nil {
+		return f.bytes, nil
+	}
+
 	file, err := os.Open(f.filePath)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
-	fileBytes, err := io.ReadAll(file)
+	info, err := file.Stat()
 	if err != nil {
 		return nil, err
 	}
 
-	// buffer for wrap file in define
-	fileBuffer := bytes.NewBuffer([]byte{})
+	prefix := fmt.Appendf(nil, "{{define \"%s\"}}", f.templateName)
+	suffix := []byte("{{end}}")
 
-	start := fmt.Appendf(nil, "{{define \"%s\"}}", f.templateName)
-	fileBuffer.Grow(len(start))
-	_, err = fileBuffer.Write(start)
+	size := len(prefix) + int(info.Size()) + len(suffix)
+	buffer := make([]byte, size)
+
+	copy(buffer, prefix)
+	n, err := file.Read(buffer[len(prefix) : len(prefix)+int(info.Size())])
 	if err != nil {
-		return fileBuffer, err
+		return nil, err
 	}
 
-	fileBuffer.Grow(len(fileBytes))
-	_, err = fileBuffer.Write(fileBytes)
-	if err != nil {
-		return fileBuffer, err
-	}
+	copy(buffer[len(prefix)+n:], suffix)
+	f.bytes = buffer
 
-	end := []byte("{{end}}")
-	fileBuffer.Grow(len(end))
-	_, err = fileBuffer.Write(end)
-	if err != nil {
-		return fileBuffer, err
-	}
-
-	return fileBuffer, nil
+	return buffer, nil
 }

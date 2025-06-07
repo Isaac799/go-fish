@@ -28,14 +28,14 @@ func handlerSardine[T, K any](f *Fish[K], pond *Pond[T, K]) http.HandlerFunc {
 			if _, exists := sardinesEaten[e.templateName]; exists {
 				continue
 			}
-			buff, err := templateBuffer(&e)
+			b, err := templateBytes(&e)
 			if err != nil {
 				fmt.Print(err)
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
-			allFishBuff.Grow(buff.Len())
-			allFishBuff.Write(buff.Bytes())
+			allFishBuff.Grow(len(b))
+			allFishBuff.Write(b)
 			sardinesEaten[e.templateName] = true
 		}
 
@@ -47,14 +47,14 @@ func handlerSardine[T, K any](f *Fish[K], pond *Pond[T, K]) http.HandlerFunc {
 			if _, exists := sardinesEaten[e.templateName]; exists {
 				continue
 			}
-			buff, err := templateBuffer(e)
+			b, err := templateBytes(e)
 			if err != nil {
 				fmt.Print(err)
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
-			allFishBuff.Grow(buff.Len())
-			allFishBuff.Write(buff.Bytes())
+			allFishBuff.Grow(len(b))
+			allFishBuff.Write(b)
 			sardinesEaten[e.templateName] = true
 		}
 
@@ -66,14 +66,14 @@ func handlerSardine[T, K any](f *Fish[K], pond *Pond[T, K]) http.HandlerFunc {
 			if _, exists := sardinesEaten[e.templateName]; exists {
 				continue
 			}
-			buff, err := templateBuffer(&e)
+			b, err := templateBytes(&e)
 			if err != nil {
 				fmt.Print(err)
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
-			allFishBuff.Grow(buff.Len())
-			allFishBuff.Write(buff.Bytes())
+			allFishBuff.Grow(len(b))
+			allFishBuff.Write(b)
 			sardinesEaten[e.templateName] = true
 		}
 
@@ -92,14 +92,14 @@ func handlerSardine[T, K any](f *Fish[K], pond *Pond[T, K]) http.HandlerFunc {
 
 		if _, exists := sardinesEaten[f.templateName]; !exists {
 			// Define the tuna 'sardine' last
-			buff, err := templateBuffer(f)
+			b, err := templateBytes(f)
 			if err != nil {
 				fmt.Print(err)
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
-			allFishBuff.Grow(buff.Len())
-			allFishBuff.Write(buff.Bytes())
+			allFishBuff.Grow(len(b))
+			allFishBuff.Write(b)
 		}
 
 		if f.Tackle != nil {
@@ -217,14 +217,14 @@ func handlerTuna[T, K any](f *Fish[K], pond *Pond[T, K]) http.HandlerFunc {
 			if _, exists := sardinesEaten[e.templateName]; exists {
 				continue
 			}
-			buff, err := templateBuffer(&e)
+			b, err := templateBytes(&e)
 			if err != nil {
 				fmt.Print(err)
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
-			allFishBuff.Grow(buff.Len())
-			allFishBuff.Write(buff.Bytes())
+			allFishBuff.Grow(len(b))
+			allFishBuff.Write(b)
 			sardinesEaten[e.templateName] = true
 		}
 
@@ -236,14 +236,14 @@ func handlerTuna[T, K any](f *Fish[K], pond *Pond[T, K]) http.HandlerFunc {
 			if _, exists := sardinesEaten[e.templateName]; exists {
 				continue
 			}
-			buff, err := templateBuffer(e)
+			b, err := templateBytes(e)
 			if err != nil {
 				fmt.Print(err)
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
-			allFishBuff.Grow(buff.Len())
-			allFishBuff.Write(buff.Bytes())
+			allFishBuff.Grow(len(b))
+			allFishBuff.Write(b)
 			sardinesEaten[e.templateName] = true
 		}
 
@@ -268,14 +268,14 @@ func handlerTuna[T, K any](f *Fish[K], pond *Pond[T, K]) http.HandlerFunc {
 			if _, exists := sardinesEaten[e.templateName]; exists {
 				continue
 			}
-			buff, err := templateBuffer(&e)
+			b, err := templateBytes(&e)
 			if err != nil {
 				fmt.Print(err)
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
-			allFishBuff.Grow(buff.Len())
-			allFishBuff.Write(buff.Bytes())
+			allFishBuff.Grow(len(b))
+			allFishBuff.Write(b)
 			sardinesEaten[e.templateName] = true
 		}
 
@@ -286,14 +286,14 @@ func handlerTuna[T, K any](f *Fish[K], pond *Pond[T, K]) http.HandlerFunc {
 		}
 
 		// Define the tuna last
-		buff, err := templateBuffer(f)
+		b, err := templateBytes(f)
 		if err != nil {
 			fmt.Print(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		allFishBuff.Grow(buff.Len())
-		allFishBuff.Write(buff.Bytes())
+		allFishBuff.Grow(len(b))
+		allFishBuff.Write(b)
 
 		if f.Tackle != nil {
 			t.Funcs(f.Tackle)
