@@ -59,7 +59,7 @@ func mackerelHTMLElement[K any]() Fish[K] {
 		kind:      FishKindMackerel,
 		isLanding: false,
 		mime:      "text/html",
-		bytes:     elementTemplate,
+		coral:     elementTemplate,
 		// used by key seeing which fish eaten when handling tuna or sardine.
 		// Value just needs to be unique.
 		templateName: randomStr,
@@ -95,9 +95,16 @@ type Fish[K any] struct {
 	filePath       string
 	children       []Fish[K]
 
-	// FishKindMackerel have it pre-defined. Other fish
-	// cached read of template since it ony needs to be read once
-	bytes []byte
+	// coral is bytes of template since it ony needs to be read once.
+	// FishKindMackerel have it pre-defined. Other fish its populated on first
+	// time parsing
+	coral []byte
+
+	// reef is combination of all coral (templates bytes) combined into
+	// one beautiful string for the parse template use. It includes all
+	// coral for other global, children... fish. Saves me from having to
+	// rebuild known template combinations for sardine and tuna.
+	reef []byte
 
 	// Licenses is a collection of licenses a user must have
 	// to catch a fish. Checked after pond licenses, in the
@@ -269,11 +276,12 @@ func newFish[T, K any](entry os.DirEntry, pathBase string, pond *Pond[T, K]) (*F
 	return &f, nil
 }
 
-// TemplateBuffer will wrap a file content in the define syntax.
+// coral will wrap a file content in the define syntax.
 // Enforcing template name scheme and reducing template lines n - 2.
-func templateBytes[K any](f *Fish[K]) ([]byte, error) {
-	if f.bytes != nil {
-		return f.bytes, nil
+// Once coral is discovered for the first time it is saved in the fish for re use.
+func coral[K any](f *Fish[K]) ([]byte, error) {
+	if f.coral != nil {
+		return f.coral, nil
 	}
 
 	file, err := os.Open(f.filePath)
@@ -299,7 +307,97 @@ func templateBytes[K any](f *Fish[K]) ([]byte, error) {
 	}
 
 	copy(buffer[len(prefix)+n:], suffix)
-	f.bytes = buffer
+	f.coral = buffer
 
 	return buffer, nil
+}
+
+// reef combines the coral of dependent fish and itself.
+// Once a reef is discovered for the first time it is saved in the fish for re use.
+func reef[T, K any](f *Fish[K], pond *Pond[T, K]) ([]byte, error) {
+	if f.reef != nil {
+		return f.reef, nil
+	}
+
+	// a map to store the various fish needed to be eaten
+	// by this fish to give it access to all templates available
+	// to it. Populated in a significant way to enable scoping
+	eaten := map[string][]byte{}
+	size := 0
+
+	// global mackerel first, cannot be over written
+	// since its a core 'system' fish
+	for _, e := range pond.globalSmallFish {
+		if e.kind != FishKindMackerel {
+			continue
+		}
+		if _, exists := eaten[e.templateName]; exists {
+			continue
+		}
+		b, err := coral(e)
+		if err != nil {
+			return nil, err
+		}
+		size += len(b)
+		eaten[e.templateName] = b
+	}
+
+	// local sardines first to give the consumer (tuna or sardine)
+	// access to its local dependent templates
+	for _, e := range f.children {
+		if e.kind != FishKindSardine {
+			continue
+		}
+		if _, exists := eaten[e.templateName]; exists {
+			continue
+		}
+		b, err := coral(&e)
+		if err != nil {
+			return nil, err
+		}
+		size += len(b)
+		eaten[e.templateName] = b
+	}
+
+	// global sardines come after local ones so they do not
+	// overwrite local ones. So if _nav in global scope and
+	// _nav in this fish dir we already consumed the local
+	// one, and it cannot be re defined
+	for _, e := range pond.globalSmallFish {
+		if e.kind != FishKindSardine {
+			continue
+		}
+		if _, exists := eaten[e.templateName]; exists {
+			continue
+		}
+		b, err := coral(e)
+		if err != nil {
+			return nil, err
+		}
+		size += len(b)
+		eaten[e.templateName] = b
+	}
+
+	// finally we can consume the 'main' fish (tuna or sardine)
+	// this is to ensure not re define if is sardine
+	if _, exists := eaten[f.templateName]; !exists {
+		b, err := coral(f)
+		if err != nil {
+			return nil, err
+		}
+		size += len(b)
+		eaten[f.templateName] = b
+	}
+
+	// now the cool part, a sliding copy into a single pre
+	// alloc buff using references to the fish bytes since
+	buff := make([]byte, size)
+	lastPos := 0
+	for _, v := range eaten {
+		n := copy(buff[lastPos:lastPos+len(v)], v)
+		lastPos += n
+	}
+
+	f.reef = buff
+	return buff, nil
 }

@@ -17,96 +17,18 @@ func handlerSardine[T, K any](f *Fish[K], pond *Pond[T, K]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		t := template.New(f.templateName)
 
-		allFishBuff := bytes.NewBuffer([]byte{})
-		sardinesEaten := map[string]bool{}
-
-		// Define the local sardines first
-		for _, e := range f.children {
-			if e.kind != FishKindSardine {
-				continue
-			}
-			if _, exists := sardinesEaten[e.templateName]; exists {
-				continue
-			}
-			b, err := templateBytes(&e)
-			if err != nil {
-				fmt.Print(err)
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-			allFishBuff.Grow(len(b))
-			allFishBuff.Write(b)
-			sardinesEaten[e.templateName] = true
-		}
-
-		// Define the global sardines second, not to overwrite the local ones
-		for _, e := range pond.globalSmallFish {
-			if e.kind != FishKindSardine {
-				continue
-			}
-			if _, exists := sardinesEaten[e.templateName]; exists {
-				continue
-			}
-			b, err := templateBytes(e)
-			if err != nil {
-				fmt.Print(err)
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-			allFishBuff.Grow(len(b))
-			allFishBuff.Write(b)
-			sardinesEaten[e.templateName] = true
-		}
-
-		// Define the children last
-		for _, e := range f.children {
-			if e.kind != FishKindSardine {
-				continue
-			}
-			if _, exists := sardinesEaten[e.templateName]; exists {
-				continue
-			}
-			b, err := templateBytes(&e)
-			if err != nil {
-				fmt.Print(err)
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-			allFishBuff.Grow(len(b))
-			allFishBuff.Write(b)
-			sardinesEaten[e.templateName] = true
-		}
-
-		// Also just the mackerel, aka the system fish
-		for _, e := range pond.globalSmallFish {
-			if e.kind != FishKindMackerel {
-				continue
-			}
-			if _, exists := sardinesEaten[e.templateName]; exists {
-				continue
-			}
-			allFishBuff.Grow(len(e.bytes))
-			allFishBuff.Write(e.bytes)
-			sardinesEaten[e.templateName] = true
-		}
-
-		if _, exists := sardinesEaten[f.templateName]; !exists {
-			// Define the tuna 'sardine' last
-			b, err := templateBytes(f)
-			if err != nil {
-				fmt.Print(err)
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-			allFishBuff.Grow(len(b))
-			allFishBuff.Write(b)
+		buff, err := reef(f, pond)
+		if err != nil {
+			fmt.Print(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
 		}
 
 		if f.Tackle != nil {
 			t.Funcs(f.Tackle)
 		}
 
-		parsed, err := t.Parse(allFishBuff.String())
+		parsed, err := t.Parse(string(buff))
 		if err != nil {
 			fmt.Print(err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -205,101 +127,18 @@ func handlerTuna[T, K any](f *Fish[K], pond *Pond[T, K]) http.HandlerFunc {
 
 		t := template.New(f.templateName)
 
-		allFishBuff := bytes.NewBuffer([]byte{})
-
-		sardinesEaten := map[string]bool{}
-
-		// Define the local sardines first
-		for _, e := range f.children {
-			if e.kind != FishKindSardine {
-				continue
-			}
-			if _, exists := sardinesEaten[e.templateName]; exists {
-				continue
-			}
-			b, err := templateBytes(&e)
-			if err != nil {
-				fmt.Print(err)
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-			allFishBuff.Grow(len(b))
-			allFishBuff.Write(b)
-			sardinesEaten[e.templateName] = true
-		}
-
-		// Define the global sardines first
-		for _, e := range pond.globalSmallFish {
-			if e.kind != FishKindSardine {
-				continue
-			}
-			if _, exists := sardinesEaten[e.templateName]; exists {
-				continue
-			}
-			b, err := templateBytes(e)
-			if err != nil {
-				fmt.Print(err)
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-			allFishBuff.Grow(len(b))
-			allFishBuff.Write(b)
-			sardinesEaten[e.templateName] = true
-		}
-
-		// Also just the mackerel, aka the system fish
-		for _, e := range pond.globalSmallFish {
-			if e.kind != FishKindMackerel {
-				continue
-			}
-			if _, exists := sardinesEaten[e.templateName]; exists {
-				continue
-			}
-			allFishBuff.Grow(len(e.bytes))
-			allFishBuff.Write(e.bytes)
-			sardinesEaten[e.templateName] = true
-		}
-
-		// Define the global sardines second, not to overwrite the local ones
-		for _, e := range f.children {
-			if e.kind != FishKindSardine {
-				continue
-			}
-			if _, exists := sardinesEaten[e.templateName]; exists {
-				continue
-			}
-			b, err := templateBytes(&e)
-			if err != nil {
-				fmt.Print(err)
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-			allFishBuff.Grow(len(b))
-			allFishBuff.Write(b)
-			sardinesEaten[e.templateName] = true
-		}
-
-		if _, exists := sardinesEaten[f.templateName]; exists {
-			fmt.Println("sardine name conflicts with tuna name: ", f.templateName)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		// Define the tuna last
-		b, err := templateBytes(f)
+		buff, err := reef(f, pond)
 		if err != nil {
 			fmt.Print(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		allFishBuff.Grow(len(b))
-		allFishBuff.Write(b)
 
 		if f.Tackle != nil {
 			t.Funcs(f.Tackle)
 		}
 
-		parsed, err := t.Parse(allFishBuff.String())
+		parsed, err := t.Parse(string(buff))
 		if err != nil {
 			fmt.Print(err)
 			w.WriteHeader(http.StatusInternalServerError)
