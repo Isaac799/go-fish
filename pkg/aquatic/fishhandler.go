@@ -113,21 +113,78 @@ func handlerClownAnchovy[T, K any](f *Fish[K]) http.HandlerFunc {
 	}
 }
 
+func bobber[T, K any](f *Fish[K], pond *Pond[T, K]) []byte {
+	if f.bobber != nil {
+		return f.bobber
+	}
+
+	// unlikely more than 10 links in doc head
+	// so realloc at least that many
+	headLinks := make([][]byte, 0, 10)
+
+	size := 0
+	for _, e := range pond.globalSmallFish {
+		if e.kind != FiskKindClown {
+			continue
+		}
+		if strings.HasPrefix(e.mime, "text/css") {
+			b := fmt.Appendf(nil, `<link rel="stylesheet" href="%s?v=%s">`, e.pattern, e.hash)
+			headLinks = append(headLinks, b)
+			size += len(b)
+		}
+		if strings.HasPrefix(e.mime, "text/javascript") {
+			b := fmt.Appendf(nil, `<script src="%s?v=%s"></script>`, e.pattern, e.hash)
+			headLinks = append(headLinks, b)
+			size += len(b)
+		}
+	}
+	for _, e := range f.children {
+		if e.kind != FiskKindClown {
+			continue
+		}
+		if strings.HasPrefix(e.mime, "text/css") {
+			b := fmt.Appendf(nil, `<link rel="stylesheet" href="%s">`, e.pattern)
+			headLinks = append(headLinks, b)
+			size += len(b)
+		}
+		if strings.HasPrefix(e.mime, "text/javascript") {
+			b := fmt.Appendf(nil, `<script src="%s"></script>`, e.pattern)
+			headLinks = append(headLinks, b)
+			size += len(b)
+		}
+	}
+
+	// Sort ensure links in lexicographical order (alphabetical)
+	// Important for consistency in resolving css class conflicts and such
+	sort.Slice(headLinks, func(i, j int) bool {
+		return bytes.Compare(headLinks[i], headLinks[j]) < 0
+	})
+
+	b := make([]byte, size)
+	last := 0
+	for _, v := range headLinks {
+		n := copy(b[last:last+len(v)], v)
+		last += n
+	}
+	f.bobber = b
+	return b
+}
+
+// handlerTuna wraps a fish reef in in html5 syntax and
+// adds the bobber to the head of the document. It uses the
+// bait for a fish and its pond for template data. It uses
+// tackle for template funcs.
 func handlerTuna[T, K any](f *Fish[K], pond *Pond[T, K]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// 3 main parts to the document I will add in between
-		htmlStartHead := []byte(`<!DOCTYPE html><html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" >`)
-		htmlEndHeadStartBody := []byte(`
-</head>
-<body>`)
-		htmlEndBody := []byte(`</body></html>`)
+		var (
+			docStart  = []byte(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0" >`)
+			bodyStart = []byte(`</head><body>`)
+			docEnd    = []byte(`</body></html>`)
+		)
 
 		t := template.New(f.templateName)
 
-		buff, err := reef(f, pond)
+		reef, err := reef(f, pond)
 		if err != nil {
 			fmt.Print(err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -138,101 +195,23 @@ func handlerTuna[T, K any](f *Fish[K], pond *Pond[T, K]) http.HandlerFunc {
 			t.Funcs(f.Tackle)
 		}
 
-		parsed, err := t.Parse(string(buff))
+		parsed, err := t.Parse(string(reef))
 		if err != nil {
 			fmt.Print(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		// buffer for html doc we will wrap in html5 syntax
-		// want to exec template into this to get len for res
-		resBytes := []byte{}
-		resBuff := bytes.NewBuffer(resBytes)
+		headLinks := bobber(f, pond)
 
-		resBuff.Grow(len(htmlStartHead))
-		_, err = resBuff.Write(htmlStartHead)
-		if err != nil {
-			fmt.Print(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+		// this size is not perfect since the executed template size
+		// cannot be know, but it helps some allocation before that
+		size := len(docStart) + len(headLinks) + len(bodyStart) + len(docEnd)
 
-		// Ensure the links are always ordered the same
-		// so the page loads them the same. Important for
-		// css class conflicts and such
-		orderedSmallFish := make([]*Fish[K], len(pond.globalSmallFish))
-
-		// global styling
-		k := 0
-		for _, e := range pond.globalSmallFish {
-			orderedSmallFish[k] = e
-			k++
-		}
-
-		sort.Slice(orderedSmallFish, func(i, j int) bool {
-			return strings.Compare(orderedSmallFish[i].pattern, orderedSmallFish[j].pattern) < 0
-		})
-
-		for _, e := range orderedSmallFish {
-			if e.kind != FiskKindClown {
-				continue
-			}
-			if strings.HasPrefix(e.mime, "text/css") {
-				b := fmt.Appendf(nil, `<link rel="stylesheet" href="%s?v=%s">`, e.pattern, e.hash)
-				resBuff.Grow(len(b))
-				_, err = resBuff.Write(b)
-				if err != nil {
-					fmt.Print(err)
-					w.WriteHeader(http.StatusInternalServerError)
-					return
-				}
-			}
-			if strings.HasPrefix(e.mime, "text/javascript") {
-				b := fmt.Appendf(nil, `<script src="%s?v=%s"></script>`, e.pattern, e.hash)
-				resBuff.Grow(len(b))
-				_, err = resBuff.Write(b)
-				if err != nil {
-					fmt.Print(err)
-					w.WriteHeader(http.StatusInternalServerError)
-					return
-				}
-			}
-		}
-
-		// styling
-		for _, e := range f.children {
-			if e.kind != FiskKindClown {
-				continue
-			}
-			if strings.HasPrefix(e.mime, "text/css") {
-				b := fmt.Appendf(nil, `<link rel="stylesheet" href="%s">`, e.pattern)
-				resBuff.Grow(len(b))
-				_, err = resBuff.Write(b)
-				if err != nil {
-					fmt.Print(err)
-					w.WriteHeader(http.StatusInternalServerError)
-					return
-				}
-			}
-			if strings.HasPrefix(e.mime, "text/javascript") {
-				b := fmt.Appendf(nil, `<script src="%s"></script>`, e.pattern)
-				resBuff.Grow(len(b))
-				_, err = resBuff.Write(b)
-				if err != nil {
-					fmt.Print(err)
-					w.WriteHeader(http.StatusInternalServerError)
-					return
-				}
-			}
-		}
-		resBuff.Grow(len(htmlEndHeadStartBody))
-		_, err = resBuff.Write(htmlEndHeadStartBody)
-		if err != nil {
-			fmt.Print(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+		buff := bytes.NewBuffer(make([]byte, 0, size))
+		buff.Write(docStart)
+		buff.Write(headLinks)
+		buff.Write(bodyStart)
 
 		var globalBait T
 		var localBait K
@@ -242,26 +221,24 @@ func handlerTuna[T, K any](f *Fish[K], pond *Pond[T, K]) http.HandlerFunc {
 		if pond.GlobalBait != nil {
 			globalBait = pond.GlobalBait(r)
 		}
-
 		pageData := masterBait[T, K]{
 			Local:  localBait,
 			Global: globalBait,
 		}
 
-		err = parsed.ExecuteTemplate(resBuff, f.templateName, pageData)
+		err = parsed.ExecuteTemplate(buff, f.templateName, pageData)
 		if err != nil {
 			fmt.Print(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		resBuff.Grow(len(htmlEndBody))
-		resBuff.Write(htmlEndBody)
+		buff.Write(docEnd)
 
 		w.Header().Add("Cache-Control", "no-store")
 		w.Header().Add("Content-Type", "text/html")
-		w.Header().Add("Content-Length", strconv.Itoa(len(resBuff.Bytes())))
-		_, err = w.Write(resBuff.Bytes())
+		w.Header().Add("Content-Length", strconv.Itoa(len(buff.Bytes())))
+		_, err = w.Write(buff.Bytes())
 		if err != nil {
 			fmt.Print(err)
 			w.WriteHeader(http.StatusInternalServerError)

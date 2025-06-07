@@ -106,6 +106,10 @@ type Fish[K any] struct {
 	// rebuild known template combinations for sardine and tuna.
 	reef []byte
 
+	// bobber stays above a tuna. Is the head of the html document.
+	// Only relevant for tuna. Saved for reuse after first determined.
+	bobber []byte
+
 	// Licenses is a collection of licenses a user must have
 	// to catch a fish. Checked after pond licenses, in the
 	// order added. To catch a fish all pond and fish licenses
@@ -392,10 +396,10 @@ func reef[T, K any](f *Fish[K], pond *Pond[T, K]) ([]byte, error) {
 	// now the cool part, a sliding copy into a single pre
 	// alloc buff using references to the fish bytes since
 	buff := make([]byte, size)
-	lastPos := 0
+	last := 0
 	for _, v := range eaten {
-		n := copy(buff[lastPos:lastPos+len(v)], v)
-		lastPos += n
+		n := copy(buff[last:last+len(v)], v)
+		last += n
 	}
 
 	f.reef = buff
