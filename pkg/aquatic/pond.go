@@ -48,11 +48,16 @@ type Pond[T, K any] struct {
 	options     NewPondOptions
 	pathBase    string
 	templateDir string
-	GlobalBait  Bait[T]
-	// strictly for small fish
-	globalSmallFish map[string]*Fish[K]
+
+	// 'global bait' that has been tossed into a pond for all fish to use.
+	Chum Bait[T]
+
+	// strictly for small fish to be used by tuna and sardines
+	shad map[string]*Fish[K]
+
 	// fish are the items available for catch in a pond
 	fish map[string][]Fish[K]
+
 	// licenses are required for any fish to be caught
 	licenses []License
 }
@@ -61,8 +66,8 @@ type Pond[T, K any] struct {
 // Note that only anchovy and clown are allowed to flow (assets)
 // Useful to setup 2 ponds. one for assets, one for pages
 func FlowsInto[T, K any](p *Pond[T, K], p2 *Pond[T, K]) {
-	for _, f := range p.globalSmallFish {
-		p2.globalSmallFish[f.filePath] = f
+	for _, f := range p.shad {
+		p2.shad[f.filePath] = f
 	}
 }
 
@@ -174,26 +179,26 @@ func collect[T, K any](p *Pond[T, K], pathBase string) error {
 		smallFishes = append(smallFishes, item)
 	}
 
-	if p.globalSmallFish == nil && isRoot {
-		if p.globalSmallFish == nil {
-			p.globalSmallFish = make(map[string]*Fish[K], len(smallFishes))
+	if p.shad == nil && isRoot {
+		if p.shad == nil {
+			p.shad = make(map[string]*Fish[K], len(smallFishes))
 		}
 		for _, f := range smallFishes {
-			p.globalSmallFish[f.filePath] = f
+			p.shad[f.filePath] = f
 		}
 
 	} else if p.options.GlobalSmallFish {
-		if p.globalSmallFish == nil {
-			p.globalSmallFish = make(map[string]*Fish[K], len(smallFishes))
+		if p.shad == nil {
+			p.shad = make(map[string]*Fish[K], len(smallFishes))
 		}
 		for _, c := range smallFishes {
-			p.globalSmallFish[c.filePath] = c
+			p.shad[c.filePath] = c
 		}
 	}
 
 	for _, pageItem := range bigFishes {
 		for _, c := range smallFishes {
-			pageItem.children = append(pageItem.children, *c)
+			pageItem.school = append(pageItem.school, *c)
 		}
 
 		itemsDeref := p.fish
@@ -226,7 +231,7 @@ func CastLines[T, K any](pond *Pond[T, K], verbose bool) *http.ServeMux {
 	// allows us to collect fish before
 	fishToRegister := make(map[string]*Fish[K])
 
-	for _, child := range pond.globalSmallFish {
+	for _, child := range pond.shad {
 		if child.kind == FishKindMackerel {
 			// not to be served
 			continue
@@ -253,7 +258,7 @@ func CastLines[T, K any](pond *Pond[T, K], verbose bool) *http.ServeMux {
 
 			fishToRegister[fish.pattern] = &fish
 
-			for _, child := range fish.children {
+			for _, child := range fish.school {
 				if child.kind == FishKindTuna {
 					// unreachable
 					continue

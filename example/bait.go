@@ -192,8 +192,6 @@ func buildStatefulTable(csvReader2 *csv.Reader, r *http.Request) *bridge.HTMLEle
 
 		// Gives a text input to filter by. We can define these now
 		// since they are not modified later and not using the 'hidden' flow.
-		// Also, opted to not use my new text element fn since that adds a label
-		// that I don't want.
 		filterKey := fmt.Sprintf("%s%d", formKeyPrefixFilterBy, i)
 		filterByDiv := bridge.NewInputText(filterKey, bridge.InputKindText, 0, 20)
 		filterByDiv.DeleteFirst(bridge.LikeTag("label"))

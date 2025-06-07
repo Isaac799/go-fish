@@ -93,7 +93,9 @@ type Fish[K any] struct {
 	pattern        string
 	scopedFilePath string
 	filePath       string
-	children       []Fish[K]
+
+	// fish found in same dir
+	school []Fish[K]
 
 	// coral is bytes of template since it ony needs to be read once.
 	// FishKindMackerel have it pre-defined. Other fish its populated on first
@@ -145,23 +147,23 @@ func Gobble[T any](f *Fish[T], f2 *Fish[T]) {
 		f.Tackle = make(template.FuncMap, len(f2.Tackle))
 	}
 	maps.Copy(f.Tackle, f2.Tackle)
-	for i := range f.children {
-		if f.children[i].Bait == nil && f2.Bait != nil {
-			f.children[i].Bait = f2.Bait
+	for i := range f.school {
+		if f.school[i].Bait == nil && f2.Bait != nil {
+			f.school[i].Bait = f2.Bait
 		}
-		if f.children[i].kind != FishKindSardine {
+		if f.school[i].kind != FishKindSardine {
 			continue
 		}
-		if f.children[i].Licenses == nil {
-			f.children[i].Licenses = make([]License, 0, len(f2.Licenses))
+		if f.school[i].Licenses == nil {
+			f.school[i].Licenses = make([]License, 0, len(f2.Licenses))
 		}
 		for _, l := range f2.Licenses {
-			f.children[i].Licenses = append(f.children[i].Licenses, l)
+			f.school[i].Licenses = append(f.school[i].Licenses, l)
 		}
-		if f.children[i].Tackle == nil {
-			f.children[i].Tackle = make(template.FuncMap, len(f2.Tackle))
+		if f.school[i].Tackle == nil {
+			f.school[i].Tackle = make(template.FuncMap, len(f2.Tackle))
 		}
-		maps.Copy(f.children[i].Tackle, f2.Tackle)
+		maps.Copy(f.school[i].Tackle, f2.Tackle)
 	}
 }
 
@@ -331,7 +333,7 @@ func reef[T, K any](f *Fish[K], pond *Pond[T, K]) ([]byte, error) {
 
 	// global mackerel first, cannot be over written
 	// since its a core 'system' fish
-	for _, e := range pond.globalSmallFish {
+	for _, e := range pond.shad {
 		if e.kind != FishKindMackerel {
 			continue
 		}
@@ -348,7 +350,7 @@ func reef[T, K any](f *Fish[K], pond *Pond[T, K]) ([]byte, error) {
 
 	// local sardines first to give the consumer (tuna or sardine)
 	// access to its local dependent templates
-	for _, e := range f.children {
+	for _, e := range f.school {
 		if e.kind != FishKindSardine {
 			continue
 		}
@@ -367,7 +369,7 @@ func reef[T, K any](f *Fish[K], pond *Pond[T, K]) ([]byte, error) {
 	// overwrite local ones. So if _nav in global scope and
 	// _nav in this fish dir we already consumed the local
 	// one, and it cannot be re defined
-	for _, e := range pond.globalSmallFish {
+	for _, e := range pond.shad {
 		if e.kind != FishKindSardine {
 			continue
 		}

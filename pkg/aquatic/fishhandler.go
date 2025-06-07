@@ -38,8 +38,8 @@ func handlerSardine[T, K any](f *Fish[K], pond *Pond[T, K]) http.HandlerFunc {
 		var globalBait T
 		var localBait K
 
-		if pond.GlobalBait != nil {
-			globalBait = pond.GlobalBait(r)
+		if pond.Chum != nil {
+			globalBait = pond.Chum(r)
 		}
 		if f.Bait != nil {
 			localBait = f.Bait(r)
@@ -123,7 +123,7 @@ func bobber[T, K any](f *Fish[K], pond *Pond[T, K]) []byte {
 	headLinks := make([][]byte, 0, 10)
 
 	size := 0
-	for _, e := range pond.globalSmallFish {
+	for _, e := range pond.shad {
 		if e.kind != FiskKindClown {
 			continue
 		}
@@ -138,7 +138,7 @@ func bobber[T, K any](f *Fish[K], pond *Pond[T, K]) []byte {
 			size += len(b)
 		}
 	}
-	for _, e := range f.children {
+	for _, e := range f.school {
 		if e.kind != FiskKindClown {
 			continue
 		}
@@ -218,8 +218,8 @@ func handlerTuna[T, K any](f *Fish[K], pond *Pond[T, K]) http.HandlerFunc {
 		if f.Bait != nil {
 			localBait = f.Bait(r)
 		}
-		if pond.GlobalBait != nil {
-			globalBait = pond.GlobalBait(r)
+		if pond.Chum != nil {
+			globalBait = pond.Chum(r)
 		}
 		pageData := masterBait[T, K]{
 			Local:  localBait,

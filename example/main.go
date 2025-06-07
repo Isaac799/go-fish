@@ -50,7 +50,7 @@ func main() {
 	aquatic.StockPond(&pond, stockFish)
 
 	gd := globalData{}
-	pond.GlobalBait = func(_ *http.Request) globalData {
+	pond.Chum = func(_ *http.Request) globalData {
 		return gd
 	}
 
