@@ -4,12 +4,18 @@ import (
 	"bytes"
 	"encoding/csv"
 	"fmt"
+	"math"
 	"net/http"
 	"slices"
 	"strconv"
 
 	"github.com/Isaac799/go-fish/pkg/bridge"
 )
+
+type dragDropItem struct {
+	ID   int
+	X, Y int
+}
 
 type user struct {
 	ID        int
@@ -23,10 +29,83 @@ type tables struct {
 }
 
 type fishData struct {
-	Season string
-	User   *user
-	Table  *tables
-	Form   *bridge.HTMLElement
+	Season   string
+	User     *user
+	Table    *tables
+	Form     *bridge.HTMLElement
+	DragDrop *bridge.HTMLElement
+}
+
+func dragDrop(r *http.Request) *fishData {
+	// default positions
+	items := []dragDropItem{
+		{ID: 1, X: 50, Y: 50},
+		{ID: 2, X: 200, Y: 150},
+	}
+
+	container := bridge.Stateful(&bridge.HTMLElement{
+		Tag:      "div",
+		Children: make([]bridge.HTMLElement, 0, len(items)+1),
+	}, nil)
+	container.EnsureAttributes()
+	container.Attributes["id"] = "container"
+
+	updateEl := bridge.HTMLElement{
+		Tag: "span",
+		Attributes: bridge.Attributes{
+			"hx-post": "/drag-drop/_container",
+			// positionUpdated emitted by JS on drag end
+			"hx-trigger": "positionUpdated from:body",
+			"hx-target":  "#container",
+			"hx-swap":    "outerHTML",
+		},
+	}
+	container.Children = append(container.Children, updateEl)
+
+	var nodeIdentifiers = func(i int) (string, string, string) {
+		nodeID := fmt.Sprintf("n%d", i)
+		nameX := fmt.Sprintf("%sx", nodeID)
+		nameY := fmt.Sprintf("%sy", nodeID)
+		return nodeID, nameX, nameY
+	}
+
+	for i, item := range items {
+		nodeID, nameX, nameY := nodeIdentifiers(i)
+		draggableEl := bridge.HTMLElement{
+			Tag: "div",
+			Attributes: bridge.Attributes{
+				"class": "node",
+				"id":    nodeID,
+			},
+			Children: make([]bridge.HTMLElement, 0, 2),
+		}
+		draggableX := bridge.NewInputHidden(nameX, strconv.Itoa(item.X))
+		draggableY := bridge.NewInputHidden(nameY, strconv.Itoa(item.Y))
+
+		draggableEl.Children = append(draggableEl.Children, draggableX, draggableY)
+		container.Children = append(container.Children, draggableEl)
+	}
+
+	container.FillForm(r)
+	formVal := container.Form()
+
+	nodes := container.FindAll(bridge.LikeAttribute("class", "node"))
+	for i, el := range nodes {
+		el.EnsureAttributes()
+		_, nameX, nameY := nodeIdentifiers(i)
+		x, _ := formVal.Int(nameX)
+		y, _ := formVal.Int(nameY)
+
+		// example of enforcing data constraint server side
+		roundBy := 25.0
+		x = int(math.Round(float64(x)/roundBy) * roundBy)
+		y = int(math.Round(float64(y)/roundBy) * roundBy)
+
+		el.Attributes["style"] = fmt.Sprintf("transform: translate(%dpx, %dpx)", x, y)
+	}
+
+	data := fishData{DragDrop: container}
+	return &data
 }
 
 func queriedSeason(r *http.Request) *fishData {

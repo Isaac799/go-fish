@@ -1,0 +1,26 @@
+#container {
+  width: 400px;
+  height: 300px;
+  border: 1px solid black;
+  position: relative;
+  user-select: none;
+}
+
+.node {
+  position: absolute;
+  cursor: grab;
+  touch-action: none;
+
+  width: 60px;
+  height: 60px;
+
+  border: 0;
+  border: 1px solid black;
+  background-color: blanchedalmond;
+  padding: 1rem;
+  border-radius: 0.5rem;
+}
+
+#container.htmx-swapping {
+  background-color: blanchedalmond;
+}

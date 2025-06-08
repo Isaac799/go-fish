@@ -46,6 +46,9 @@ func main() {
 		rx("/table"): {
 			Bait: tableInfo,
 		},
+		rx("drag-drop"): {
+			Bait: dragDrop,
+		},
 	}
 	aquatic.StockPond(&pond, stockFish)
 

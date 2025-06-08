@@ -143,12 +143,12 @@ func bobber[T, K any](f *Fish[K], pond *Pond[T, K]) []byte {
 			continue
 		}
 		if strings.HasPrefix(e.mime, "text/css") {
-			b := fmt.Appendf(nil, `<link rel="stylesheet" href="%s">`, e.pattern)
+			b := fmt.Appendf(nil, `<link rel="stylesheet" href="%s?v=%s">`, e.pattern, e.hash)
 			headLinks = append(headLinks, b)
 			size += len(b)
 		}
 		if strings.HasPrefix(e.mime, "text/javascript") {
-			b := fmt.Appendf(nil, `<script src="%s"></script>`, e.pattern)
+			b := fmt.Appendf(nil, `<script src="%s?v=%s"></script>`, e.pattern, e.hash)
 			headLinks = append(headLinks, b)
 			size += len(b)
 		}
