@@ -13,7 +13,7 @@ func TestStateful(t *testing.T) {
 	divEl := HTMLElement{
 		Tag: "div",
 	}
-	form := Stateful(&divEl, state)
+	form := ElementWithState(&divEl, state)
 	assert(t, len(form.Children), 5)
 	assert(t, form.Children[0].Tag, "div")
 }

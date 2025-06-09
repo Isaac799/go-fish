@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"slices"
 	"strconv"
-	"time"
+	"strings"
 )
 
 var (
@@ -31,109 +31,13 @@ var (
 )
 
 // ParsedForm is the result of comparing a request against a predefined form
-// with helpful methods for parsing values.
-type ParsedForm map[string][]string
-
-// String parses a string from the form given a key
-func (form ParsedForm) String(key string) (string, error) {
-	s, exists := form[key]
-	if !exists {
-		return "", ErrKeyDoesNotExist
-	}
-	if len(s) != 1 {
-		return "", ErrMultipleValues
-	}
-	return s[0], nil
-}
-
-// Time parses a time from the form given a key
-func (form ParsedForm) Time(key string) (*time.Time, error) {
-	s, err := form.String(key)
-	if err != nil {
-		return nil, err
-	}
-	t, err := time.Parse(TimeFormatHTMLTime, s)
-	if err != nil {
-		return nil, err
-	}
-	return &t, nil
-}
-
-// Date parses a date from the form given a key
-func (form ParsedForm) Date(key string) (*time.Time, error) {
-	s, err := form.String(key)
-	if err != nil {
-		return nil, err
-	}
-	t, err := time.Parse(TimeFormatHTMLDate, s)
-	if err != nil {
-		return nil, err
-	}
-	return &t, nil
-}
-
-// DateTime parses a date and time from the form given a key
-func (form ParsedForm) DateTime(key string) (*time.Time, error) {
-	s, err := form.String(key)
-	if err != nil {
-		return nil, err
-	}
-	t, err := time.Parse(TimeFormatHTMLDateTime, s)
-	if err != nil {
-		return nil, err
-	}
-	return &t, nil
-}
-
-// Int parses a int from the form given a key
-func (form ParsedForm) Int(key string) (int, error) {
-	s, err := form.String(key)
-	if err != nil {
-		return 0, err
-	}
-	parsed, err := strconv.Atoi(s)
-	if err != nil {
-		return 0, err
-	}
-	return parsed, nil
-}
-
-// Uint64 parses a uint64 from the form given a key
-// useful for things like a table page where the number must be unsigned
-func (el *HTMLElement) Uint64() (uint64, error) {
-	s, err := el.ValueString()
-	if err != nil {
-		return 0, ErrNoValueOnInputElement
-	}
-	parsed, err := strconv.ParseUint(s, 10, 8)
-	if err != nil {
-		return 0, err
-	}
-	return parsed, nil
-}
-
-// Indexes parses the chosen indexes of a select, checkbox, or radio
-// from the form given a key
-func (form ParsedForm) Indexes(key string) ([]int, error) {
-	values, exists := form[key]
-	if !exists {
-		return nil, ErrKeyDoesNotExist
-	}
-	indexes := make([]int, len(values))
-	for i, s := range values {
-		parsed, err := strconv.Atoi(s)
-		if err != nil {
-			return nil, err
-		}
-		indexes[i] = parsed
-	}
-	return indexes, nil
-}
+// with helpful methods for parsing values. Indexes are a comma delimited string
+type ParsedForm map[string]string
 
 // FormSelected parses the chosen items of a select, checkbox, or radio
 // from the form given a key
 func FormSelected[T Printable](form ParsedForm, key string, pool []T) ([]T, error) {
-	indexes, err := form.Indexes(key)
+	indexes, err := ValueOf[[]int](form, key)
 	if err != nil {
 		return nil, ErrKeyDoesNotExist
 	}
@@ -156,7 +60,7 @@ func FormSelected[T Printable](form ParsedForm, key string, pool []T) ([]T, erro
 // Useful when defining what something should look like, then
 // getting the form that will actually be provided to a client.
 func (el *HTMLElement) Form() ParsedForm {
-	m := make(map[string][]string)
+	m := make(map[string]string)
 
 	inputs := el.FindAll(LikeInput)
 
@@ -190,11 +94,11 @@ func (el *HTMLElement) Form() ParsedForm {
 
 			indexStr := strconv.Itoa(selectOptionIndex)
 
-			if m[key] == nil {
-				m[key] = make([]string, 0, 1)
-				m[key] = append(m[key], indexStr)
+			curr, exists := m[key]
+			if !exists {
+				m[key] = indexStr
 			} else {
-				m[key] = append(m[key], indexStr)
+				m[key] = strings.Join([]string{curr, indexStr}, ",")
 			}
 		}
 	}
@@ -250,11 +154,11 @@ func (el *HTMLElement) Form() ParsedForm {
 				continue
 			}
 			indexStr := strconv.Itoa(index)
-			if m[key] == nil {
-				m[key] = make([]string, 0, 1)
-				m[key] = append(m[key], indexStr)
+			curr, exists := m[key]
+			if !exists {
+				m[key] = indexStr
 			} else {
-				m[key] = append(m[key], indexStr)
+				m[key] = strings.Join([]string{curr, indexStr}, ",")
 			}
 		}
 	}
@@ -272,11 +176,11 @@ func (el *HTMLElement) Form() ParsedForm {
 				continue
 			}
 			indexStr := strconv.Itoa(index)
-			if m[key] == nil {
-				m[key] = make([]string, 0, 1)
-				m[key] = append(m[key], indexStr)
+			curr, exists := m[key]
+			if !exists {
+				m[key] = indexStr
 			} else {
-				m[key] = append(m[key], indexStr)
+				m[key] = strings.Join([]string{curr, indexStr}, ",")
 			}
 		}
 	}
@@ -290,8 +194,7 @@ func (el *HTMLElement) Form() ParsedForm {
 		if !exists {
 			continue
 		}
-		m[key] = make([]string, 0, 1)
-		m[key] = append(m[key], input.InnerText)
+		m[key] = input.InnerText
 	}
 
 	// for most other inputs we can look at the value attribute
@@ -317,19 +220,18 @@ func (el *HTMLElement) Form() ParsedForm {
 		if !exists {
 			continue
 		}
-		m[key] = make([]string, 0, 1)
-		m[key] = append(m[key], value)
+		m[key] = value
 	}
 
 	return m
 }
 
-// FillForm will look at the form in a request and compare it
+// FormFill will look at the form in a request and compare it
 // to all the inputs in an element to set their attributes accordingly.
 // Attributes: value, checked, and selected. Or inner text if needed.
 // Useful when you know what a element is, and want to preserve state
 // from a users form submission.
-func (el *HTMLElement) FillForm(r *http.Request) {
+func (el *HTMLElement) FormFill(r *http.Request) {
 	r.ParseForm()
 	inputs := el.FindAll(LikeInput)
 

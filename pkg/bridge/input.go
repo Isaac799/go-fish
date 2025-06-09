@@ -19,64 +19,61 @@ var (
 	ErrNotInputKindTime = errors.New("can only set time on a date time or datetime input kind")
 )
 
-// InputKind is a pre defined list of html inputs that I support
-type InputKind string
-
 const (
 	// InputKindText is for input tag with attribute type of text
-	InputKindText InputKind = "text"
+	InputKindText = "text"
 	// InputKindPassword is for input tag with attribute type of password
-	InputKindPassword InputKind = "password"
+	InputKindPassword = "password"
 	// InputKindEmail is for input tag with attribute type of email
-	InputKindEmail InputKind = "email"
+	InputKindEmail = "email"
 	// InputKindSearch is for input tag with attribute type of search
-	InputKindSearch InputKind = "search"
+	InputKindSearch = "search"
 	// InputKindTel is for input tag with attribute type of tel
-	InputKindTel InputKind = "tel"
+	InputKindTel = "tel"
 	// InputKindURL is for input tag with attribute type of url
-	InputKindURL InputKind = "url"
+	InputKindURL = "url"
 
 	// InputKindTextarea is for textarea tag with col and row attributes
-	InputKindTextarea InputKind = "textarea"
+	InputKindTextarea = "textarea"
 	// InputKindNumber is for input tag with attribute type of num
-	InputKindNumber InputKind = "number"
+	InputKindNumber = "number"
 	// InputKindColor is for input tag with attribute type of color
-	InputKindColor InputKind = "color"
+	InputKindColor = "color"
 	// InputKindHidden is for input tag with attribute type of hidden
-	InputKindHidden InputKind = "hidden"
+	InputKindHidden = "hidden"
 	// InputKindFile is for input tag with attribute type of file
-	InputKindFile InputKind = "file"
+	InputKindFile = "file"
 
 	// InputKindDate is for input tag with attribute type of date
-	InputKindDate InputKind = "date"
+	InputKindDate = "date"
 	// InputKindTime is for input tag with attribute type of time
-	InputKindTime InputKind = "time"
+	InputKindTime = "time"
 	// InputKindDateTime is for input tag with attribute type of datetime
-	InputKindDateTime InputKind = "datetime-local"
+	InputKindDateTime = "datetime-local"
 
 	// InputKindSelect is for select tag with options
-	InputKindSelect InputKind = "select"
+	InputKindSelect = "select"
 	// InputKindRadio is for input tags with attribute type of radio
-	InputKindRadio InputKind = "radio"
+	InputKindRadio = "radio"
 	// InputKindCheckbox is for input tags with attribute type of checkbox
-	InputKindCheckbox InputKind = "checkbox"
+	InputKindCheckbox = "checkbox"
 
 	// InputKindSubmit is for input tags with attribute type of submit
-	InputKindSubmit InputKind = "submit"
+	InputKindSubmit = "submit"
 )
 
-func newInput(kind InputKind, name string) HTMLElement {
+func newInput(kind string, name string) HTMLElement {
 	id := fmt.Sprintf("id-%s", name)
 
 	if kind == InputKindHidden {
 		return HTMLElement{
 			Tag:         "input",
 			SelfClosing: true,
-			Attributes: map[AttributeKey]string{
-				ID:    id,
-				Type:  string(kind),
-				Name:  name,
-				Value: "",
+			Attributes: map[string]string{
+				"id":    id,
+				"type":  kind,
+				"name":  name,
+				"value": "",
 			},
 		}
 	}
@@ -84,19 +81,19 @@ func newInput(kind InputKind, name string) HTMLElement {
 	label := HTMLElement{
 		Tag:       "label",
 		InnerText: name,
-		Attributes: map[AttributeKey]string{
-			For: id,
+		Attributes: map[string]string{
+			"for": id,
 		},
 	}
 
 	input := HTMLElement{
 		Tag:         "input",
 		SelfClosing: true,
-		Attributes: map[AttributeKey]string{
-			ID:    id,
-			Type:  string(kind),
-			Name:  name,
-			Value: "",
+		Attributes: map[string]string{
+			"id":    id,
+			"type":  kind,
+			"name":  name,
+			"value": "",
 		},
 	}
 
@@ -117,20 +114,20 @@ func newTextArea(name string, col, row uint) HTMLElement {
 	label := HTMLElement{
 		Tag:       "label",
 		InnerText: name,
-		Attributes: map[AttributeKey]string{
-			For: id,
+		Attributes: map[string]string{
+			"for": id,
 		},
 	}
 
 	input := HTMLElement{
 		Tag:       "textarea",
 		InnerText: "",
-		Attributes: map[AttributeKey]string{
-			ID:   id,
-			Type: string(InputKindTextarea),
-			Name: name,
-			Col:  fmt.Sprintf("%d", col),
-			Row:  fmt.Sprintf("%d", row),
+		Attributes: map[string]string{
+			"id":   id,
+			"type": string(InputKindTextarea),
+			"name": name,
+			"col":  fmt.Sprintf("%d", col),
+			"row":  fmt.Sprintf("%d", row),
 		},
 	}
 
@@ -151,16 +148,16 @@ func newSelect[T Printable](name string, options []T) HTMLElement {
 	label := HTMLElement{
 		Tag:       "label",
 		InnerText: fmt.Sprintf("Choose %s:", name),
-		Attributes: map[AttributeKey]string{
-			For: id,
+		Attributes: map[string]string{
+			"for": id,
 		},
 	}
 
 	input := HTMLElement{
 		Tag: "select",
-		Attributes: map[AttributeKey]string{
-			ID:   id,
-			Name: name,
+		Attributes: map[string]string{
+			"id":   id,
+			"name": name,
 		},
 	}
 
@@ -169,10 +166,10 @@ func newSelect[T Printable](name string, options []T) HTMLElement {
 		el := HTMLElement{
 			Tag:       "option",
 			InnerText: option.Print(),
-			Attributes: map[AttributeKey]string{
-				ID:    id,
-				Name:  name,
-				Value: fmt.Sprintf("%d", i),
+			Attributes: map[string]string{
+				"id":    id,
+				"name":  name,
+				"value": fmt.Sprintf("%d", i),
 			},
 		}
 		input.Children = append(input.Children, el)
@@ -189,7 +186,7 @@ func newSelect[T Printable](name string, options []T) HTMLElement {
 	return div
 }
 
-func newRadioCheckbox[T Printable](kind InputKind, name string, options []T) HTMLElement {
+func newRadioCheckbox[T Printable](kind string, name string, options []T) HTMLElement {
 	legend := HTMLElement{
 		Tag:       "legend",
 		InnerText: fmt.Sprintf("Choose %s:", name),
@@ -202,19 +199,19 @@ func newRadioCheckbox[T Printable](kind InputKind, name string, options []T) HTM
 		label := HTMLElement{
 			Tag:       "label",
 			InnerText: option.Print(),
-			Attributes: map[AttributeKey]string{
-				ID: fmt.Sprintf("id-%s", name),
+			Attributes: map[string]string{
+				"id": fmt.Sprintf("id-%s", name),
 			},
 		}
 		input := HTMLElement{
 			Tag:         "input",
 			SelfClosing: true,
 			InnerText:   option.Print(),
-			Attributes: map[AttributeKey]string{
-				ID:    fmt.Sprintf("id-%s", name),
-				Type:  string(kind),
-				Name:  name,
-				Value: fmt.Sprintf("%d", i),
+			Attributes: map[string]string{
+				"id":    fmt.Sprintf("id-%s", name),
+				"type":  kind,
+				"name":  name,
+				"value": fmt.Sprintf("%d", i),
 			},
 		}
 
@@ -259,11 +256,11 @@ func InputJoinComma(s []string) string {
 
 // NewInputText is a div element with labeled text child
 // To be called with [ text | password | email | search | tel | url ]
-func NewInputText(name string, kind InputKind, minLen, maxLen uint) HTMLElement {
+func NewInputText(name string, kind string, minLen, maxLen uint) HTMLElement {
 	el := newInput(kind, name)
 	input := el.FindFirst(LikeInput)
-	input.Attributes["minLength"] = fmt.Sprintf("%d", minLen)
-	input.Attributes["maxLength"] = fmt.Sprintf("%d", maxLen)
+	input.Attributes["minlength"] = fmt.Sprintf("%d", minLen)
+	input.Attributes["maxlength"] = fmt.Sprintf("%d", maxLen)
 	return el
 }
 
@@ -271,8 +268,8 @@ func NewInputText(name string, kind InputKind, minLen, maxLen uint) HTMLElement 
 func NewInputTextarea(name string, minLen, maxLen, col, row uint) HTMLElement {
 	el := newTextArea(name, col, row)
 	input := el.FindFirst(LikeInput)
-	input.Attributes["minLength"] = fmt.Sprintf("%d", minLen)
-	input.Attributes["maxLength"] = fmt.Sprintf("%d", maxLen)
+	input.Attributes["minlength"] = fmt.Sprintf("%d", minLen)
+	input.Attributes["maxlength"] = fmt.Sprintf("%d", maxLen)
 	return el
 }
 

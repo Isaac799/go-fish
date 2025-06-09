@@ -7,7 +7,7 @@ import (
 func TestGiveAttributes(t *testing.T) {
 	style := "color: red"
 	placeholder := "enter something..."
-	attrs := map[AttributeKey]string{
+	attrs := map[string]string{
 		"style":       style,
 		"placeholder": placeholder,
 	}
@@ -32,8 +32,8 @@ func TestEnsureAttributes(t *testing.T) {
 func TestSetValueAttribute(t *testing.T) {
 	elText := NewInputText("name", InputKindText, 0, 30)
 	elText.SetFirstValue("Jane Doe")
-
-	s, err := elText.FindFirst(LikeInput).ValueString()
+	input := elText.FindFirst(LikeInput)
+	s, err := ElementValue[string](input)
 	assertNoError(t, err)
 	assert(t, "Jane Doe", s)
 }
@@ -41,8 +41,9 @@ func TestSetValueAttribute(t *testing.T) {
 func TestSetValueTextArea(t *testing.T) {
 	elTextarea := NewInputTextarea("bio", 0, 30, 30, 5)
 	elTextarea.SetFirstValue("I am a writer.")
+	input := elTextarea.FindFirst(LikeInput)
 
-	s, err := elTextarea.ValueString()
+	s, err := ElementValue[string](input)
 	assertNoError(t, err)
 	assert(t, "I am a writer.", s)
 }
@@ -50,7 +51,8 @@ func TestSetValueTextArea(t *testing.T) {
 func TestSetCheckedRadio(t *testing.T) {
 	elRadio := NewInputRadio("radio color", mockColors)
 	elRadio.SetFirstValue("true")
-	indexes, err := elRadio.ValueIndexes()
+
+	indexes, err := ElementValue[[]int](&elRadio)
 	assertNoError(t, err)
 	assertIndexes(t, indexes, []int{0})
 }
@@ -59,7 +61,7 @@ func TestSetCheckedCheckbox(t *testing.T) {
 	elCheckbox := NewInputCheckbox("cb color", mockColors)
 	elCheckbox.SetNthValue(1, "true")
 	elCheckbox.SetNthValue(3, "true")
-	indexes, err := elCheckbox.ValueIndexes()
+	indexes, err := ElementValue[[]int](&elCheckbox)
 	assertNoError(t, err)
 	assertIndexes(t, indexes, []int{0, 2})
 }
@@ -67,8 +69,8 @@ func TestSetCheckedCheckbox(t *testing.T) {
 func TestSetValueSelectable(t *testing.T) {
 	elSelect := NewInputSelect("sel color", mockColors)
 	elSelect.SetSelectOption(1, true)
+	indexes, err := ElementValue[[]int](&elSelect)
 
-	indexes, err := elSelect.ValueIndexes()
 	assertNoError(t, err)
 	assertIndexes(t, indexes, []int{1})
 }
@@ -77,7 +79,7 @@ func TestValueElementSelected(t *testing.T) {
 	elSelect := NewInputSelect("sel color", mockColors)
 	elSelect.SetSelectOption(1, true)
 
-	chosen, err := ValueElementSelected(&elSelect, mockColors)
+	chosen, err := ElementSelectedValue(&elSelect, mockColors)
 	assertNoError(t, err)
 	assert(t, len(chosen), 1)
 	assert(t, chosen[0].Print(), "green")

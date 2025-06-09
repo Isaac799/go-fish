@@ -13,8 +13,9 @@ import (
 )
 
 type dragDropItem struct {
-	ID   int
-	X, Y int
+	ID,
+	X,
+	Y int
 }
 
 type user struct {
@@ -43,7 +44,7 @@ func dragDrop(r *http.Request) *fishData {
 		{ID: 2, X: 200, Y: 150},
 	}
 
-	container := bridge.Stateful(&bridge.HTMLElement{
+	container := bridge.ElementWithState(&bridge.HTMLElement{
 		Tag:      "div",
 		Children: make([]bridge.HTMLElement, 0, len(items)+1),
 	}, nil)
@@ -79,6 +80,7 @@ func dragDrop(r *http.Request) *fishData {
 			},
 			Children: make([]bridge.HTMLElement, 0, 2),
 		}
+
 		draggableX := bridge.NewInputHidden(nameX, strconv.Itoa(item.X))
 		draggableY := bridge.NewInputHidden(nameY, strconv.Itoa(item.Y))
 
@@ -86,22 +88,38 @@ func dragDrop(r *http.Request) *fishData {
 		container.Children = append(container.Children, draggableEl)
 	}
 
-	container.FillForm(r)
-	formVal := container.Form()
+	container.FormFill(r)
 
 	nodes := container.FindAll(bridge.LikeAttribute("class", "node"))
+
+	form := container.Form()
+
+	// example of enforcing data constraint server side
+	var roundToNearest = func(val, nearest float64) int {
+		return int(math.Round(val/nearest) * nearest)
+	}
+
 	for i, el := range nodes {
 		el.EnsureAttributes()
 		_, nameX, nameY := nodeIdentifiers(i)
-		x, _ := formVal.Int(nameX)
-		y, _ := formVal.Int(nameY)
 
-		// example of enforcing data constraint server side
+		x, err := bridge.ValueOf[int](form, nameX)
+		if err != nil {
+			print(err.Error())
+			continue
+		}
+
+		y, err := bridge.ValueOf[int](form, nameY)
+		if err != nil {
+			print(err.Error())
+			continue
+		}
+
 		roundBy := 25.0
-		x = int(math.Round(float64(x)/roundBy) * roundBy)
-		y = int(math.Round(float64(y)/roundBy) * roundBy)
+		roundedX := roundToNearest(float64(x), roundBy)
+		roundedY := roundToNearest(float64(y), roundBy)
 
-		el.Attributes["style"] = fmt.Sprintf("transform: translate(%dpx, %dpx)", x, y)
+		el.Attributes["style"] = fmt.Sprintf("transform: translate(%dpx, %dpx)", roundedX, roundedY)
 	}
 
 	data := fishData{DragDrop: container}
@@ -251,7 +269,7 @@ func buildStatefulTable(csvReader2 *csv.Reader, r *http.Request) *bridge.HTMLEle
 
 	table, err := bridge.NewTable(csvReader2)
 
-	form := bridge.Stateful(table, nil)
+	form := bridge.ElementWithState(table, nil)
 	if err != nil {
 		fmt.Print(err)
 		return nil
@@ -276,12 +294,12 @@ func buildStatefulTable(csvReader2 *csv.Reader, r *http.Request) *bridge.HTMLEle
 		filterByDiv.DeleteFirst(bridge.LikeTag("label"))
 
 		textBox := filterByDiv.FindFirst(bridge.LikeInput)
-		textBoxHTMLX := map[bridge.AttributeKey]string{
-			"hx-trigger":       "keyup changed delay:500ms",
-			"hx-post":          templatePath,
-			"hx-target":        fmt.Sprintf("#%s", formRootID),
-			"hx-swap":          "outerHTML",
-			bridge.Placeholder: "filter...",
+		textBoxHTMLX := map[string]string{
+			"hx-trigger":  "keyup changed delay:500ms",
+			"hx-post":     templatePath,
+			"hx-target":   fmt.Sprintf("#%s", formRootID),
+			"hx-swap":     "outerHTML",
+			"placeholder": "filter...",
 		}
 		textBox.GiveAttributes(textBoxHTMLX)
 
@@ -297,12 +315,12 @@ func buildStatefulTable(csvReader2 *csv.Reader, r *http.Request) *bridge.HTMLEle
 	rowCountDiv.DeleteFirst(bridge.LikeTag("label"))
 
 	rowCountSel := rowCountDiv.FindFirst(bridge.LikeInput)
-	rowCountHTMLX := map[bridge.AttributeKey]string{
-		"hx-trigger":       "change",
-		"hx-post":          templatePath,
-		"hx-target":        fmt.Sprintf("#%s", formRootID),
-		"hx-swap":          "outerHTML",
-		bridge.Placeholder: "filter...",
+	rowCountHTMLX := map[string]string{
+		"hx-trigger":  "change",
+		"hx-post":     templatePath,
+		"hx-target":   fmt.Sprintf("#%s", formRootID),
+		"hx-swap":     "outerHTML",
+		"placeholder": "filter...",
 	}
 	rowCountSel.GiveAttributes(rowCountHTMLX)
 
@@ -313,7 +331,7 @@ func buildStatefulTable(csvReader2 *csv.Reader, r *http.Request) *bridge.HTMLEle
 	// Now we have the final table with all input elements
 	// and can get its form to see what all we need to parse
 	// from a request to populate the form values from the request
-	form.FillForm(r)
+	form.FormFill(r)
 
 	// 3: Modify the element based on its values
 	//
@@ -329,20 +347,17 @@ func buildStatefulTable(csvReader2 *csv.Reader, r *http.Request) *bridge.HTMLEle
 
 		// Gives a button to change sort
 		sortKey := fmt.Sprintf("%s%d", formKeyPrefixSortBy, i)
-		hiddenSort := headers[i].FindFirst(
-			bridge.LikeAttribute("type", string(bridge.InputKindHidden)),
-			bridge.LikeAttribute("name", sortKey),
-		)
-		if hiddenSort == nil {
+
+		// parse the form of the header so we can extract the value of the sort
+		headerForm := headers[i].Form()
+		desiredSort, err := bridge.ValueOf[int](headerForm, sortKey)
+		if err != nil {
 			continue
 		}
 
 		previousSort := SortNone
-		desiredSort, err := hiddenSort.ValueInt()
-		if err == nil {
-			if slices.Contains(acceptableSort, desiredSort) {
-				previousSort = desiredSort
-			}
+		if slices.Contains(acceptableSort, desiredSort) {
+			previousSort = desiredSort
 		}
 
 		sortBtn := bridge.HTMLElement{
@@ -363,15 +378,16 @@ func buildStatefulTable(csvReader2 *csv.Reader, r *http.Request) *bridge.HTMLEle
 	}
 
 	var page uint64 = 1
-	parsedCurrent, err := pageHiddenEl.ValueUint64()
+	parsedCurrent, err := bridge.ElementValue[int](&pageHiddenEl)
+
 	if err == nil {
-		page = parsedCurrent
+		page = uint64(parsedCurrent)
 	}
 
 	// v, err := bridge.ValueElementSelected(rowCountSel, rowLimitOptions)
 	// fmt.Print(v)
 	var limit uint64 = 10
-	parsedLimit, err := bridge.ValueElementSelected(&rowCountDiv, rowLimitOptions)
+	parsedLimit, err := bridge.ElementSelectedValue(&rowCountDiv, rowLimitOptions)
 	if err == nil && len(parsedLimit) == 1 {
 		limit = parsedLimit[0].value
 	}

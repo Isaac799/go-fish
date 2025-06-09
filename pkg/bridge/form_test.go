@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
-	"time"
 )
 
 var (
@@ -44,7 +43,7 @@ func mockFormSubmitReq() *http.Request {
 
 func mockEmptyForm() HTMLElement {
 	form := NewHTMLElement("form")
-	form.Children = make([]HTMLElement, 12)
+	form.Children = make([]HTMLElement, 13)
 
 	form.Children[0] = NewInputText("name", InputKindText, 0, 30)
 	form.Children[1] = NewInputTextarea("bio", 0, 30, 30, 5)
@@ -72,17 +71,13 @@ func mockEmptyForm() HTMLElement {
 	return form
 }
 
-func formValEq(t *testing.T, m map[string][]string, i int, key string, value string) {
-	if len(m[key]) < i {
-		fmt.Println(key)
-		fmt.Println(value)
-		t.Fatal(errUnexpectedLength)
+func formValEq(t *testing.T, m map[string]string, key string, value string) {
+	if value == m[key] {
+		return
 	}
-	if m[key][i] != value {
-		fmt.Println(key)
-		fmt.Printf("'%s' != '%s'", value, m[key][i])
-		t.Fatal(errUnexpectedValue)
-	}
+	fmt.Println(key)
+	fmt.Printf("'%s' != '%s'", value, m[key])
+	t.Fatal(errUnexpectedValue)
 }
 
 func assert[T comparable](t *testing.T, a, b T) {
@@ -93,7 +88,7 @@ func assert[T comparable](t *testing.T, a, b T) {
 	t.Fatal(errNotEqual)
 }
 
-func assertIndexes(t *testing.T, a, b []int) {
+func assertIndexes[T comparable](t *testing.T, a, b []T) {
 	assert(t, len(a), len(b))
 	for i := range a {
 		assert(t, a[i], b[i])
@@ -111,87 +106,28 @@ func assertNoError(t *testing.T, err error) {
 func TestParseRequest(t *testing.T) {
 	el := mockEmptyForm()
 	r := mockFormSubmitReq()
-	el.FillForm(r)
+	el.FormFill(r)
 	formValues := el.Form()
-	formValEq(t, formValues, 0, "name", "Jane Doe")
-	formValEq(t, formValues, 0, "bio", "I am a writer")
-	formValEq(t, formValues, 0, "favorite number", "27")
-	formValEq(t, formValues, 0, "color", "#00ff00")
-	formValEq(t, formValues, 0, "shh", "cat and mouse")
-	formValEq(t, formValues, 0, "birthday", "1980-01-01")
-	formValEq(t, formValues, 0, "clock in", "10:15")
-	formValEq(t, formValues, 0, "vacation start", "1999-01-01T10:15")
-	formValEq(t, formValues, 0, "sel color", "0")
-	formValEq(t, formValues, 0, "radio color", "1")
-	formValEq(t, formValues, 0, "cb color", "0")
-	formValEq(t, formValues, 1, "cb color", "2")
-}
-
-func TestParseString(t *testing.T) {
-	form := mockEmptyForm()
-	r := mockFormSubmitReq()
-	form.FillForm(r)
-	formValues := form.Form()
-
-	s, err := formValues.String("name")
-	assertNoError(t, err)
-	assert(t, s, "Jane Doe")
-}
-
-func TestParseNumber(t *testing.T) {
-	form := mockEmptyForm()
-	r := mockFormSubmitReq()
-	form.FillForm(r)
-	formValues := form.Form()
-
-	n, err := formValues.Int("favorite number")
-	assertNoError(t, err)
-	assert(t, n, 27)
-}
-
-func TestParseDate(t *testing.T) {
-	form := mockEmptyForm()
-	r := mockFormSubmitReq()
-	form.FillForm(r)
-	formValues := form.Form()
-
-	d, err := formValues.Date("birthday")
-	assertNoError(t, err)
-	expectedTime, _ := time.Parse(TimeFormatHTMLDate, "1980-01-01")
-	assert(t, *d, expectedTime)
-}
-
-func TestParseTime(t *testing.T) {
-	form := mockEmptyForm()
-	r := mockFormSubmitReq()
-	form.FillForm(r)
-	formValues := form.Form()
-
-	d, err := formValues.Time("clock in")
-	assertNoError(t, err)
-	expectedTime, _ := time.Parse(TimeFormatHTMLTime, "10:15")
-	assert(t, *d, expectedTime)
-}
-
-func TestParseDateTime(t *testing.T) {
-	form := mockEmptyForm()
-	r := mockFormSubmitReq()
-	form.FillForm(r)
-	formValues := form.Form()
-
-	d, err := formValues.DateTime("vacation start")
-	assertNoError(t, err)
-	expectedTime, _ := time.Parse(TimeFormatHTMLDateTime, "1999-01-01T10:15")
-	assert(t, *d, expectedTime)
+	formValEq(t, formValues, "name", "Jane Doe")
+	formValEq(t, formValues, "bio", "I am a writer")
+	formValEq(t, formValues, "favorite number", "27")
+	formValEq(t, formValues, "color", "#00ff00")
+	formValEq(t, formValues, "shh", "cat and mouse")
+	formValEq(t, formValues, "birthday", "1980-01-01")
+	formValEq(t, formValues, "clock in", "10:15")
+	formValEq(t, formValues, "vacation start", "1999-01-01T10:15")
+	formValEq(t, formValues, "sel color", "0")
+	formValEq(t, formValues, "radio color", "1")
+	formValEq(t, formValues, "cb color", "0,2")
 }
 
 func TestFormIndex(t *testing.T) {
 	form := mockEmptyForm()
 	r := mockFormSubmitReq()
-	form.FillForm(r)
+	form.FormFill(r)
 	formValues := form.Form()
 
-	indexes, err := formValues.Indexes("cb color")
+	indexes, err := ValueOf[[]int](formValues, "cb color")
 	assertNoError(t, err)
 	expectedIndexes := []int{0, 2}
 	assertIndexes(t, indexes, expectedIndexes)
@@ -200,7 +136,7 @@ func TestFormIndex(t *testing.T) {
 func TestParseSelection(t *testing.T) {
 	form := mockEmptyForm()
 	r := mockFormSubmitReq()
-	form.FillForm(r)
+	form.FormFill(r)
 	formValues := form.Form()
 
 	selectedColor, err := FormSelected(formValues, "sel color", mockColors)

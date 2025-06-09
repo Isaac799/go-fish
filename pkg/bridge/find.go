@@ -70,7 +70,7 @@ var LikeTag = func(tag string) ElementLike {
 
 // LikeAttribute is a small alias to see elements where an attribute is
 // non empty value
-var LikeAttribute = func(key AttributeKey, value string) ElementLike {
+var LikeAttribute = func(key string, value string) ElementLike {
 	return ElementLike(func(element *HTMLElement) bool {
 		if element.Attributes == nil {
 			return false

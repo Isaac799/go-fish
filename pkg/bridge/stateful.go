@@ -1,9 +1,9 @@
 package bridge
 
-// Stateful wraps an element in a form and adds hidden html inputs
+// ElementWithState wraps an element in a form and adds hidden html inputs
 // to store key-value pairs. Enabling form submissions within an element
 // to know the state it was rendered with. e.g. what page a table was on.
-func Stateful(el *HTMLElement, state map[string]string) *HTMLElement {
+func ElementWithState(el *HTMLElement, state map[string]string) *HTMLElement {
 	form := HTMLElement{
 		Tag:      "form",
 		Children: make([]HTMLElement, 0, len(state)+1),
