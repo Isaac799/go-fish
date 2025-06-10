@@ -173,16 +173,44 @@ func Kind[T, K any](f *Fish[K]) int {
 }
 
 func newFish[T, K any](entry os.DirEntry, pathBase string, pond *Pond[T, K]) (*Fish[K], error) {
+	pathBase = filepath.ToSlash(pathBase)
+
 	info, err := entry.Info()
 	if err != nil {
 		return nil, err
 	}
-
 	ext := filepath.Ext(info.Name())
+
+	// since I want to cache styling while preventing
+	// an invalid cache we make the name based on a hash
+	// of its content
+	file, err := os.Open(filepath.Join(pathBase, entry.Name()))
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	b, err := io.ReadAll(file)
+	if err != nil {
+		return nil, err
+	}
+	hash := fmt.Sprintf("%x", md5.Sum(b))
+
+	// so windows mime types suck and using mime package not always work
+	// e.g. windows not knowing what a woff2 file was and causing
+	// browser to "rejected by sanitizer" due to incorrect mime type
+	// so we need the fallback
 	mime := mime.TypeByExtension(ext)
+	if len(mime) == 0 {
+		// fallback
+		mime = http.DetectContentType(b)
+	}
+
+	if len(mime) == 0 {
+		fmt.Println("gofish warn: cannot determine mime type of: ", ext)
+		return nil, ErrInvalidExtension
+	}
 
 	kind := -1
-
 	if strings.HasPrefix(mime, "text/html") {
 		if strings.HasPrefix(info.Name(), "_") {
 			kind = FishKindSardine
@@ -209,24 +237,15 @@ func newFish[T, K any](entry os.DirEntry, pathBase string, pond *Pond[T, K]) (*F
 	}
 	templateName := name
 
-	// since I want to cache styling while preventing
-	// an invalid cache we make the name based on a hash
-	// of its content
-	file, err := os.Open(filepath.Join(pathBase, entry.Name()))
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-	b, err := io.ReadAll(file)
-	if err != nil {
-		return nil, err
-	}
-	hash := fmt.Sprintf("%x", md5.Sum(b))
-
 	filePath := filepath.Join(pathBase, info.Name())
+	filePath = filepath.ToSlash(filePath)
+
 	scopedFilePath := strings.Replace(filePath, pond.templateDir, "", 1)
+	scopedFilePath = filepath.ToSlash(scopedFilePath)
 
 	pattern := filepath.Join(pathBase, name)
+	pattern = filepath.ToSlash(pattern)
+
 	pattern = strings.Replace(pattern, pond.templateDir, "", 1)
 	pattern = strings.ReplaceAll(pattern, " ", "-")
 
@@ -255,7 +274,7 @@ func newFish[T, K any](entry os.DirEntry, pathBase string, pond *Pond[T, K]) (*F
 		pattern = strings.Join(newPatternParts, "/")
 	}
 
-	pattern = strings.ReplaceAll(pattern, "\\", "/")
+	// fixes the // on path like "/users/.id/edit.html"
 	pattern = strings.ReplaceAll(pattern, "//", "/")
 
 	if kind == FishKindTuna {

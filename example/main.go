@@ -61,5 +61,5 @@ func main() {
 	mux := aquatic.CastLines(&pond, verbose)
 
 	fmt.Println("gone fishing")
-	http.ListenAndServe(":8080", mux)
+	http.ListenAndServe("localhost:8080", mux)
 }

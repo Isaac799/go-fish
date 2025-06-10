@@ -125,6 +125,8 @@ func NewPond[T, K any](templateDirPath string, options NewPondOptions) (Pond[T, 
 		return p, err
 	}
 	templateDir := filepath.Join(wd, templateDirPath)
+	templateDir = filepath.Clean(templateDir)
+	templateDir = filepath.ToSlash(templateDir)
 	p.templateDir = templateDir
 
 	err = collect(&p, templateDir)
