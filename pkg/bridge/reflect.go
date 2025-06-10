@@ -61,6 +61,9 @@ func ElementValue[T HTMLValueType](el *HTMLElement) (T, error) {
 
 // ValueOf uses reflection to get a from a map. Can be used with ParsedForm
 // or with HTMLElement Attributes
+//
+// For reading or modification of attributes 'class' or 'style' consider
+// the respective functions built into the element struct.
 func ValueOf[T HTMLValueType](m map[string]string, key string) (T, error) {
 	var v T
 	err := htmlStrIntoReflectVal(reflect.ValueOf(&v).Elem(), m[key])
@@ -111,7 +114,7 @@ func AttributesToStruct(m Attributes, v any) error {
 // formatted as expected (mainly slices to be comma separated).
 //
 // Also mainly used to parse HTML attributes, not meant for slices
-// with that use case. TODO consider this for parsing class, style...
+// with that use case.
 //
 // Also having this broken out enables me to re-use it for reflecting
 // into custom struct (e.g. validation)

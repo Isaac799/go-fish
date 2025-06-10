@@ -2,8 +2,10 @@ package bridge
 
 import (
 	"errors"
+	"fmt"
 	"maps"
 	"strconv"
+	"strings"
 )
 
 var (
@@ -53,6 +55,68 @@ func (el *HTMLElement) EnsureAttributes() {
 		return
 	}
 	el.Attributes = make(Attributes)
+}
+
+// AppendClass takes an an element 'class' attribute
+// and appends a string with a space delimiter
+func (el *HTMLElement) AppendClass(s string) {
+	el.EnsureAttributes()
+	classes := el.Class()
+	classes = append(classes, strings.TrimSpace(s))
+	el.Attributes["class"] = strings.Join(classes, " ")
+}
+
+// Class will parse out the classes of an element
+func (el *HTMLElement) Class() []string {
+	if el.Attributes == nil {
+		return nil
+	}
+	s, exists := el.Attributes["class"]
+	if !exists {
+		return nil
+	}
+	values := strings.Fields(s)
+	return values
+}
+
+// AppendStyle takes an an element 'style' attribute and
+// appends a string with a semi colin delimiter with
+// 'key:value'. If a key already exists it will overwrite it
+func (el *HTMLElement) AppendStyle(k, v string) {
+	el.EnsureAttributes()
+	k = strings.TrimSpace(k)
+	v = strings.TrimSpace(v)
+	style := el.Style()
+	style[k] = v
+	parts := make([]string, 0, len(style))
+	for k, v := range style {
+		parts = append(parts, fmt.Sprintf("%s:%s", k, v))
+	}
+	el.Attributes["style"] = strings.Join(parts, ";")
+}
+
+// Style will parse out the style of an element
+func (el *HTMLElement) Style() map[string]string {
+	if el.Attributes == nil {
+		return nil
+	}
+	s, exists := el.Attributes["style"]
+	if !exists {
+		return nil
+	}
+	values := strings.Split(s, ";")
+	m := make(map[string]string, len(values))
+	for _, val := range values {
+		val := strings.TrimSpace(val)
+		kv := strings.SplitN(val, ":", 2)
+		if len(kv) != 2 {
+			continue
+		}
+		k := strings.TrimSpace(kv[0])
+		v := strings.TrimSpace(kv[1])
+		m[k] = v
+	}
+	return m
 }
 
 // SetFirstValue finds the first input element and sets its
