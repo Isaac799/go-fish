@@ -151,7 +151,7 @@ type labeledValue struct {
 	value uint64
 }
 
-func (s labeledValue) Print() string {
+func (s labeledValue) String() string {
 	return s.label
 }
 

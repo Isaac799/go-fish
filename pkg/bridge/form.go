@@ -2,6 +2,7 @@ package bridge
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"slices"
 	"strconv"
@@ -36,7 +37,7 @@ type ParsedForm map[string]string
 
 // FormSelected parses the chosen items of a select, checkbox, or radio
 // from the form given a key
-func FormSelected[T Printable](form ParsedForm, key string, pool []T) ([]T, error) {
+func FormSelected[T fmt.Stringer](form ParsedForm, key string, pool []T) ([]T, error) {
 	indexes, err := ValueOf[[]int](form, key)
 	if err != nil {
 		return nil, ErrKeyDoesNotExist

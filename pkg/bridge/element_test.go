@@ -82,7 +82,7 @@ func TestValueElementSelected(t *testing.T) {
 	chosen, err := ElementSelectedValue(&elSelect, mockColors)
 	assertNoError(t, err)
 	assert(t, len(chosen), 1)
-	assert(t, chosen[0].Print(), "green")
+	assert(t, chosen[0].String(), "green")
 }
 
 func TestClass(t *testing.T) {

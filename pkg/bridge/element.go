@@ -170,7 +170,7 @@ func (el *HTMLElement) SetSelectOption(index uint, b bool) error {
 
 // ElementSelectedValue parses the chosen items of a select, checkbox, or radio
 // from inputs names the same as the first input element
-func ElementSelectedValue[T Printable](el *HTMLElement, pool []T) ([]T, error) {
+func ElementSelectedValue[T fmt.Stringer](el *HTMLElement, pool []T) ([]T, error) {
 	indexes, err := ElementValue[[]int](el)
 	if err != nil {
 		return nil, err

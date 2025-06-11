@@ -11,7 +11,7 @@ type exampleColor struct {
 	value string
 }
 
-func (s exampleColor) Print() string {
+func (s exampleColor) String() string {
 	return s.label
 }
 

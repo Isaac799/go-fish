@@ -8,12 +8,6 @@ import (
 	"time"
 )
 
-// Printable ensures that a list of items has a way to be
-// displayed in the template. Is used for select, radio, and checkbox
-type Printable interface {
-	Print() string
-}
-
 var (
 	// ErrNotInputKindTime is returned when setting time for an input that is not time related
 	ErrNotInputKindTime = errors.New("can only set time on a date time or datetime input kind")
@@ -142,7 +136,7 @@ func newTextArea(name string, col, row uint) HTMLElement {
 	return div
 }
 
-func newSelect[T Printable](name string, options []T) HTMLElement {
+func newSelect[T fmt.Stringer](name string, options []T) HTMLElement {
 	id := fmt.Sprintf("id-%s", name)
 
 	label := HTMLElement{
@@ -165,7 +159,7 @@ func newSelect[T Printable](name string, options []T) HTMLElement {
 		id := fmt.Sprintf("id-%s", name)
 		el := HTMLElement{
 			Tag:       "option",
-			InnerText: option.Print(),
+			InnerText: option.String(),
 			Attributes: map[string]string{
 				"id":    id,
 				"name":  name,
@@ -186,7 +180,7 @@ func newSelect[T Printable](name string, options []T) HTMLElement {
 	return div
 }
 
-func newRadioCheckbox[T Printable](kind string, name string, options []T) HTMLElement {
+func newRadioCheckbox[T fmt.Stringer](kind string, name string, options []T) HTMLElement {
 	legend := HTMLElement{
 		Tag:       "legend",
 		InnerText: fmt.Sprintf("Choose %s:", name),
@@ -198,7 +192,7 @@ func newRadioCheckbox[T Printable](kind string, name string, options []T) HTMLEl
 	for i, option := range options {
 		label := HTMLElement{
 			Tag:       "label",
-			InnerText: option.Print(),
+			InnerText: option.String(),
 			Attributes: map[string]string{
 				"id": fmt.Sprintf("id-%s", name),
 			},
@@ -206,7 +200,7 @@ func newRadioCheckbox[T Printable](kind string, name string, options []T) HTMLEl
 		input := HTMLElement{
 			Tag:         "input",
 			SelfClosing: true,
-			InnerText:   option.Print(),
+			InnerText:   option.String(),
 			Attributes: map[string]string{
 				"id":    fmt.Sprintf("id-%s", name),
 				"type":  kind,
@@ -330,21 +324,21 @@ func NewInputDateTime(name string, min, max *time.Time) HTMLElement {
 
 // NewInputSelect is a div element with labeled select child
 // One to many selections allowed.
-func NewInputSelect[T Printable](name string, options []T) HTMLElement {
+func NewInputSelect[T fmt.Stringer](name string, options []T) HTMLElement {
 	el := newSelect(name, options)
 	return el
 }
 
 // NewInputRadio is a div element with labeled radio input children
 // One selection allowed.
-func NewInputRadio[T Printable](name string, options []T) HTMLElement {
+func NewInputRadio[T fmt.Stringer](name string, options []T) HTMLElement {
 	el := newRadioCheckbox(InputKindRadio, name, options)
 	return el
 }
 
 // NewInputCheckbox is a div element with labeled checkbox input children.
 // Many selections allowed.
-func NewInputCheckbox[T Printable](name string, options []T) HTMLElement {
+func NewInputCheckbox[T fmt.Stringer](name string, options []T) HTMLElement {
 	el := newRadioCheckbox(InputKindCheckbox, name, options)
 	return el
 }

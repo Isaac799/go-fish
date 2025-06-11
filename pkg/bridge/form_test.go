@@ -27,7 +27,7 @@ type mockChoose struct {
 	value string
 }
 
-func (s mockChoose) Print() string {
+func (s mockChoose) String() string {
 	return s.label
 }
 
@@ -146,5 +146,5 @@ func TestParseSelection(t *testing.T) {
 		t.Fatal(errUnexpectedLength)
 	}
 
-	assert(t, selectedColor[0].Print(), mockColors[0].Print())
+	assert(t, selectedColor[0].String(), mockColors[0].String())
 }
