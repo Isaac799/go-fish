@@ -85,16 +85,6 @@ func TestReflectionSlice(t *testing.T) {
 	assertIndexes(t, person.VacationStart, []time.Time{vacationStart, vacationStart2})
 }
 
-func TestFormValue(t *testing.T) {
-	el := mockDateEl()
-	expectedBirthday, _ := time.Parse(TimeFormatHTMLDate, "1970-01-01")
-	el.Attributes["value"] = "1970-01-01"
-	form := el.Form()
-	birthday, err := ValueOf[time.Time](form, "birthday")
-	assertNoError(t, err)
-	assert(t, birthday, expectedBirthday)
-}
-
 func TestAttributesToStruct(t *testing.T) {
 	el := mockDateEl()
 	expectedBirthday, _ := time.Parse(TimeFormatHTMLDate, "1970-01-01")

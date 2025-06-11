@@ -17,7 +17,7 @@ var (
 
 // Validate will determine look at the first input in an element
 // and based on its type apply the appropriate validation
-func (el *HTMLElement) Validate() (bool, error) {
+func (el *HTMLInput) Validate() (bool, error) {
 	kind, kindExists := el.Attributes["type"]
 	if !kindExists {
 		return false, ErrNoInputElement
@@ -97,7 +97,7 @@ type attributeValue[T HTMLValueType] struct {
 
 // ValidationForElement provides fields to validate against derived
 // from the attribute map
-func ValidationForElement[T HTMLValueType](el *HTMLElement) (*Validation[T], error) {
+func ValidationForElement[T HTMLValueType](el *HTMLInput) (*Validation[T], error) {
 	v := Validation[T]{}
 	if el.Attributes == nil {
 		return &v, ErrAttributesNil

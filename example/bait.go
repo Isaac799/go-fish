@@ -70,6 +70,9 @@ func dragDrop(r *http.Request) *fishData {
 		return nodeID, nameX, nameY
 	}
 
+	xInputs := make([]*bridge.HTMLInput, 0, len(items))
+	yInputs := make([]*bridge.HTMLInput, 0, len(items))
+
 	for i, item := range items {
 		nodeID, nameX, nameY := nodeIdentifiers(i)
 		draggableEl := bridge.HTMLElement{
@@ -82,7 +85,9 @@ func dragDrop(r *http.Request) *fishData {
 		}
 
 		draggableX := bridge.NewInputHidden(nameX, strconv.Itoa(item.X))
+		xInputs = append(xInputs, &draggableX)
 		draggableY := bridge.NewInputHidden(nameY, strconv.Itoa(item.Y))
+		yInputs = append(yInputs, &draggableY)
 
 		draggableEl.Children = append(draggableEl.Children, draggableX, draggableY)
 		container.Children = append(container.Children, draggableEl)
@@ -92,8 +97,6 @@ func dragDrop(r *http.Request) *fishData {
 
 	nodes := container.FindAll(bridge.LikeAttribute("class", "node"))
 
-	form := container.Form()
-
 	// example of enforcing data constraint server side
 	var roundToNearest = func(val, nearest float64) int {
 		return int(math.Round(val/nearest) * nearest)
@@ -101,23 +104,22 @@ func dragDrop(r *http.Request) *fishData {
 
 	for i, el := range nodes {
 		el.EnsureAttributes()
-		_, nameX, nameY := nodeIdentifiers(i)
 
-		x, err := bridge.ValueOf[int](form, nameX)
+		x, err := xInputs[i].ParseFloat()
 		if err != nil {
 			print(err.Error())
 			continue
 		}
 
-		y, err := bridge.ValueOf[int](form, nameY)
+		y, err := yInputs[i].ParseFloat()
 		if err != nil {
 			print(err.Error())
 			continue
 		}
 
 		roundBy := 25.0
-		roundedX := roundToNearest(float64(x), roundBy)
-		roundedY := roundToNearest(float64(y), roundBy)
+		roundedX := roundToNearest(x, roundBy)
+		roundedY := roundToNearest(y, roundBy)
 
 		el.Attributes["style"] = fmt.Sprintf("transform: translate(%dpx, %dpx)", roundedX, roundedY)
 	}
@@ -279,13 +281,16 @@ func buildStatefulTable(csvReader2 *csv.Reader, r *http.Request) *bridge.HTMLEle
 
 	headers := form.FindAll(bridge.LikeTag("th"))
 
+	sortInputs := make([]*bridge.HTMLInput, 0, len(headers))
+
 	for i := range headers {
 		if !slices.Contains(colsToSortAndFilter, i) {
 			continue
 		}
 		// So we keep the sort of items even if not clicked
 		sortKey := fmt.Sprintf("%s%d", formKeyPrefixSortBy, i)
-		preservedSport := bridge.NewInputHidden(sortKey, "0")
+		hiddenSortInput := bridge.NewInputHidden(sortKey, "0")
+		sortInputs = append(sortInputs, &hiddenSortInput)
 
 		// Gives a text input to filter by. We can define these now
 		// since they are not modified later and not using the 'hidden' flow.
@@ -303,7 +308,7 @@ func buildStatefulTable(csvReader2 *csv.Reader, r *http.Request) *bridge.HTMLEle
 		}
 		textBox.GiveAttributes(textBoxHTMLX)
 
-		headers[i].Children = append(headers[i].Children, filterByDiv, preservedSport)
+		headers[i].Children = append(headers[i].Children, filterByDiv, hiddenSortInput)
 	}
 
 	// Add pagination state to fill in from request
@@ -349,14 +354,13 @@ func buildStatefulTable(csvReader2 *csv.Reader, r *http.Request) *bridge.HTMLEle
 		sortKey := fmt.Sprintf("%s%d", formKeyPrefixSortBy, i)
 
 		// parse the form of the header so we can extract the value of the sort
-		headerForm := headers[i].Form()
-		desiredSort, err := bridge.ValueOf[int](headerForm, sortKey)
+		desiredSort, err := sortInputs[i].ParseInt()
 		if err != nil {
 			continue
 		}
 
 		previousSort := SortNone
-		if slices.Contains(acceptableSort, desiredSort) {
+		if slices.Contains(acceptableSort, int(desiredSort)) {
 			previousSort = desiredSort
 		}
 
@@ -378,7 +382,7 @@ func buildStatefulTable(csvReader2 *csv.Reader, r *http.Request) *bridge.HTMLEle
 	}
 
 	var page uint64 = 1
-	parsedCurrent, err := bridge.ElementValue[int](&pageHiddenEl)
+	parsedCurrent, err := pageHiddenEl.ParseInt()
 
 	if err == nil {
 		page = uint64(parsedCurrent)
@@ -387,7 +391,7 @@ func buildStatefulTable(csvReader2 *csv.Reader, r *http.Request) *bridge.HTMLEle
 	// v, err := bridge.ValueElementSelected(rowCountSel, rowLimitOptions)
 	// fmt.Print(v)
 	var limit uint64 = 10
-	parsedLimit, err := bridge.ElementSelectedValue(&rowCountDiv, rowLimitOptions)
+	parsedLimit, err := bridge.InputSelectedValue(&rowCountDiv, rowLimitOptions)
 	if err == nil && len(parsedLimit) == 1 {
 		limit = parsedLimit[0].value
 	}

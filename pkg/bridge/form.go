@@ -2,7 +2,6 @@ package bridge
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"slices"
 	"strconv"
@@ -34,28 +33,6 @@ var (
 // ParsedForm is the result of comparing a request against a predefined form
 // with helpful methods for parsing values. Indexes are a comma delimited string
 type ParsedForm map[string]string
-
-// FormSelected parses the chosen items of a select, checkbox, or radio
-// from the form given a key
-func FormSelected[T fmt.Stringer](form ParsedForm, key string, pool []T) ([]T, error) {
-	indexes, err := ValueOf[[]int](form, key)
-	if err != nil {
-		return nil, ErrKeyDoesNotExist
-	}
-	consumed := make(map[int]bool, len(indexes))
-	items := make([]T, len(indexes))
-	for i, index := range indexes {
-		if index < 0 || index > len(indexes) {
-			return nil, ErrInvalidSelection
-		}
-		if _, exists := consumed[i]; exists {
-			return nil, ErrDuplicateSelection
-		}
-		consumed[i] = true
-		items[i] = pool[index]
-	}
-	return items, nil
-}
 
 // Form provides a parsed value of all the input related elements.
 // Useful when defining what something should look like, then

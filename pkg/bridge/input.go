@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -56,7 +57,11 @@ const (
 	InputKindSubmit = "submit"
 )
 
-func newInput(kind string, name string) HTMLElement {
+// HTMLInput is a specific kind of html element with a focus on
+// user input or storing state
+type HTMLInput = HTMLElement
+
+func newInput(kind string, name string) HTMLInput {
 	id := fmt.Sprintf("id-%s", name)
 
 	if kind == InputKindHidden {
@@ -102,7 +107,7 @@ func newInput(kind string, name string) HTMLElement {
 	return div
 }
 
-func newTextArea(name string, col, row uint) HTMLElement {
+func newTextArea(name string, col, row uint) HTMLInput {
 	id := fmt.Sprintf("id-%s", name)
 
 	label := HTMLElement{
@@ -136,7 +141,7 @@ func newTextArea(name string, col, row uint) HTMLElement {
 	return div
 }
 
-func newSelect[T fmt.Stringer](name string, options []T) HTMLElement {
+func newSelect[T fmt.Stringer](name string, options []T) HTMLInput {
 	id := fmt.Sprintf("id-%s", name)
 
 	label := HTMLElement{
@@ -180,7 +185,7 @@ func newSelect[T fmt.Stringer](name string, options []T) HTMLElement {
 	return div
 }
 
-func newRadioCheckbox[T fmt.Stringer](kind string, name string, options []T) HTMLElement {
+func newRadioCheckbox[T fmt.Stringer](kind string, name string, options []T) HTMLInput {
 	legend := HTMLElement{
 		Tag:       "legend",
 		InnerText: fmt.Sprintf("Choose %s:", name),
@@ -250,7 +255,7 @@ func InputJoinComma(s []string) string {
 
 // NewInputText is a div element with labeled text child
 // To be called with [ text | password | email | search | tel | url ]
-func NewInputText(name string, kind string, minLen, maxLen uint) HTMLElement {
+func NewInputText(name string, kind string, minLen, maxLen uint) HTMLInput {
 	el := newInput(kind, name)
 	input := el.FindFirst(LikeInput)
 	input.Attributes["minlength"] = fmt.Sprintf("%d", minLen)
@@ -259,7 +264,7 @@ func NewInputText(name string, kind string, minLen, maxLen uint) HTMLElement {
 }
 
 // NewInputTextarea is a div element with labeled textarea child
-func NewInputTextarea(name string, minLen, maxLen, col, row uint) HTMLElement {
+func NewInputTextarea(name string, minLen, maxLen, col, row uint) HTMLInput {
 	el := newTextArea(name, col, row)
 	input := el.FindFirst(LikeInput)
 	input.Attributes["minlength"] = fmt.Sprintf("%d", minLen)
@@ -268,7 +273,7 @@ func NewInputTextarea(name string, minLen, maxLen, col, row uint) HTMLElement {
 }
 
 // NewInputNumber is a div element with labeled number child
-func NewInputNumber(name string, min, max float32) HTMLElement {
+func NewInputNumber(name string, min, max float32) HTMLInput {
 	el := newInput(InputKindNumber, name)
 	input := el.FindFirst(LikeInput)
 	input.Attributes["min"] = fmt.Sprintf("%f", min)
@@ -277,26 +282,26 @@ func NewInputNumber(name string, min, max float32) HTMLElement {
 }
 
 // NewInputColor is a div element with labeled color child
-func NewInputColor(name string) HTMLElement {
+func NewInputColor(name string) HTMLInput {
 	el := newInput(InputKindColor, name)
 	return el
 }
 
 // NewInputHidden gives a hidden input element
-func NewInputHidden(name string, value string) HTMLElement {
+func NewInputHidden(name string, value string) HTMLInput {
 	el := newInput(InputKindHidden, name)
 	el.Attributes["value"] = value
 	return el
 }
 
 // NewInputFile is a div element with labeled file child
-func NewInputFile(name string) HTMLElement {
+func NewInputFile(name string) HTMLInput {
 	el := newInput(InputKindFile, name)
 	return el
 }
 
 // NewInputDate is a div element with labeled date child
-func NewInputDate(name string, min, max *time.Time) HTMLElement {
+func NewInputDate(name string, min, max *time.Time) HTMLInput {
 	el := newInput(InputKindDate, name)
 	input := el.FindFirst(LikeInput)
 	input.Attributes["min"] = PrintDate(min)
@@ -305,7 +310,7 @@ func NewInputDate(name string, min, max *time.Time) HTMLElement {
 }
 
 // NewInputTime is a div element with labeled time child
-func NewInputTime(name string, min, max *time.Time) HTMLElement {
+func NewInputTime(name string, min, max *time.Time) HTMLInput {
 	el := newInput(InputKindTime, name)
 	input := el.FindFirst(LikeInput)
 	input.Attributes["min"] = PrintTime(min)
@@ -314,7 +319,7 @@ func NewInputTime(name string, min, max *time.Time) HTMLElement {
 }
 
 // NewInputDateTime is a div element with labeled datetime-local child
-func NewInputDateTime(name string, min, max *time.Time) HTMLElement {
+func NewInputDateTime(name string, min, max *time.Time) HTMLInput {
 	el := newInput(InputKindDateTime, name)
 	input := el.FindFirst(LikeInput)
 	input.Attributes["min"] = PrintDateTime(min)
@@ -324,21 +329,194 @@ func NewInputDateTime(name string, min, max *time.Time) HTMLElement {
 
 // NewInputSelect is a div element with labeled select child
 // One to many selections allowed.
-func NewInputSelect[T fmt.Stringer](name string, options []T) HTMLElement {
+func NewInputSelect[T fmt.Stringer](name string, options []T) HTMLInput {
 	el := newSelect(name, options)
 	return el
 }
 
 // NewInputRadio is a div element with labeled radio input children
 // One selection allowed.
-func NewInputRadio[T fmt.Stringer](name string, options []T) HTMLElement {
+func NewInputRadio[T fmt.Stringer](name string, options []T) HTMLInput {
 	el := newRadioCheckbox(InputKindRadio, name, options)
 	return el
 }
 
 // NewInputCheckbox is a div element with labeled checkbox input children.
 // Many selections allowed.
-func NewInputCheckbox[T fmt.Stringer](name string, options []T) HTMLElement {
+func NewInputCheckbox[T fmt.Stringer](name string, options []T) HTMLInput {
 	el := newRadioCheckbox(InputKindCheckbox, name, options)
 	return el
+}
+
+// SetFirstValue finds the first input element and sets its
+// value. Recommended use is with elements that utilize the
+// value attribute. Usage with a select, radio, or checkbox
+// will just set the first element value
+func (el *HTMLInput) SetFirstValue(s string) error {
+	return el.SetNthValue(1, s)
+}
+
+// SetNthValue finds the nth occurrence on an input element.
+// Depending on that element it will set the value accordingly.
+// Not for use with select as the option children are treated
+// differently, see SetSelectOption.
+func (el *HTMLInput) SetNthValue(occurrence uint, s string) error {
+	var c uint
+	input := el.findNth(&c, occurrence, LikeInput)
+	if input == nil {
+		return ErrNoInputElement
+	}
+	if input.Tag == InputKindTextarea {
+		input.InnerText = s
+		return nil
+	}
+	if input.Attributes["type"] == InputKindCheckbox ||
+		input.Attributes["type"] == InputKindRadio {
+		input.EnsureAttributes()
+		input.Attributes["checked"] = strconv.FormatBool(s == "t" || s == "true")
+		return nil
+	}
+	input.EnsureAttributes()
+	input.Attributes["value"] = s
+	return nil
+}
+
+// SetSelectOption modifies a select option's selected attribute
+func (el *HTMLInput) SetSelectOption(index uint, b bool) error {
+	var c uint
+	input := el.findNth(&c, 1, LikeTag("select"))
+	if input == nil {
+		return ErrNoInputElement
+	}
+	if len(input.Children) < int(index) {
+		return ErrNoInputElement
+	}
+	option := input.Children[index]
+	option.EnsureAttributes()
+	option.Attributes["selected"] = strconv.FormatBool(b)
+	return nil
+}
+
+// InputSelectedValue parses the chosen items of a select, checkbox, or radio
+// from inputs names the same as the first input element
+func InputSelectedValue[T fmt.Stringer](el *HTMLInput, pool []T) ([]T, error) {
+	indexes, err := el.ParseIndexes()
+	if err != nil {
+		return nil, err
+	}
+	consumed := make(map[int]bool, len(indexes))
+	items := make([]T, len(indexes))
+	for i, index := range indexes {
+		if index < 0 || index > len(pool) {
+			return nil, ErrInvalidSelection
+		}
+		if _, exists := consumed[i]; exists {
+			return nil, ErrDuplicateSelection
+		}
+		consumed[i] = true
+		items[i] = pool[index]
+	}
+	return items, nil
+}
+
+func (el *HTMLInput) formKey() (ParsedForm, string, error) {
+	firstInput := el.FindFirst(LikeInput)
+	if firstInput.Attributes == nil {
+		return nil, "", ErrAttributesNil
+	}
+	name, exists := firstInput.Attributes["name"]
+	if !exists {
+		return nil, "", ErrAttrNotExist
+	}
+
+	form := el.Form()
+	return form, name, nil
+}
+
+// ParseString provides the string value of an input
+func (el *HTMLInput) ParseString() (string, error) {
+	form, key, err := el.formKey()
+	if err != nil {
+		return "", err
+	}
+	s := form[key]
+	return s, nil
+}
+
+// ParseBool provides the boolean value of an input
+func (el *HTMLInput) ParseBool() (bool, error) {
+	form, key, err := el.formKey()
+	if err != nil {
+		return false, err
+	}
+	s := form[key]
+	return strconv.ParseBool(s)
+}
+
+// ParseFloat provides the numerical value of an input
+func (el *HTMLInput) ParseFloat() (float64, error) {
+	form, key, err := el.formKey()
+	if err != nil {
+		return 0.0, err
+	}
+	s := form[key]
+	return strconv.ParseFloat(s, 64)
+}
+
+// ParseInt provides the numerical value of an input
+func (el *HTMLInput) ParseInt() (int, error) {
+	form, key, err := el.formKey()
+	if err != nil {
+		return 0, err
+	}
+	s := form[key]
+	v, err := strconv.ParseInt(s, 10, 64)
+	return int(v), err
+}
+
+// ParseTime provides the date, time, or datetime value of an input
+func (el *HTMLInput) ParseTime() (*time.Time, error) {
+	form, key, err := el.formKey()
+	if err != nil {
+		return nil, err
+	}
+	s := form[key]
+
+	// there are 3 ays I can parse out time for HTML,
+	// so we look over the 3 html date, time, and datetime formats
+	// until one works and we can set the value, otherwise fail
+	var parsed time.Time
+	layouts := []string{TimeFormatHTMLDate, TimeFormatHTMLTime, TimeFormatHTMLDateTime}
+	for _, layout := range layouts {
+		parsed, err = time.Parse(layout, s)
+		if err != nil {
+			// we expect err since it may not be this format
+			continue
+		}
+		break
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &parsed, nil
+}
+
+// ParseIndexes provides the indexes of selected items
+func (el *HTMLInput) ParseIndexes() ([]int, error) {
+	form, key, err := el.formKey()
+	if err != nil {
+		return nil, err
+	}
+	s := form[key]
+	parts := strings.Split(s, ",")
+	result := make([]int, 0, len(parts))
+	for _, s := range parts {
+		s := strings.TrimSpace(s)
+		v, err := strconv.ParseInt(s, 10, 32)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, int(v))
+	}
+	return result, nil
 }

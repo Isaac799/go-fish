@@ -120,31 +120,3 @@ func TestParseRequest(t *testing.T) {
 	formValEq(t, formValues, "radio color", "1")
 	formValEq(t, formValues, "cb color", "0,2")
 }
-
-func TestFormIndex(t *testing.T) {
-	form := mockEmptyForm()
-	r := mockFormSubmitReq()
-	form.FormFill(r)
-	formValues := form.Form()
-
-	indexes, err := ValueOf[[]int](formValues, "cb color")
-	assertNoError(t, err)
-	expectedIndexes := []int{0, 2}
-	assertIndexes(t, indexes, expectedIndexes)
-}
-
-func TestParseSelection(t *testing.T) {
-	form := mockEmptyForm()
-	r := mockFormSubmitReq()
-	form.FormFill(r)
-	formValues := form.Form()
-
-	selectedColor, err := FormSelected(formValues, "sel color", mockColors)
-	assertNoError(t, err)
-
-	if len(selectedColor) != 1 {
-		t.Fatal(errUnexpectedLength)
-	}
-
-	assert(t, selectedColor[0].String(), mockColors[0].String())
-}

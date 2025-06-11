@@ -42,34 +42,6 @@ type HTMLValueType interface {
 		time.Time | []time.Time
 }
 
-// ElementValue parses the form form an element and only returns the
-// value of the first input name
-func ElementValue[T HTMLValueType](el *HTMLElement) (T, error) {
-	var t T
-	firstInput := el.FindFirst(LikeInput)
-	if firstInput.Attributes == nil {
-		return t, ErrAttributesNil
-	}
-	name, exists := firstInput.Attributes["name"]
-	if !exists {
-		return t, ErrAttrNotExist
-	}
-
-	form := el.Form()
-	return ValueOf[T](form, name)
-}
-
-// ValueOf uses reflection to get a from a map. Can be used with ParsedForm
-// or with HTMLElement Attributes
-//
-// For reading or modification of attributes 'class' or 'style' consider
-// the respective functions built into the element struct.
-func ValueOf[T HTMLValueType](m map[string]string, key string) (T, error) {
-	var v T
-	err := htmlStrIntoReflectVal(reflect.ValueOf(&v).Elem(), m[key])
-	return v, err
-}
-
 // AttributesToStruct will parse out a string map into something that
 // is easier to work with. Max struct depth is 1 (so no nested structs).
 // Thanks to this blog for getting me started https://go.dev/blog/laws-of-reflection
