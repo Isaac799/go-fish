@@ -470,7 +470,7 @@ func (el *HTMLInput) ParseInt() (int, error) {
 		return 0, err
 	}
 	s := form[key]
-	v, err := strconv.ParseInt(s, 10, 64)
+	v, err := strconv.Atoi(s)
 	return int(v), err
 }
 

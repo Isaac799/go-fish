@@ -11,19 +11,5 @@
         This page demos a table made with bridge and a csv reader
     </p>
 
-    {{if .Local.Table}}
-
-    {{if .Local.Table.Basic}}
-    <div>
-        {{ template "_element" .Local.Table.Basic }}
-    </div>
-    {{else}}
-    <p>No basic table</p>
-    {{end}}
-
     {{ template "_stateful_table" . }}
-
-    {{else}}
-    <p>No tables</p>
-    {{end}}
 </div>
