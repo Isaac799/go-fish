@@ -68,6 +68,11 @@ var LikeTag = func(tag string) ElementLike {
 	})
 }
 
+// LikeSubmitButton is a small alias to see elements like a submit button
+var LikeSubmitButton = ElementLike(func(element *HTMLElement) bool {
+	return element.Tag == "button" && element.Attributes["type"] == "submit"
+})
+
 // LikeAttribute is a small alias to see elements where an attribute is
 // non empty value
 var LikeAttribute = func(key string, value string) ElementLike {

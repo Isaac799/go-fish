@@ -19,27 +19,21 @@ type Constraints struct {
 // Consider define step of Pagination, Sort, and Filter
 // and filling the table form via request before use.
 func (table *HTMLTable) Constraints() (*Constraints, error) {
-	if table.conf.LimitOptions == nil {
-		return nil, ErrMissingTableLimitOptions
-	}
-	if table.pageHiddenEl == nil {
-		return nil, ErrMissingTablePage
-	}
-	if table.limitHiddenEl == nil {
-		return nil, ErrMissingTableLimit
-	}
-
 	page := defaultPage
 	limit := defaultLimit
 
-	parsedPage, err := table.pageHiddenEl.ParseInt()
-	if err == nil {
-		page = parsedPage
+	if table.pageHiddenEl != nil {
+		parsedPage, err := table.pageHiddenEl.ParseInt()
+		if err == nil {
+			page = parsedPage
+		}
 	}
 
-	selection, err := bridge.InputSelectedValue(table.limitHiddenEl, table.conf.LimitOptions)
-	if err == nil && len(selection) == 1 {
-		limit = selection[0].Value
+	if table.conf.LimitOptions != nil && table.limitHiddenEl != nil {
+		selection, err := bridge.InputSelectedValue(table.limitHiddenEl, table.conf.LimitOptions)
+		if err == nil && len(selection) == 1 {
+			limit = selection[0].Value
+		}
 	}
 
 	dc := Constraints{

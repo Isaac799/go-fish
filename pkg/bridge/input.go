@@ -382,7 +382,7 @@ func (el *HTMLInput) SetNthValue(occurrence uint, s string) error {
 }
 
 // SetSelectOption modifies a select option's selected attribute
-func (el *HTMLInput) SetSelectOption(index uint, b bool) error {
+func (el *HTMLInput) SetSelectOption(index int, b bool) error {
 	var c uint
 	input := el.findNth(&c, 1, LikeTag("select"))
 	if input == nil {
@@ -392,8 +392,29 @@ func (el *HTMLInput) SetSelectOption(index uint, b bool) error {
 		return ErrNoInputElement
 	}
 	option := input.Children[index]
+	if option.Tag != "option" {
+		return ErrNoInputElement
+	}
 	option.EnsureAttributes()
 	option.Attributes["selected"] = strconv.FormatBool(b)
+	return nil
+}
+
+// ClearSelectOptions ensures all options are selected false.
+// Useful when wanting to set something specific
+func (el *HTMLInput) ClearSelectOptions() error {
+	var c uint
+	input := el.findNth(&c, 1, LikeTag("select"))
+	if input == nil {
+		return ErrNoInputElement
+	}
+	for _, option := range input.Children {
+		if option.Tag != "option" {
+			continue
+		}
+		option.EnsureAttributes()
+		option.Attributes["selected"] = strconv.FormatBool(false)
+	}
 	return nil
 }
 

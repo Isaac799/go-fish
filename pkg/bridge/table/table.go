@@ -17,6 +17,7 @@ package table
 
 import (
 	"errors"
+	"strconv"
 
 	"github.com/Isaac799/go-fish/pkg/bridge"
 )
@@ -131,6 +132,52 @@ func (table *HTMLTable) Modify(mods ...Mod) error {
 			return err
 		}
 	}
+	return nil
+}
+
+// SetPage will set the page of a table
+func (table *HTMLTable) SetPage(n int) error {
+	if table.pageHiddenEl == nil {
+		return ErrMissingExpectedElement
+	}
+	table.pageHiddenEl.SetFirstValue(strconv.Itoa(n))
+	return nil
+}
+
+// SetLimit will set the selected limit option. Index based
+func (table *HTMLTable) SetLimit(index int) error {
+	if table.limitHiddenEl == nil {
+		return ErrMissingExpectedElement
+	}
+	table.limitHiddenEl.ClearSelectOptions()
+	table.limitHiddenEl.SetSelectOption(index, true)
+	table.limitHiddenEl.SetFirstValue(strconv.Itoa(index))
+	return nil
+}
+
+// SetFilter will set filter for a column. Index based
+func (table *HTMLTable) SetFilter(index int, s string) error {
+	if table.filterInputs == nil {
+		return ErrMissingExpectedElement
+	}
+	el, exists := table.filterInputs[index]
+	if !exists {
+		return ErrMissingExpectedElement
+	}
+	el.SetFirstValue(s)
+	return nil
+}
+
+// SetSort will set sort for a column. Index based
+func (table *HTMLTable) SetSort(index int, direction int) error {
+	if table.filterInputs == nil {
+		return ErrMissingExpectedElement
+	}
+	el, exists := table.sortInputs[index]
+	if !exists {
+		return ErrMissingExpectedElement
+	}
+	el.SetFirstValue(strconv.Itoa(direction))
 	return nil
 }
 
