@@ -177,8 +177,8 @@ func buildStatefulTable(r *http.Request) *bridge.HTMLElement {
 	tbl, _ := table.New(config)
 
 	definePagination, modifyPagination := table.Pagination()
-	defineSort, modifySort := table.Sort(ColAverage, ColPrice)
-	defineFilter := table.Filter(ColName, ColHabitat)
+	defineSort, modifySort := table.Sort(ColName, ColHabitat, ColAverage, ColPrice, ColStock)
+	defineFilter := table.Filter(ColName, ColHabitat, ColAverage, ColPrice, ColStock)
 
 	err := tbl.Modify(defineSort, definePagination, defineFilter)
 	if err != nil {

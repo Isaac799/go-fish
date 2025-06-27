@@ -1,30 +1,23 @@
-<div class="fc g2 m2">
-    <!-- Top Bar -->
-    <div class="fc g1">
-        <h1>
-            View User
-        </h1>
+<header>
+    <h1>View User</h1>
+    {{ template "_nav" . }}
+</header>
 
-        {{ template "_nav" . }}
+<main>
+    {{if .}}
+    <h3>
+        {{ .Local.User.LastName }}, {{ .Local.User.FirstName }}
+    </h3>
+    <div>
+        <a href="{{.Local.User.ID}}/edit">Edit</a>
     </div>
+    {{else}}
+    <div>
+        <span>
+            No user
+        </span>
+    </div>
+    {{end}}
+</main>
 
-    <div class="fr g2">
-        <!-- Body -->
-        <div class="fc g2">
-            {{if .}}
-            <h3>
-                {{ .Local.User.LastName }}, {{ .Local.User.FirstName }}
-            </h3>
-            <div>
-                <a href="{{.Local.User.ID}}/edit">Edit</a>
-            </div>
-            {{else}}
-            <div>
-                <span>
-                    No user
-                </span>
-            </div>
-            {{end}}
-        </div>
-    </div>
-</div>
+{{ template "_footer" }}

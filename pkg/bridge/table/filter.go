@@ -9,7 +9,7 @@ import (
 
 // random as to not overlap with consumer field names
 var (
-	// prefixes are used with the column index to make form keys
+	// prefixes are used with the column i to make form keys
 	formKeyPrefixFilterBy = bridge.RandomID()
 )
 
@@ -48,8 +48,18 @@ func Filter(columnIndexes ...int) Mod {
 			textBox := filterByDiv.FindFirst(bridge.LikeInput)
 			textBox.GiveAttributes(textBoxHTMLX)
 
-			headers[i].Children = append(headers[i].Children, filterByDiv)
 			table.filterInputs[i] = &filterByDiv
+
+			// find sort slot made on New table
+			filterSlot := headers[i].FindFirst(bridge.LikeAttribute("id", table.conf.filterSlotID))
+
+			// fallback to just placing in th
+			if filterSlot == nil {
+				headers[i].Children = append(headers[i].Children, filterByDiv)
+				continue
+			}
+
+			filterSlot.Children = append(filterSlot.Children, filterByDiv)
 		}
 
 		return nil

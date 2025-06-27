@@ -1,18 +1,15 @@
-<div class="fc g2 m2">
-    <!-- Top Bar -->
-    <div class="fr g2">
-        {{ template "_header" . }}
-    </div>
+<header>
+    <h1>Home</h1>
+    {{ template "_nav" . }}
+</header>
 
-    <div class="fr g2 p2">
-        <!-- Side Bar -->
-        <div class="fc g2">
-            {{ template "_sidebar" }}
-        </div>
+<main>
+    <p>
+        Lorem ipsum dolor sit amet consectetur adipisicing elit. Repellendus sit doloremque aliquid nam? Quas
+        exercitationem facere ipsam minima voluptates esse dolor alias libero, cumque excepturi rerum omnis
+        perspiciatis
+        dolore. Enim!
+    </p>
+</main>
 
-        <!-- Body -->
-        <div class="fc g2">
-            {{ template "_content" }}
-        </div>
-    </div>
-</div>
+{{ template "_footer" }}

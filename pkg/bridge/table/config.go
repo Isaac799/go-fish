@@ -7,6 +7,10 @@ type Config struct {
 	LimitOptions []LabeledValue
 	HxPost       string
 	HxSwapTarget string
+
+	sortSlotID       string
+	filterSlotID     string
+	paginationSlotID string
 }
 
 // NewConfig provides html table configuration.
@@ -16,10 +20,13 @@ type Config struct {
 // you want to this before creating a table based off it.
 func NewConfig(id string, headers []string, hxPost string) Config {
 	return Config{
-		ID:           id,
-		HxSwapTarget: "#" + id,
-		Headers:      headers,
-		HxPost:       hxPost,
-		LimitOptions: DefaultPaginationLimitOptions,
+		ID:               id,
+		HxSwapTarget:     "#" + id,
+		Headers:          headers,
+		HxPost:           hxPost,
+		LimitOptions:     DefaultPaginationLimitOptions,
+		sortSlotID:       id + "-sort-slot",
+		filterSlotID:     id + "-filter-slot",
+		paginationSlotID: id + "-pagination-slot",
 	}
 }

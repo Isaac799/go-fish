@@ -125,8 +125,8 @@ func newTextArea(name string, col, row uint) HTMLInput {
 			"id":   id,
 			"type": string(InputKindTextarea),
 			"name": name,
-			"col":  fmt.Sprintf("%d", col),
-			"row":  fmt.Sprintf("%d", row),
+			"cols": fmt.Sprintf("%d", col),
+			"rows": fmt.Sprintf("%d", row),
 		},
 	}
 

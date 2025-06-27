@@ -77,7 +77,16 @@ func Sort(columnIndexes ...int) (Mod, Mod) {
 				InnerText: icons[previousSort],
 			}
 
-			headers[index].Children = append(headers[index].Children, sortBtn)
+			// find sort slot made on New table
+			sortSlot := headers[index].FindFirst(bridge.LikeAttribute("id", table.conf.sortSlotID))
+
+			// fallback to just placing in th
+			if sortSlot == nil {
+				headers[index].Children = append(headers[index].Children, sortBtn)
+				continue
+			}
+
+			sortSlot.Children = append(sortSlot.Children, sortBtn)
 		}
 
 		return nil

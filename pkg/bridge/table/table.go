@@ -87,11 +87,30 @@ func New(conf Config) (*HTMLTable, error) {
 		Children: make([]bridge.HTMLElement, 0, len(conf.Headers)),
 	}
 	for _, col := range conf.Headers {
-		// header
-		th := bridge.HTMLElement{
-			Tag:       "th",
+		thTop := bridge.HTMLElement{
+			Tag: "div",
+			Attributes: bridge.Attributes{
+				"id": conf.sortSlotID,
+			},
 			InnerText: col,
 		}
+		thBottom := bridge.HTMLElement{
+			Tag: "div",
+			Attributes: bridge.Attributes{
+				"id": conf.filterSlotID,
+			},
+		}
+		thDiv := bridge.HTMLElement{
+			Tag:      "div",
+			Children: []bridge.HTMLElement{thTop, thBottom},
+		}
+
+		// header
+		th := bridge.HTMLElement{
+			Tag:      "th",
+			Children: []bridge.HTMLElement{thDiv},
+		}
+
 		tr.Children = append(tr.Children, th)
 	}
 

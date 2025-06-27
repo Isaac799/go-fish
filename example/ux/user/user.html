@@ -1,26 +1,28 @@
-<div class="fc g2 m2">
-    <!-- Top Bar -->
-    <div class="fc g2">
-        <h1>
-            Pick a User
-        </h1>
+<header>
+    <h1>Index User</h1>
+    {{ template "_nav" . }}
+</header>
 
-        {{ template "_nav" . }}
-    </div>
-
+<main>
     <p>
         this page demos how a path value is used
     </p>
 
-    <div class="fr g2">
-        <!-- Side Bar -->
-        <div class="fc g2">
-            {{ template "_sidebar" . }}
-        </div>
+    <ul>
+        <li>
+            <a href="user/1">User 1</a>
+        </li>
+        <li>
+            <a href="user/2">User 2</a>
+        </li>
+        <li>
+            <a href="user/3">User 3</a>
+        </li>
+        <li>
+            <a href="user/4">User 4 (none)</a>
+        </li>
+    </ul>
+</main>
 
-        <!-- Body -->
-        <div class="fc g2">
-            Here is a list of users
-        </div>
-    </div>
-</div>
+
+{{ template "_footer" }}

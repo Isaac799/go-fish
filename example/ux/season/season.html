@@ -1,26 +1,34 @@
-<div class="fc g2 m2">
-    <!-- Top Bar -->
-    <div class="fc g2">
-        <h1>
-            Season
-        </h1>
+<header>
+    <h1>Season</h1>
+    {{ template "_nav" . }}
+</header>
 
-        {{ template "_nav" . }}
-    </div>
+<main>
     <p>
-        this page demos how a query param can change how the page is rendered
+        This page demos how a query param can change how the page is rendered
     </p>
-    {{if .}}
+
+    {{if not .Local.Season }}
+    <ul>
+        <li hx-boost="true">
+            <a href="season?q=spring">Spring</a>
+        </li>
+        <li hx-boost="true">
+            <a href="season?q=summer">Summer</a>
+        </li>
+        <li hx-boost="true">
+            <a href="season?q=fall">Fall</a>
+        </li>
+        <li hx-boost="true">
+            <a href="season?q=winter">Winter</a>
+        </li>
+    </ul>
+    {{else}}
     <span>
         You queried: {{ .Local.Season }}
     </span>
-    {{else}}
-    <span>
-        No season selected
-    </span>
     {{end}}
-</div>
+</main>
 
-{{if not .Local.Season }}
-{{template "_dialog_season"}}
-{{end}}
+
+{{ template "_footer" . }}

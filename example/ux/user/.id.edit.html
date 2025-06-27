@@ -1,42 +1,35 @@
-<div class="fc g2 m2">
-    <!-- Top Bar -->
-    <div class="fc g1">
-        <h1>
-            Edit User
-        </h1>
+<header>
+    <h1>Edit User</h1>
+    {{ template "_nav" . }}
+</header>
 
-        {{ template "_nav" . }}
+<main>
+    {{if .}}
+    <div>
+        <label for="lastName">Last Name</label>
+        <input
+            type="text"
+            name="last_name"
+            id="lastName"
+            value="{{ .Local.User.LastName }}"
+        >
     </div>
+    <div>
+        <label for="firstName">First Name</label>
+        <input
+            type="text"
+            name="first_name"
+            id="firstName"
+            value="{{ .Local.User.FirstName }}"
+        >
+    </div>
+    {{else}}
+    <div>
+        <span>
+            No user
+        </span>
+    </div>
+    {{end}}
+</main>
 
-    <div class="fr g2">
-        <!-- Body -->
-        <div class="fc g2">
-            {{if .}}
-            <div class="fc g1">
-                <label for="lastName">Last Name</label>
-                <input
-                    type="text"
-                    name="last_name"
-                    id="lastName"
-                    value="{{ .Local.User.LastName }}"
-                >
-            </div>
-            <div class="fc g1">
-                <label for="firstName">First Name</label>
-                <input
-                    type="text"
-                    name="first_name"
-                    id="firstName"
-                    value="{{ .Local.User.FirstName }}"
-                >
-            </div>
-            {{else}}
-            <div>
-                <span>
-                    No user
-                </span>
-            </div>
-            {{end}}
-        </div>
-    </div>
-</div>
+{{ template "_footer" }}

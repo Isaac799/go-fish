@@ -1,12 +1,14 @@
-<div class="fc g2 m2">
-    <div class="fc g2">
-        <h1> Drag Drop </h1>
-        {{ template "_nav" . }}
-    </div>
+<header>
+    <h1>Drag Drop</h1>
+    {{ template "_nav" . }}
+</header>
+
+<main>
     <p>
         Drag drop is controlled by JS, its result is temporary.
         Quickly replaced by the server re-render of the state.
     </p>
+
     <p>
         On drag the css is changed, but so are the hidden elements
         for form submission.
@@ -21,4 +23,6 @@
     </p>
 
     {{ template "_container" . }}
-</div>
+</main>
+
+{{ template "_footer" }}

@@ -1,15 +1,15 @@
-<div class="fc g2 m2">
-    <!-- Top Bar -->
-    <div class="fc g2">
-        <h1>
-            Table
-        </h1>
+<header>
+    <h1>Stateful Table</h1>
+    {{ template "_nav" . }}
+</header>
 
-        {{ template "_nav" . }}
-    </div>
+<main>
     <p>
         This page demos a table made with bridge and a csv reader
     </p>
 
+
     {{ template "_stateful_table" . }}
-</div>
+</main>
+
+{{ template "_footer" }}
