@@ -6,10 +6,10 @@
 <main>
     {{if .}}
     <h3>
-        {{ .Local.User.LastName }}, {{ .Local.User.FirstName }}
+        {{ .Fish.LastName }}, {{ .Fish.FirstName }}
     </h3>
     <div>
-        <a href="{{.Local.User.ID}}/edit">Edit</a>
+        <a href="{{.Fish.ID}}/edit">Edit</a>
     </div>
     {{else}}
     <div>

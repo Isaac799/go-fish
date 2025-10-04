@@ -11,54 +11,45 @@ import (
 
 type globalData struct{}
 
-func setupPond[T, K any]() aquatic.Pond[T, K] {
+func setupPond() aquatic.Pond {
 	config := aquatic.NewPondOptions{Licenses: []aquatic.License{visitorLog}}
-	uxPond, err := aquatic.NewPond[T, K]("ux", config)
+	uxPond, err := aquatic.NewPond("ux", config)
 	if err != nil {
 		panic(err)
 	}
 
-	assetPond, err := aquatic.NewPond[T, K]("asset", aquatic.NewPondOptions{GlobalSmallFish: true})
+	assetPond, err := aquatic.NewPond("asset", aquatic.NewPondOptions{GlobalSmallFish: true})
 	if err != nil {
 		panic(err)
 	}
 
-	aquatic.FlowsInto(&assetPond, &uxPond)
+	assetPond.FlowsInto(&uxPond)
 	return uxPond
 }
 
 func main() {
-	pond := setupPond[globalData, *fishData]()
+	pond := setupPond()
 	rx := regexp.MustCompile
 
-	stockFish := aquatic.Stock[globalData, *fishData]{
+	stockFish := aquatic.Stock{
 		rx("season"): {
 			Licenses: []aquatic.License{optionQuery},
-			Bait:     queriedSeason,
+			OnCatch:  queriedSeason,
 		},
 		rx("user/.id"): {
-			Bait:     userInfo,
+			OnCatch:  userInfo,
 			Licenses: []aquatic.License{requireUser},
 		},
-		rx("/form"): {
-			Bait: exampleFormBait,
-		},
-		rx("/table"): {
-			Bait: tableInfo,
-		},
-		rx("drag-drop"): {
-			Bait: dragDrop,
-		},
 	}
-	aquatic.StockPond(&pond, stockFish)
+	pond.Stock(stockFish)
 
-	gd := globalData{}
-	pond.Chum = func(_ *http.Request) globalData {
-		return gd
+	pond.OnCatch = func(_ *http.Request) any {
+		fmt.Println("caught a fish")
+		return nil
 	}
 
 	verbose := true
-	mux := aquatic.CastLines(&pond, verbose)
+	mux := pond.CastLines(verbose)
 
 	fmt.Println("gone fishing")
 	http.ListenAndServe("localhost:8080", mux)

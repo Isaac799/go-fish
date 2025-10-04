@@ -13,11 +13,16 @@ import (
 	"text/template"
 )
 
-func handlerSardine[T, K any](f *Fish[K], pond *Pond[T, K]) http.HandlerFunc {
+type pageData struct {
+	Pond any
+	Fish any
+}
+
+func handlerSardine(f *Fish, p *Pond) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		t := template.New(f.templateName)
 
-		buff, err := reef(f, pond)
+		buff, err := f.cacheReef(p)
 		if err != nil {
 			fmt.Print(err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -35,26 +40,22 @@ func handlerSardine[T, K any](f *Fish[K], pond *Pond[T, K]) http.HandlerFunc {
 			return
 		}
 
-		var globalBait T
-		var localBait K
+		var fishData any
+		if f.OnCatch != nil {
+			fishData = f.OnCatch(r)
+		}
+		var pondData any
+		if p.OnCatch != nil {
+			pondData = p.OnCatch(r)
+		}
 
-		if pond.Chum != nil {
-			globalBait = pond.Chum(r)
-		}
-		if f.Bait != nil {
-			localBait = f.Bait(r)
-		}
-
-		pageData := masterBait[T, K]{
-			Local:  localBait,
-			Global: globalBait,
-		}
+		data := pageData{Pond: pondData, Fish: fishData}
 
 		// want to exe template into this to get len for res
 		resBytes := []byte{}
 		resBuff := bytes.NewBuffer(resBytes)
 
-		err = parsed.ExecuteTemplate(resBuff, f.templateName, pageData)
+		err = parsed.ExecuteTemplate(resBuff, f.templateName, data)
 		if err != nil {
 			fmt.Print(err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -72,7 +73,7 @@ func handlerSardine[T, K any](f *Fish[K], pond *Pond[T, K]) http.HandlerFunc {
 	}
 }
 
-func handlerClownAnchovy[T, K any](f *Fish[K]) http.HandlerFunc {
+func handlerClownAnchovy(f *Fish) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if f.kind == FiskKindClown {
 			ver := r.URL.Query().Get("v")
@@ -113,7 +114,7 @@ func handlerClownAnchovy[T, K any](f *Fish[K]) http.HandlerFunc {
 	}
 }
 
-func bobber[T, K any](f *Fish[K], pond *Pond[T, K]) []byte {
+func bobber(f *Fish, pond *Pond) []byte {
 	if f.bobber != nil {
 		return f.bobber
 	}
@@ -174,7 +175,7 @@ func bobber[T, K any](f *Fish[K], pond *Pond[T, K]) []byte {
 // adds the bobber to the head of the document. It uses the
 // bait for a fish and its pond for template data. It uses
 // tackle for template funcs.
-func handlerTuna[T, K any](f *Fish[K], pond *Pond[T, K]) http.HandlerFunc {
+func handlerTuna(f *Fish, p *Pond) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var (
 			docStart  = []byte(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0" >`)
@@ -184,7 +185,7 @@ func handlerTuna[T, K any](f *Fish[K], pond *Pond[T, K]) http.HandlerFunc {
 
 		t := template.New(f.templateName)
 
-		reef, err := reef(f, pond)
+		reef, err := f.cacheReef(p)
 		if err != nil {
 			fmt.Print(err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -202,7 +203,7 @@ func handlerTuna[T, K any](f *Fish[K], pond *Pond[T, K]) http.HandlerFunc {
 			return
 		}
 
-		headLinks := bobber(f, pond)
+		headLinks := bobber(f, p)
 
 		// this size is not perfect since the executed template size
 		// cannot be know, but it helps some allocation before that
@@ -213,20 +214,18 @@ func handlerTuna[T, K any](f *Fish[K], pond *Pond[T, K]) http.HandlerFunc {
 		buff.Write(headLinks)
 		buff.Write(bodyStart)
 
-		var globalBait T
-		var localBait K
-		if f.Bait != nil {
-			localBait = f.Bait(r)
+		var fishData any
+		if f.OnCatch != nil {
+			fishData = f.OnCatch(r)
 		}
-		if pond.Chum != nil {
-			globalBait = pond.Chum(r)
-		}
-		pageData := masterBait[T, K]{
-			Local:  localBait,
-			Global: globalBait,
+		var pondData any
+		if p.OnCatch != nil {
+			pondData = p.OnCatch(r)
 		}
 
-		err = parsed.ExecuteTemplate(buff, f.templateName, pageData)
+		data := pageData{Pond: pondData, Fish: fishData}
+
+		err = parsed.ExecuteTemplate(buff, f.templateName, data)
 		if err != nil {
 			fmt.Print(err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -260,7 +259,7 @@ func chainLicenses(fin http.Handler, licenses ...License) http.Handler {
 
 // reel enables catching a fish. It will chain license
 // together to ensure you are allowed to catch
-func reel[T, K any](f *Fish[K], pond *Pond[T, K]) http.Handler {
+func reel(f *Fish, pond *Pond) http.Handler {
 	licenses := []License{}
 
 	for _, license := range pond.licenses {
@@ -272,10 +271,6 @@ func reel[T, K any](f *Fish[K], pond *Pond[T, K]) http.Handler {
 	}
 
 	var (
-		cannotCatch = http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-			w.WriteHeader(http.StatusNotAcceptable)
-			w.Write([]byte("this fish is for catching"))
-		})
 		unaccountedFish = http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("this fish was not accounted for"))
@@ -283,11 +278,10 @@ func reel[T, K any](f *Fish[K], pond *Pond[T, K]) http.Handler {
 	)
 
 	handlerMap := map[int]http.HandlerFunc{
-		FishKindSardine:  handlerSardine(f, pond),
-		FiskKindClown:    handlerClownAnchovy[T](f),
-		FiskKindAnchovy:  handlerClownAnchovy[T](f),
-		FishKindTuna:     handlerTuna(f, pond),
-		FishKindMackerel: cannotCatch,
+		FishKindSardine: handlerSardine(f, pond),
+		FiskKindClown:   handlerClownAnchovy(f),
+		FiskKindAnchovy: handlerClownAnchovy(f),
+		FishKindTuna:    handlerTuna(f, pond),
 	}
 
 	finalHandler, exists := handlerMap[f.kind]

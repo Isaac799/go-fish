@@ -51,9 +51,6 @@ Here is more specifics about the fish.
 - **Anchovy** is supportive of the tuna
 	- Identified by mime `[ image | audio | video ]`
 	- Is cached
-- **Mackerel** a "system" fish available to all fish.
-	- Not discovered in file system
-	- Not served
 
 ### Stocking a Pond
 
@@ -92,18 +89,6 @@ Name things whatever you like, put them wherever you like. Just know this:
   - `_nav.html` is accessible via `{{ template "_nav" }}`
   - `user.id.edit.html` is accessible via `{{ template "user.id.edit" }}`
 
-
-
-## Bridge
-
-A large part of this tool is the bridge package. A bridge between HTML and go.
-
-I wanted a solution that complements go templating. So, for non-interactive parts of the site, use go templating as normal. When it comes time for a user interaction consider using the bridge HTMLElement. I have been designing it around this exact use case in mind.
-
-### HTML
-
-- A predefined mackerel fish is available for usage in all sardines and tuna `{{ template "_element" . }}`, and will render the HTMLElement in a template.
-- This mackerel is not served, so you will need to create a sardine or tuna to consume it.
 
 ### Go
 

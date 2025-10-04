@@ -8,7 +8,7 @@
         This page demos how a query param can change how the page is rendered
     </p>
 
-    {{if not .Local.Season }}
+    {{if not .Fish }}
     <ul>
         <li hx-boost="true">
             <a href="season?q=spring">Spring</a>
@@ -25,7 +25,7 @@
     </ul>
     {{else}}
     <span>
-        You queried: {{ .Local.Season }}
+        You queried: {{ .Fish }}
     </span>
     {{end}}
 </main>

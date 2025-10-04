@@ -33,12 +33,6 @@ const (
 	// Identified by mime [ image | audio | video ].
 	// Is cached.
 	FiskKindAnchovy
-	// FishKindMackerel is essential to a healthy pond.
-	// Is a "system" fish provided by me. Not discovered in file system.
-	// Not meant to be caught. Handled different than most other fish.
-	// Similar to a global sardine usage but instead of reading file
-	// it uses pre-defined bytes.
-	FishKindMackerel
 )
 
 const (
@@ -48,43 +42,12 @@ const (
 	browserCacheDurationSeconds = 86400 // 1 day
 )
 
-// mackerelHTMLElement provides a system fish for
-// the all powerful element.
-func mackerelHTMLElement[K any]() Fish[K] {
-	// A template element that works with bridge.HTMLelement.
-	// Whitespace sensitive because text area value is inner text.
-	elementTemplate := []byte(`{{define "_element"}}{{if .Tag}}{{if .SelfClosing}}<{{.Tag}}{{range $key, $value := .Attributes}} {{$key}}="{{$value}}" {{end}} />{{if .Children}}{{range $key, $value := .Children}}{{template "_element" $value}}{{end}}{{end}}{{else}}<{{.Tag}} {{range $key, $value := .Attributes}} {{$key}}="{{$value}}" {{end}}>{{.InnerText}}{{range $key, $value := .Children}} {{template "_element" $value}}{{end}}</{{.Tag}}>{{end}}{{end}}{{end}}`)
-	randomStr := "3b5d5c3712955042212316173ccf37be"
-	mackerel := Fish[K]{
-		kind:      FishKindMackerel,
-		isLanding: false,
-		mime:      "text/html",
-		coral:     elementTemplate,
-		// used by key seeing which fish eaten when handling tuna or sardine.
-		// Value just needs to be unique.
-		templateName: randomStr,
-		// used by key in global fish.
-		// Value just needs to be unique
-		filePath: randomStr,
-	}
-	return mackerel
-}
-
 // License is a requirement to catch a fish.
 // acts as a middleware. Return true if license is passed
 type License func(next http.Handler) http.Handler
 
-type masterBait[T, K any] struct {
-	Local  K
-	Global T
-}
-
-// Bait is to be gobbled up by a fish before catching it.
-// A func that has access to the request and returns template data
-type Bait[T any] func(r *http.Request) T
-
 // Fish is an item found form the template dir.
-type Fish[K any] struct {
+type Fish struct {
 	kind           int
 	isLanding      bool
 	mime           string
@@ -95,11 +58,10 @@ type Fish[K any] struct {
 	filePath       string
 
 	// fish found in same dir
-	school []Fish[K]
+	school []Fish
 
 	// coral is bytes of template since it ony needs to be read once.
-	// FishKindMackerel have it pre-defined. Other fish its populated on first
-	// time parsing
+	// Populated on first time parsing
 	coral []byte
 
 	// reef is combination of all coral (templates bytes) combined into
@@ -118,24 +80,17 @@ type Fish[K any] struct {
 	// must be met.
 	Licenses []License
 
-	// Bait fn is called and the result is passed into the
-	// executed template, or eaten by the fish before caught
-	Bait Bait[K]
+	OnCatch func(r *http.Request) any
 
 	// Tackle helps catch a fish.
 	// Given to a template to help transform the data.
 	Tackle template.FuncMap
 }
 
-// Patten is the pattern of a fish used by mux
-func Patten[K any](f *Fish[K]) string {
-	return f.pattern
-}
-
 // Gobble has one fish gobble up another. Gaining its Licenses, Tackle, and Bait (if not already has some).
-func Gobble[T any](f *Fish[T], f2 *Fish[T]) {
-	if f.Bait == nil && f2.Bait != nil {
-		f.Bait = f2.Bait
+func (f *Fish) Gobble(f2 *Fish) {
+	if f.OnCatch == nil && f2.OnCatch != nil {
+		f.OnCatch = f2.OnCatch
 	}
 	if f.Licenses == nil {
 		f.Licenses = make([]License, 0, len(f2.Licenses))
@@ -148,8 +103,8 @@ func Gobble[T any](f *Fish[T], f2 *Fish[T]) {
 	}
 	maps.Copy(f.Tackle, f2.Tackle)
 	for i := range f.school {
-		if f.school[i].Bait == nil && f2.Bait != nil {
-			f.school[i].Bait = f2.Bait
+		if f.school[i].OnCatch == nil && f2.OnCatch != nil {
+			f.school[i].OnCatch = f2.OnCatch
 		}
 		if f.school[i].kind != FishKindSardine {
 			continue
@@ -167,12 +122,7 @@ func Gobble[T any](f *Fish[T], f2 *Fish[T]) {
 	}
 }
 
-// Kind reads back the kind of a fish
-func Kind[T, K any](f *Fish[K]) int {
-	return f.kind
-}
-
-func newFish[T, K any](entry os.DirEntry, pathBase string, pond *Pond[T, K]) (*Fish[K], error) {
+func newFish(entry os.DirEntry, pathBase string, pond *Pond) (*Fish, error) {
 	pathBase = filepath.ToSlash(pathBase)
 
 	info, err := entry.Info()
@@ -286,7 +236,7 @@ func newFish[T, K any](entry os.DirEntry, pathBase string, pond *Pond[T, K]) (*F
 		}
 	}
 
-	f := Fish[K]{
+	f := Fish{
 		kind:           kind,
 		mime:           mime,
 		hash:           hash,
@@ -301,10 +251,10 @@ func newFish[T, K any](entry os.DirEntry, pathBase string, pond *Pond[T, K]) (*F
 	return &f, nil
 }
 
-// coral will wrap a file content in the define syntax.
+// cacheCoral will wrap a file content in the define syntax.
 // Enforcing template name scheme and reducing template lines n - 2.
 // Once coral is discovered for the first time it is saved in the fish for re use.
-func coral[K any](f *Fish[K]) ([]byte, error) {
+func (f *Fish) cacheCoral() ([]byte, error) {
 	if f.coral != nil {
 		return f.coral, nil
 	}
@@ -337,9 +287,9 @@ func coral[K any](f *Fish[K]) ([]byte, error) {
 	return buffer, nil
 }
 
-// reef combines the coral of dependent fish and itself.
+// cacheReef combines the coral of dependent fish and itself.
 // Once a reef is discovered for the first time it is saved in the fish for re use.
-func reef[T, K any](f *Fish[K], pond *Pond[T, K]) ([]byte, error) {
+func (f *Fish) cacheReef(pond *Pond) ([]byte, error) {
 	if f.reef != nil {
 		return f.reef, nil
 	}
@@ -350,23 +300,6 @@ func reef[T, K any](f *Fish[K], pond *Pond[T, K]) ([]byte, error) {
 	eaten := map[string][]byte{}
 	size := 0
 
-	// global mackerel first, cannot be over written
-	// since its a core 'system' fish
-	for _, e := range pond.shad {
-		if e.kind != FishKindMackerel {
-			continue
-		}
-		if _, exists := eaten[e.templateName]; exists {
-			continue
-		}
-		b, err := coral(e)
-		if err != nil {
-			return nil, err
-		}
-		size += len(b)
-		eaten[e.templateName] = b
-	}
-
 	// local sardines first to give the consumer (tuna or sardine)
 	// access to its local dependent templates
 	for _, e := range f.school {
@@ -376,7 +309,7 @@ func reef[T, K any](f *Fish[K], pond *Pond[T, K]) ([]byte, error) {
 		if _, exists := eaten[e.templateName]; exists {
 			continue
 		}
-		b, err := coral(&e)
+		b, err := e.cacheCoral()
 		if err != nil {
 			return nil, err
 		}
@@ -395,7 +328,7 @@ func reef[T, K any](f *Fish[K], pond *Pond[T, K]) ([]byte, error) {
 		if _, exists := eaten[e.templateName]; exists {
 			continue
 		}
-		b, err := coral(e)
+		b, err := e.cacheCoral()
 		if err != nil {
 			return nil, err
 		}
@@ -406,7 +339,7 @@ func reef[T, K any](f *Fish[K], pond *Pond[T, K]) ([]byte, error) {
 	// finally we can consume the 'main' fish (tuna or sardine)
 	// this is to ensure not re define if is sardine
 	if _, exists := eaten[f.templateName]; !exists {
-		b, err := coral(f)
+		b, err := f.cacheCoral()
 		if err != nil {
 			return nil, err
 		}

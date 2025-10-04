@@ -28,7 +28,7 @@ var fishKindStr = map[int]string{
 
 // Stock enables developer to provide what fish they think
 // the pond should have. Keyed by file name (without extension)
-type Stock[T, K any] map[*regexp.Regexp]Fish[K]
+type Stock map[*regexp.Regexp]Fish
 
 // NewPondOptions gives the options available when creating a new pond
 type NewPondOptions struct {
@@ -36,6 +36,7 @@ type NewPondOptions struct {
 	// and are checked before a fish license in the order added.
 	// To catch a fish all pond and fish licenses must be met.
 	Licenses []License
+
 	// GlobalSmallFish makes all Anchovy, Sardine, and Clown fish
 	// global scoped no matter where they are. Useful for an assets pond
 	// that flows into another pond.
@@ -44,19 +45,20 @@ type NewPondOptions struct {
 
 // Pond is a collection of files from a dir with functions
 // to get a server running
-type Pond[T, K any] struct {
+type Pond struct {
 	options     NewPondOptions
 	pathBase    string
 	templateDir string
 
-	// 'global bait' that has been tossed into a pond for all fish to use.
-	Chum Bait[T]
+	// OnCatch is a fn where you can provide the pond data for a template
+	// to access.
+	OnCatch func(r *http.Request) any
 
 	// strictly for small fish to be used by tuna and sardines
-	shad map[string]*Fish[K]
+	shad map[string]*Fish
 
 	// fish are the items available for catch in a pond
-	fish map[string][]Fish[K]
+	fish map[string][]Fish
 
 	// licenses are required for any fish to be caught
 	licenses []License
@@ -65,27 +67,27 @@ type Pond[T, K any] struct {
 // FlowsInto can make global fish in one pond apply to another pond
 // Note that only anchovy and clown are allowed to flow (assets)
 // Useful to setup 2 ponds. one for assets, one for pages
-func FlowsInto[T, K any](p *Pond[T, K], p2 *Pond[T, K]) {
+func (p *Pond) FlowsInto(p2 *Pond) {
 	for _, f := range p.shad {
 		p2.shad[f.filePath] = f
 	}
 }
 
-// StockPond puts a stock into the pond. They will find their matches
+// Stock puts a stock into the pond. They will find their matches
 // and be gobbled. So you can set fish bait and licenses, and
 // feed then into the pond so the ponds fish inherit their stuff.
 // Regex match done against relative file path to pond base dir
-func StockPond[T, K any](p *Pond[T, K], stock Stock[T, K]) {
+func (p *Pond) Stock(stock Stock) {
 	for stockFishRegex, stockFish := range stock {
 		found := false
-		for _, pondFish := range FishFinder(p) {
+		for _, pondFish := range p.FishFinder() {
 			matched := stockFishRegex.Match([]byte(pondFish.scopedFilePath))
 			if !matched {
 				continue
 			}
 
 			found = true
-			Gobble(pondFish, &stockFish)
+			pondFish.Gobble(&stockFish)
 		}
 		if !found {
 			fmt.Println("did not find matching fish for regex: " + stockFishRegex.String())
@@ -94,8 +96,8 @@ func StockPond[T, K any](p *Pond[T, K], stock Stock[T, K]) {
 }
 
 // FishFinder provides a slice of all fish
-func FishFinder[T, K any](p *Pond[T, K]) []*Fish[K] {
-	all := []*Fish[K]{}
+func (p *Pond) FishFinder() []*Fish {
+	all := []*Fish{}
 	for _, fishes := range p.fish {
 		for i := range fishes {
 			all = append(all, &fishes[i])
@@ -105,10 +107,10 @@ func FishFinder[T, K any](p *Pond[T, K]) []*Fish[K] {
 }
 
 // NewPond provides a new pond based on dir
-func NewPond[T, K any](templateDirPath string, options NewPondOptions) (Pond[T, K], error) {
+func NewPond(templateDirPath string, options NewPondOptions) (Pond, error) {
 
-	p := Pond[T, K]{
-		fish:     map[string][]Fish[K]{},
+	p := Pond{
+		fish:     map[string][]Fish{},
 		licenses: options.Licenses,
 	}
 
@@ -117,7 +119,7 @@ func NewPond[T, K any](templateDirPath string, options NewPondOptions) (Pond[T, 
 	if p.licenses == nil {
 		// do this to avoid nil deref in handle funcs
 		// prefer this to checking for nil
-		p.licenses = make([]License, 0, 0)
+		p.licenses = make([]License, 0)
 	}
 
 	wd, err := os.Getwd()
@@ -129,7 +131,7 @@ func NewPond[T, K any](templateDirPath string, options NewPondOptions) (Pond[T, 
 	templateDir = filepath.ToSlash(templateDir)
 	p.templateDir = templateDir
 
-	err = collect(&p, templateDir)
+	err = p.collect(templateDir)
 	if err != nil {
 		return p, err
 	}
@@ -137,9 +139,9 @@ func NewPond[T, K any](templateDirPath string, options NewPondOptions) (Pond[T, 
 }
 
 // collect will gather html and css from template dir
-func collect[T, K any](p *Pond[T, K], pathBase string) error {
+func (p *Pond) collect(pathBase string) error {
 	if p.fish == nil {
-		p.fish = map[string][]Fish[K]{}
+		p.fish = map[string][]Fish{}
 	}
 	entries, err := os.ReadDir(pathBase)
 	if err != nil {
@@ -151,11 +153,8 @@ func collect[T, K any](p *Pond[T, K], pathBase string) error {
 
 	isRoot := pathBase == p.templateDir
 
-	_elementFish := mackerelHTMLElement[K]()
-	smallFishes := []*Fish[K]{
-		&_elementFish,
-	}
-	bigFishes := []*Fish[K]{}
+	smallFishes := []*Fish{}
+	bigFishes := []*Fish{}
 
 	dirs := []os.DirEntry{}
 
@@ -183,7 +182,7 @@ func collect[T, K any](p *Pond[T, K], pathBase string) error {
 
 	if p.shad == nil && isRoot {
 		if p.shad == nil {
-			p.shad = make(map[string]*Fish[K], len(smallFishes))
+			p.shad = make(map[string]*Fish, len(smallFishes))
 		}
 		for _, f := range smallFishes {
 			p.shad[f.filePath] = f
@@ -191,7 +190,7 @@ func collect[T, K any](p *Pond[T, K], pathBase string) error {
 
 	} else if p.options.GlobalSmallFish {
 		if p.shad == nil {
-			p.shad = make(map[string]*Fish[K], len(smallFishes))
+			p.shad = make(map[string]*Fish, len(smallFishes))
 		}
 		for _, c := range smallFishes {
 			p.shad[c.filePath] = c
@@ -206,21 +205,21 @@ func collect[T, K any](p *Pond[T, K], pathBase string) error {
 		itemsDeref := p.fish
 		_, exists := itemsDeref[pathBase]
 		if !exists {
-			itemsDeref[pathBase] = []Fish[K]{}
+			itemsDeref[pathBase] = []Fish{}
 		}
 		itemsDeref[pathBase] = append(itemsDeref[pathBase], *pageItem)
 	}
 
 	// now we can look at nested dirs
 	for _, e := range dirs {
-		collect(p, filepath.Join(pathBase, e.Name()))
+		p.collect(filepath.Join(pathBase, e.Name()))
 	}
 
 	return nil
 }
 
 // CastLines provides a mux to with patterns based on go templates in the specified directory
-func CastLines[T, K any](pond *Pond[T, K], verbose bool) *http.ServeMux {
+func (p *Pond) CastLines(verbose bool) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	var tw *tabwriter.Writer
@@ -231,13 +230,9 @@ func CastLines[T, K any](pond *Pond[T, K], verbose bool) *http.ServeMux {
 	}
 
 	// allows us to collect fish before
-	fishToRegister := make(map[string]*Fish[K])
+	fishToRegister := make(map[string]*Fish)
 
-	for _, child := range pond.shad {
-		if child.kind == FishKindMackerel {
-			// not to be served
-			continue
-		}
+	for _, child := range p.shad {
 		if child.kind == FishKindTuna {
 			// unreachable
 			continue
@@ -246,7 +241,7 @@ func CastLines[T, K any](pond *Pond[T, K], verbose bool) *http.ServeMux {
 	}
 
 	// all dirs
-	for path, fishes := range pond.fish {
+	for path, fishes := range p.fish {
 		if len(fishes) == 0 {
 			fmt.Printf("no patterns for: %s\n", path)
 			continue
@@ -271,7 +266,7 @@ func CastLines[T, K any](pond *Pond[T, K], verbose bool) *http.ServeMux {
 		}
 	}
 
-	sortedFish := make([]*Fish[K], 0, len(fishToRegister))
+	sortedFish := make([]*Fish, 0, len(fishToRegister))
 	for pattern, fish := range fishToRegister {
 		if len(pattern) == 0 {
 			continue
@@ -288,7 +283,7 @@ func CastLines[T, K any](pond *Pond[T, K], verbose bool) *http.ServeMux {
 		if tw != nil {
 			tw.Write(fmt.Appendf(nil, "%s\t%s\t%s\n", fishKindStr[fish.kind], fish.pattern, fish.scopedFilePath))
 		}
-		mux.Handle(fish.pattern, reel(fish, pond))
+		mux.Handle(fish.pattern, reel(fish, p))
 	}
 
 	if tw != nil {
