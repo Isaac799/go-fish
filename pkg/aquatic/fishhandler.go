@@ -246,28 +246,28 @@ func handlerTuna(f *Fish, p *Pond) http.HandlerFunc {
 	}
 }
 
-// chainLicense essentially is a Russian nesting doll like so
+// middlewares essentially is a Russian nesting doll like so
 // (fin, A, B) is ran as A(B(fin))
 // get it? fish have fin. do you get it?
-func chainLicenses(fin http.Handler, licenses ...License) http.Handler {
-	for i := len(licenses) - 1; i >= 0; i-- {
-		license := licenses[i]
-		fin = license(fin)
+func middlewares(handler http.Handler, fns ...BeforeCatchFn) http.Handler {
+	for i := len(fns) - 1; i >= 0; i-- {
+		fn := fns[i]
+		handler = fn(handler)
 	}
-	return fin
+	return handler
 }
 
-// reel enables catching a fish. It will chain license
+// reel enables catching a fish. It will chain before catches
 // together to ensure you are allowed to catch
 func reel(f *Fish, pond *Pond) http.Handler {
-	licenses := []License{}
+	fns := []BeforeCatchFn{}
 
-	for _, license := range pond.licenses {
-		licenses = append(licenses, license)
+	for _, fn := range pond.beforeCatchFns {
+		fns = append(fns, fn)
 	}
 
-	for _, license := range f.Licenses {
-		licenses = append(licenses, license)
+	for _, fn := range f.BeforeCatch {
+		fns = append(fns, fn)
 	}
 
 	var (
@@ -289,5 +289,5 @@ func reel(f *Fish, pond *Pond) http.Handler {
 		return unaccountedFish
 	}
 
-	return chainLicenses(finalHandler, licenses...)
+	return middlewares(finalHandler, fns...)
 }

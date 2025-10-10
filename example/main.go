@@ -12,7 +12,7 @@ import (
 type globalData struct{}
 
 func setupPond() aquatic.Pond {
-	config := aquatic.NewPondOptions{Licenses: []aquatic.License{visitorLog}}
+	config := aquatic.NewPondOptions{BeforeCatchFns: []aquatic.BeforeCatchFn{visitorLog}}
 	uxPond, err := aquatic.NewPond("ux", config)
 	if err != nil {
 		panic(err)
@@ -33,12 +33,12 @@ func main() {
 
 	stockFish := aquatic.Stock{
 		rx("season"): {
-			Licenses: []aquatic.License{optionQuery},
-			OnCatch:  queriedSeason,
+			BeforeCatch: []aquatic.BeforeCatchFn{optionQuery},
+			OnCatch:     queriedSeason,
 		},
 		rx("user/.id"): {
-			OnCatch:  userInfo,
-			Licenses: []aquatic.License{requireUser},
+			BeforeCatch: []aquatic.BeforeCatchFn{requireUser},
+			OnCatch:     userInfo,
 		},
 	}
 	pond.Stock(stockFish)

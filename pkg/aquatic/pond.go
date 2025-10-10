@@ -32,10 +32,9 @@ type Stock map[*regexp.Regexp]Fish
 
 // NewPondOptions gives the options available when creating a new pond
 type NewPondOptions struct {
-	// Licenses for a pond are applied to all fish in the pond
-	// and are checked before a fish license in the order added.
-	// To catch a fish all pond and fish licenses must be met.
-	Licenses []License
+	// BeforeCatchFns for a pond are applied to all fish in the pond
+	// and can prevent a catch.
+	BeforeCatchFns []BeforeCatchFn
 
 	// GlobalSmallFish makes all Anchovy, Sardine, and Clown fish
 	// global scoped no matter where they are. Useful for an assets pond
@@ -60,8 +59,8 @@ type Pond struct {
 	// fish are the items available for catch in a pond
 	fish map[string][]Fish
 
-	// licenses are required for any fish to be caught
-	licenses []License
+	// beforeCatchFns are required for any fish to be caught
+	beforeCatchFns []BeforeCatchFn
 }
 
 // FlowsInto can make global fish in one pond apply to another pond
@@ -74,7 +73,7 @@ func (p *Pond) FlowsInto(p2 *Pond) {
 }
 
 // Stock puts a stock into the pond. They will find their matches
-// and be gobbled. So you can set fish bait and licenses, and
+// and be gobbled. So you can set fish bait and catch fns, and
 // feed then into the pond so the ponds fish inherit their stuff.
 // Regex match done against relative file path to pond base dir
 func (p *Pond) Stock(stock Stock) {
@@ -110,16 +109,16 @@ func (p *Pond) FishFinder() []*Fish {
 func NewPond(templateDirPath string, options NewPondOptions) (Pond, error) {
 
 	p := Pond{
-		fish:     map[string][]Fish{},
-		licenses: options.Licenses,
+		fish:           map[string][]Fish{},
+		beforeCatchFns: options.BeforeCatchFns,
 	}
 
 	p.options = options
 
-	if p.licenses == nil {
+	if p.beforeCatchFns == nil {
 		// do this to avoid nil deref in handle funcs
 		// prefer this to checking for nil
-		p.licenses = make([]License, 0)
+		p.beforeCatchFns = make([]BeforeCatchFn, 0)
 	}
 
 	wd, err := os.Getwd()

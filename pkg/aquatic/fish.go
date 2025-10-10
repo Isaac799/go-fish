@@ -42,9 +42,8 @@ const (
 	browserCacheDurationSeconds = 86400 // 1 day
 )
 
-// License is a requirement to catch a fish.
-// acts as a middleware. Return true if license is passed
-type License func(next http.Handler) http.Handler
+// BeforeCatchFn is a requirement to catch a fish, a middleware.
+type BeforeCatchFn func(next http.Handler) http.Handler
 
 // Fish is an item found form the template dir.
 type Fish struct {
@@ -74,12 +73,11 @@ type Fish struct {
 	// Only relevant for tuna. Saved for reuse after first determined.
 	bobber []byte
 
-	// Licenses is a collection of licenses a user must have
-	// to catch a fish. Checked after pond licenses, in the
-	// order added. To catch a fish all pond and fish licenses
-	// must be met.
-	Licenses []License
+	// BeforeCatch is middleware before a fish is caught.
+	// Checked after pond middleware in order.
+	BeforeCatch []BeforeCatchFn
 
+	// OnCatch provides data that a fish as access to when it is caught.
 	OnCatch func(r *http.Request) any
 
 	// Tackle helps catch a fish.
@@ -87,16 +85,16 @@ type Fish struct {
 	Tackle template.FuncMap
 }
 
-// Gobble has one fish gobble up another. Gaining its Licenses, Tackle, and Bait (if not already has some).
+// Gobble has one fish gobble up another. Gaining its Before and On catch fns, and Tackle (if not already has some).
 func (f *Fish) Gobble(f2 *Fish) {
 	if f.OnCatch == nil && f2.OnCatch != nil {
 		f.OnCatch = f2.OnCatch
 	}
-	if f.Licenses == nil {
-		f.Licenses = make([]License, 0, len(f2.Licenses))
+	if f.BeforeCatch == nil {
+		f.BeforeCatch = make([]BeforeCatchFn, 0, len(f2.BeforeCatch))
 	}
-	for _, l := range f2.Licenses {
-		f.Licenses = append(f.Licenses, l)
+	for _, l := range f2.BeforeCatch {
+		f.BeforeCatch = append(f.BeforeCatch, l)
 	}
 	if f.Tackle == nil {
 		f.Tackle = make(template.FuncMap, len(f2.Tackle))
@@ -109,11 +107,11 @@ func (f *Fish) Gobble(f2 *Fish) {
 		if f.school[i].kind != FishKindSardine {
 			continue
 		}
-		if f.school[i].Licenses == nil {
-			f.school[i].Licenses = make([]License, 0, len(f2.Licenses))
+		if f.school[i].BeforeCatch == nil {
+			f.school[i].BeforeCatch = make([]BeforeCatchFn, 0, len(f2.BeforeCatch))
 		}
-		for _, l := range f2.Licenses {
-			f.school[i].Licenses = append(f.school[i].Licenses, l)
+		for _, l := range f2.BeforeCatch {
+			f.school[i].BeforeCatch = append(f.school[i].BeforeCatch, l)
 		}
 		if f.school[i].Tackle == nil {
 			f.school[i].Tackle = make(template.FuncMap, len(f2.Tackle))
@@ -245,7 +243,7 @@ func newFish(entry os.DirEntry, pathBase string, pond *Pond) (*Fish, error) {
 		templateName:   templateName,
 		filePath:       filePath,
 		scopedFilePath: scopedFilePath,
-		Licenses:       []License{},
+		BeforeCatch:    []BeforeCatchFn{},
 	}
 
 	return &f, nil
