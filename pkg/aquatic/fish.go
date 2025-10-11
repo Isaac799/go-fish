@@ -4,6 +4,7 @@
 package aquatic
 
 import (
+	"bytes"
 	"crypto/md5"
 	"fmt"
 	"io"
@@ -62,12 +63,6 @@ type Fish struct {
 	// coral is bytes of template since it ony needs to be read once.
 	// Populated on first time parsing
 	coral []byte
-
-	// reef is combination of all coral (templates bytes) combined into
-	// one beautiful string for the parse template use. It includes all
-	// coral for other global, children... fish. Saves me from having to
-	// rebuild known template combinations for sardine and tuna.
-	reef []byte
 
 	// bobber stays above a tuna. Is the head of the html document.
 	// Only relevant for tuna. Saved for reuse after first determined.
@@ -287,27 +282,21 @@ func (f *Fish) cacheCoral() ([]byte, error) {
 	suffix := []byte("{{end}}")
 
 	size := len(prefix) + int(info.Size()) + len(suffix)
-	buffer := make([]byte, size)
+	buff := bytes.NewBuffer(make([]byte, 0, size))
 
-	copy(buffer, prefix)
-	n, err := file.Read(buffer[len(prefix) : len(prefix)+int(info.Size())])
+	buff.Write(prefix)
+	_, err = io.CopyN(buff, file, info.Size())
 	if err != nil {
 		return nil, err
 	}
 
-	copy(buffer[len(prefix)+n:], suffix)
-	f.coral = buffer
-
-	return buffer, nil
+	buff.Write(suffix)
+	f.coral = buff.Bytes()
+	return f.coral, nil
 }
 
-// cacheReef combines the coral of dependent fish and itself.
-// Once a reef is discovered for the first time it is saved in the fish for re use.
-func (f *Fish) cacheReef(pond *Pond) ([]byte, error) {
-	if f.reef != nil {
-		return f.reef, nil
-	}
-
+// reef combines the coral of dependent fish and itself.
+func (f *Fish) reef(pond *Pond) ([]byte, error) {
 	// a map to store the various fish needed to be eaten
 	// by this fish to give it access to all templates available
 	// to it. Populated in a significant way to enable scoping
@@ -318,9 +307,6 @@ func (f *Fish) cacheReef(pond *Pond) ([]byte, error) {
 	// access to its local dependent templates
 	for _, e := range f.school {
 		if e.kind != FishKindSardine {
-			continue
-		}
-		if _, exists := eaten[e.templateName]; exists {
 			continue
 		}
 		b, err := e.cacheCoral()
@@ -363,13 +349,9 @@ func (f *Fish) cacheReef(pond *Pond) ([]byte, error) {
 
 	// now the cool part, a sliding copy into a single pre
 	// alloc buff using references to the fish bytes since
-	buff := make([]byte, size)
-	last := 0
-	for _, v := range eaten {
-		n := copy(buff[last:last+len(v)], v)
-		last += n
+	buff := bytes.NewBuffer(make([]byte, 0, size))
+	for _, b := range eaten {
+		buff.Write(b)
 	}
-
-	f.reef = buff
-	return buff, nil
+	return buff.Bytes(), nil
 }

@@ -30,7 +30,6 @@ A item discovered in the ponds.
 In a fish we have:
 - school are other fish available to it (files found in the same dir)
 - coral is the details of a fish (the bytes of file)
-- reef combination of all coral for a fish (combination of all templates bytes for template parsing)
 - bobber stays above a tuna. (head of the html document, determined by other file in dir or globally scoped)
 - restrict access to catch via 'before catch fns' (middleware)
 - provide bait (data provided to just this template before execution)

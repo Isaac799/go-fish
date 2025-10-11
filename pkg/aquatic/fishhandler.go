@@ -22,7 +22,7 @@ func handlerSardine(f *Fish, p *Pond) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		t := template.New(f.templateName)
 
-		buff, err := f.cacheReef(p)
+		buff, err := f.reef(p)
 		if err != nil {
 			fmt.Print(err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -161,14 +161,12 @@ func bobber(f *Fish, pond *Pond) []byte {
 		return bytes.Compare(headLinks[i], headLinks[j]) < 0
 	})
 
-	b := make([]byte, size)
-	last := 0
-	for _, v := range headLinks {
-		n := copy(b[last:last+len(v)], v)
-		last += n
+	buff := bytes.NewBuffer(make([]byte, 0, size))
+	for _, b := range headLinks {
+		buff.Write(b)
 	}
-	f.bobber = b
-	return b
+	f.bobber = buff.Bytes()
+	return f.bobber
 }
 
 // handlerTuna wraps a fish reef in in html5 syntax and
@@ -185,7 +183,7 @@ func handlerTuna(f *Fish, p *Pond) http.HandlerFunc {
 
 		t := template.New(f.templateName)
 
-		reef, err := f.cacheReef(p)
+		reef, err := f.reef(p)
 		if err != nil {
 			fmt.Print(err)
 			w.WriteHeader(http.StatusInternalServerError)
