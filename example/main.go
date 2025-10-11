@@ -33,6 +33,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+
 	rx := regexp.MustCompile
 
 	stockFish := aquatic.Stock{
@@ -51,6 +52,12 @@ func main() {
 		fmt.Println("caught a fish")
 		return nil
 	}
+
+	go func() {
+		for err := range pond.OnErr {
+			fmt.Println(err.Error())
+		}
+	}()
 
 	verbose := true
 	mux := pond.CastLines(verbose)

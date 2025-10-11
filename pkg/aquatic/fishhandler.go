@@ -24,7 +24,7 @@ func handlerSardine(f *Fish, p *Pond) http.HandlerFunc {
 
 		buff, err := f.reef(p)
 		if err != nil {
-			fmt.Print(err)
+			p.OnErr <- errors.Join(err, ErrHandle)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -35,7 +35,7 @@ func handlerSardine(f *Fish, p *Pond) http.HandlerFunc {
 
 		parsed, err := t.Parse(string(buff))
 		if err != nil {
-			fmt.Print(err)
+			p.OnErr <- errors.Join(err, ErrHandle)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -57,7 +57,7 @@ func handlerSardine(f *Fish, p *Pond) http.HandlerFunc {
 
 		err = parsed.ExecuteTemplate(resBuff, f.templateName, data)
 		if err != nil {
-			fmt.Print(err)
+			p.OnErr <- errors.Join(err, ErrHandle)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -66,14 +66,14 @@ func handlerSardine(f *Fish, p *Pond) http.HandlerFunc {
 		w.Header().Add("Content-Length", strconv.Itoa(len(resBuff.Bytes())))
 		_, err = w.Write(resBuff.Bytes())
 		if err != nil {
-			fmt.Print(err)
+			p.OnErr <- errors.Join(err, ErrHandle)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 	}
 }
 
-func handlerClownAnchovy(f *Fish) http.HandlerFunc {
+func handlerClownAnchovy(f *Fish, p *Pond) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if f.kind == FiskKindClown {
 			ver := r.URL.Query().Get("v")
@@ -86,19 +86,19 @@ func handlerClownAnchovy(f *Fish) http.HandlerFunc {
 
 		file, err := os.Open(f.filePath)
 		if errors.Is(err, os.ErrNotExist) {
-			fmt.Print(err)
+			p.OnErr <- errors.Join(err, ErrHandle)
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
 		if err != nil {
-			fmt.Print(err)
+			p.OnErr <- errors.Join(err, ErrHandle)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		defer file.Close()
 		b, err := io.ReadAll(file)
 		if err != nil {
-			fmt.Print(err)
+			p.OnErr <- errors.Join(err, ErrHandle)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -107,7 +107,7 @@ func handlerClownAnchovy(f *Fish) http.HandlerFunc {
 		w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", browserCacheDurationSeconds))
 		_, err = w.Write(b)
 		if err != nil {
-			fmt.Print(err)
+			p.OnErr <- errors.Join(err, ErrHandle)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -185,7 +185,7 @@ func handlerTuna(f *Fish, p *Pond) http.HandlerFunc {
 
 		reef, err := f.reef(p)
 		if err != nil {
-			fmt.Print(err)
+			p.OnErr <- errors.Join(err, ErrHandle)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -196,7 +196,7 @@ func handlerTuna(f *Fish, p *Pond) http.HandlerFunc {
 
 		parsed, err := t.Parse(string(reef))
 		if err != nil {
-			fmt.Print(err)
+			p.OnErr <- errors.Join(err, ErrHandle)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -225,7 +225,7 @@ func handlerTuna(f *Fish, p *Pond) http.HandlerFunc {
 
 		err = parsed.ExecuteTemplate(buff, f.templateName, data)
 		if err != nil {
-			fmt.Print(err)
+			p.OnErr <- errors.Join(err, ErrHandle)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -237,7 +237,7 @@ func handlerTuna(f *Fish, p *Pond) http.HandlerFunc {
 		w.Header().Add("Content-Length", strconv.Itoa(len(buff.Bytes())))
 		_, err = w.Write(buff.Bytes())
 		if err != nil {
-			fmt.Print(err)
+			p.OnErr <- errors.Join(err, ErrHandle)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -277,8 +277,8 @@ func reel(f *Fish, pond *Pond) http.Handler {
 
 	handlerMap := map[int]http.HandlerFunc{
 		FishKindSardine: handlerSardine(f, pond),
-		FiskKindClown:   handlerClownAnchovy(f),
-		FiskKindAnchovy: handlerClownAnchovy(f),
+		FiskKindClown:   handlerClownAnchovy(f, pond),
+		FiskKindAnchovy: handlerClownAnchovy(f, pond),
 		FishKindTuna:    handlerTuna(f, pond),
 	}
 

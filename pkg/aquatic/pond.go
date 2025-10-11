@@ -12,13 +12,6 @@ import (
 	"text/tabwriter"
 )
 
-var (
-	// ErrNoTemplateDir is given if I cannot find the desired dir to setup a new mux
-	ErrNoTemplateDir = errors.New("cannot find template directory relative to working dir")
-	// ErrInvalidExtension is given if a file is discoverd that I did not anticipate
-	ErrInvalidExtension = errors.New("invalid file extension")
-)
-
 var fishKindStr = map[int]string{
 	FishKindTuna:    "Tuna",
 	FishKindSardine: "Sardine",
@@ -61,6 +54,8 @@ type Pond struct {
 
 	// beforeCatchFns are required for any fish to be caught
 	beforeCatchFns []BeforeCatchFn
+
+	OnErr chan error
 }
 
 // FlowsInto can make global fish in one pond apply to another pond
@@ -70,6 +65,11 @@ func (p *Pond) FlowsInto(p2 *Pond) {
 	for _, f := range p.shad {
 		p2.shad[f.filePath] = f
 	}
+	go func() {
+		for err := range p2.OnErr {
+			p.OnErr <- err
+		}
+	}()
 }
 
 // Stock puts a stock into the pond. They will find their matches
@@ -111,6 +111,7 @@ func NewPond(templateDirPath string, options NewPondOptions) (Pond, error) {
 	p := Pond{
 		fish:           map[string][]Fish{},
 		beforeCatchFns: options.BeforeCatchFns,
+		OnErr:          make(chan error),
 	}
 
 	p.options = options
@@ -123,7 +124,7 @@ func NewPond(templateDirPath string, options NewPondOptions) (Pond, error) {
 
 	wd, err := os.Getwd()
 	if err != nil {
-		return p, err
+		return p, errors.Join(err, ErrNewPond)
 	}
 	templateDir := filepath.Join(wd, templateDirPath)
 	templateDir = filepath.Clean(templateDir)
@@ -132,7 +133,7 @@ func NewPond(templateDirPath string, options NewPondOptions) (Pond, error) {
 
 	err = p.collect(templateDir)
 	if err != nil {
-		return p, err
+		return p, errors.Join(err, ErrNewPond)
 	}
 	return p, nil
 }
@@ -145,9 +146,9 @@ func (p *Pond) collect(pathBase string) error {
 	entries, err := os.ReadDir(pathBase)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return ErrNoTemplateDir
+			return errors.Join(ErrCollectFish, ErrNoTemplateDir)
 		}
-		return err
+		return errors.Join(err, ErrCollectFish)
 	}
 
 	isRoot := pathBase == p.templateDir
@@ -168,7 +169,7 @@ func (p *Pond) collect(pathBase string) error {
 			continue
 		}
 		if err != nil {
-			return err
+			return errors.Join(err, ErrCollectFish)
 		}
 
 		if item.kind == FishKindTuna {

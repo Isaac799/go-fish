@@ -6,6 +6,7 @@ package aquatic
 import (
 	"bytes"
 	"crypto/md5"
+	"errors"
 	"fmt"
 	"io"
 	"maps"
@@ -172,7 +173,7 @@ func newFish(entry os.DirEntry, rootPath string, pond *Pond) (*Fish, error) {
 
 	info, err := entry.Info()
 	if err != nil {
-		return nil, err
+		return nil, errors.Join(err, ErrNewFish)
 	}
 	ext := filepath.Ext(info.Name())
 
@@ -181,12 +182,12 @@ func newFish(entry os.DirEntry, rootPath string, pond *Pond) (*Fish, error) {
 	// of its content
 	file, err := os.Open(filepath.Join(rootPath, entry.Name()))
 	if err != nil {
-		return nil, err
+		return nil, errors.Join(err, ErrNewFish)
 	}
 	defer file.Close()
 	b, err := io.ReadAll(file)
 	if err != nil {
-		return nil, err
+		return nil, errors.Join(err, ErrNewFish)
 	}
 	hash := fmt.Sprintf("%x", md5.Sum(b))
 
@@ -202,7 +203,7 @@ func newFish(entry os.DirEntry, rootPath string, pond *Pond) (*Fish, error) {
 
 	if len(mime) == 0 {
 		fmt.Println("gofish warn: cannot determine mime type of: ", ext)
-		return nil, ErrInvalidExtension
+		return nil, errors.Join(ErrNewFish, ErrInvalidExtension)
 	}
 
 	kind := -1
@@ -223,7 +224,7 @@ func newFish(entry os.DirEntry, rootPath string, pond *Pond) (*Fish, error) {
 	}
 
 	if kind == -1 {
-		return nil, ErrInvalidExtension
+		return nil, errors.Join(ErrNewFish, ErrInvalidExtension)
 	}
 
 	absolute := filepath.Join(rootPath, info.Name())
@@ -270,12 +271,12 @@ func (f *Fish) cacheCoral() ([]byte, error) {
 
 	file, err := os.Open(f.filePath)
 	if err != nil {
-		return nil, err
+		return nil, errors.Join(err, ErrCoral)
 	}
 	defer file.Close()
 	info, err := file.Stat()
 	if err != nil {
-		return nil, err
+		return nil, errors.Join(err, ErrCoral)
 	}
 
 	prefix := fmt.Appendf(nil, "{{define \"%s\"}}", f.templateName)
@@ -287,7 +288,7 @@ func (f *Fish) cacheCoral() ([]byte, error) {
 	buff.Write(prefix)
 	_, err = io.CopyN(buff, file, info.Size())
 	if err != nil {
-		return nil, err
+		return nil, errors.Join(err, ErrCoral)
 	}
 
 	buff.Write(suffix)
@@ -311,7 +312,7 @@ func (f *Fish) reef(pond *Pond) ([]byte, error) {
 		}
 		b, err := e.cacheCoral()
 		if err != nil {
-			return nil, err
+			return nil, errors.Join(err, ErrReef)
 		}
 		size += len(b)
 		eaten[e.templateName] = b
@@ -330,7 +331,7 @@ func (f *Fish) reef(pond *Pond) ([]byte, error) {
 		}
 		b, err := e.cacheCoral()
 		if err != nil {
-			return nil, err
+			return nil, errors.Join(err, ErrReef)
 		}
 		size += len(b)
 		eaten[e.templateName] = b
@@ -341,7 +342,7 @@ func (f *Fish) reef(pond *Pond) ([]byte, error) {
 	if _, exists := eaten[f.templateName]; !exists {
 		b, err := f.cacheCoral()
 		if err != nil {
-			return nil, err
+			return nil, errors.Join(err, ErrReef)
 		}
 		size += len(b)
 		eaten[f.templateName] = b
