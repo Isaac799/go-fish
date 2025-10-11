@@ -120,8 +120,58 @@ func (f *Fish) Gobble(f2 *Fish) {
 	}
 }
 
-func newFish(entry os.DirEntry, pathBase string, pond *Pond) (*Fish, error) {
-	pathBase = filepath.ToSlash(pathBase)
+func patternFromRelativePath(relative, ext string, isHTML bool) string {
+	pattern := filepath.ToSlash(relative)
+	pattern = strings.ReplaceAll(pattern, " ", "-")
+	pattern = strings.ToLower(pattern)
+
+	if !isHTML {
+		return pattern
+	}
+
+	pattern = strings.TrimSuffix(pattern, ext)
+
+	arr := strings.Split(pattern, "/")
+	arr2 := []string{}
+
+	for i, pathItem := range arr {
+		if len(pathItem) == 0 {
+			continue
+		}
+
+		// exclude file prefix eq dir
+		if i <= 2 && len(arr2) > 0 && arr2[len(arr2)-1] == pathItem {
+			continue
+		}
+
+		if !strings.Contains(pathItem, ".") {
+			arr2 = append(arr2, pathItem)
+			continue
+		}
+
+		arr := strings.Split(pathItem, ".")
+		for k, s := range arr {
+			if len(s) == 0 {
+				continue
+			}
+			// exclude file prefix eq dir
+			if k == 0 && len(arr2) > 0 && arr2[len(arr2)-1] == s {
+				continue
+			}
+			if k%2 == 0 {
+				arr2 = append(arr2, s)
+				continue
+			}
+			arr2 = append(arr2, fmt.Sprintf("{%s}", s))
+		}
+	}
+
+	pattern = fmt.Sprintf("/%s", strings.Join(arr2, "/"))
+	return pattern
+}
+
+func newFish(entry os.DirEntry, rootPath string, pond *Pond) (*Fish, error) {
+	rootPath = filepath.ToSlash(rootPath)
 
 	info, err := entry.Info()
 	if err != nil {
@@ -132,7 +182,7 @@ func newFish(entry os.DirEntry, pathBase string, pond *Pond) (*Fish, error) {
 	// since I want to cache styling while preventing
 	// an invalid cache we make the name based on a hash
 	// of its content
-	file, err := os.Open(filepath.Join(pathBase, entry.Name()))
+	file, err := os.Open(filepath.Join(rootPath, entry.Name()))
 	if err != nil {
 		return nil, err
 	}
@@ -179,59 +229,23 @@ func newFish(entry os.DirEntry, pathBase string, pond *Pond) (*Fish, error) {
 		return nil, ErrInvalidExtension
 	}
 
-	name := info.Name()
-	if kind == FishKindTuna || kind == FishKindSardine {
-		name = strings.TrimSuffix(info.Name(), ext)
-	}
-	templateName := name
+	absolute := filepath.Join(rootPath, info.Name())
+	absolute = filepath.ToSlash(absolute)
 
-	filePath := filepath.Join(pathBase, info.Name())
-	filePath = filepath.ToSlash(filePath)
+	relative := strings.Replace(absolute, pond.templateDir, "", 1)
+	relativeNoSuffix := strings.TrimSuffix(relative, ext)
 
-	scopedFilePath := strings.Replace(filePath, pond.templateDir, "", 1)
-	scopedFilePath = filepath.ToSlash(scopedFilePath)
+	isHTML := kind == FishKindTuna || kind == FishKindSardine
 
-	pattern := filepath.Join(pathBase, name)
-	pattern = filepath.ToSlash(pattern)
+	rootArr := strings.Split(rootPath, "/")
+	relNow := strings.TrimPrefix(relativeNoSuffix, "/")
+	isLanding := len(rootArr) > 0 && rootArr[len(rootArr)-1] == relNow
 
-	pattern = strings.Replace(pattern, pond.templateDir, "", 1)
-	pattern = strings.ReplaceAll(pattern, " ", "-")
-
-	pattern = strings.ToLower(pattern)
-
-	isLanding := false
-	if kind == FishKindTuna {
-		fileParts := strings.Split(pathBase, "/")
-		if len(fileParts) > 0 {
-			parentDir := fileParts[len(fileParts)-1]
-			isLanding = parentDir == name
-		}
-	}
-
-	if kind == FishKindTuna || kind == FishKindSardine {
-		patternParts := strings.Split(pattern, ".")
-		newPatternParts := []string{}
-		for i, e := range patternParts {
-			if (i+1)%2 == 0 {
-				param := "{" + e + "}"
-				newPatternParts = append(newPatternParts, param)
-				continue
-			}
-			newPatternParts = append(newPatternParts, e)
-		}
-		pattern = strings.Join(newPatternParts, "/")
-	}
-
-	// fixes the // on path like "/users/.id/edit.html"
-	pattern = strings.ReplaceAll(pattern, "//", "/")
-
-	if kind == FishKindTuna {
-		if isLanding {
-			pattern = strings.TrimSuffix(pattern, templateName)
-		}
-		if pattern != "/" && strings.HasSuffix(pattern, "/") {
-			pattern = strings.TrimSuffix(pattern, "/")
-		}
+	var pattern string
+	if isLanding {
+		pattern = "/"
+	} else {
+		pattern = patternFromRelativePath(relative, ext, isHTML)
 	}
 
 	f := Fish{
@@ -239,10 +253,10 @@ func newFish(entry os.DirEntry, pathBase string, pond *Pond) (*Fish, error) {
 		mime:           mime,
 		hash:           hash,
 		pattern:        pattern,
-		isLanding:      isLanding,
-		templateName:   templateName,
-		filePath:       filePath,
-		scopedFilePath: scopedFilePath,
+		isLanding:      false,
+		templateName:   strings.TrimSuffix(info.Name(), ext),
+		filePath:       absolute,
+		scopedFilePath: relative,
 		BeforeCatch:    []BeforeCatchFn{},
 	}
 

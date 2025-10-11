@@ -66,13 +66,14 @@ See the example folder
 For a file name, `.` delimited makes a new path. This is designed with path values in mind, and not to be used in place of dir structure. The even items are considered a value, enforcing a `/context/value` pattern. 
 
 To use path values simply name a file like: 
+- `user.html` translates to `/user`
 - `user.id.html` translates to `/user/{id}`
 - `user.id.edit.html` translates to `/user/{id}/edit`
 
 Or this too works
 - `user/user.html` translates to `/user`
-- `user/.id.html` translates to `/user/{id}`
-- `user/.id.edit.html` translates to `/user/{id}/edit`
+- `user/user.id.html` translates to `/user/{id}`
+- `user/user.id.edit.html` translates to `/user/{id}/edit`
 
 How is this useful? 
 - You can use the `id` in the 'before catch' to restrict access
@@ -86,8 +87,8 @@ Name things whatever you like, put them wherever you like. Just know this:
 
 - **Patterns** to for mux to match are lower kebab case. So if a file is called `My photo.jpg` I will recognize that to `my-photo.jpg`.
 - **Template Names** are the same as file, without extension. You **do not** need to `{{ define "foo" }} ... {{ end }}` in your templates. I do this before the template is executed to enforce the standard. Examples: 
-  - `_nav.html` is accessible via `{{ template "_nav" }}`
-  - `user.id.edit.html` is accessible via `{{ template "user.id.edit" }}`
+  - `/_nav.html` is accessible via `{{ template "/_nav" }}`
+  - `/user/user.id.edit.html` is accessible via `{{ template "/user/user.id.edit" }}`
 
 
 ### Go

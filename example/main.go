@@ -3,6 +3,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"regexp"
 
@@ -11,32 +12,35 @@ import (
 
 type globalData struct{}
 
-func setupPond() aquatic.Pond {
+func setupPond() (*aquatic.Pond, error) {
 	config := aquatic.NewPondOptions{BeforeCatchFns: []aquatic.BeforeCatchFn{visitorLog}}
 	uxPond, err := aquatic.NewPond("ux", config)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	assetPond, err := aquatic.NewPond("asset", aquatic.NewPondOptions{GlobalSmallFish: true})
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	assetPond.FlowsInto(&uxPond)
-	return uxPond
+	return &uxPond, nil
 }
 
 func main() {
-	pond := setupPond()
+	pond, err := setupPond()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 	rx := regexp.MustCompile
 
 	stockFish := aquatic.Stock{
-		rx("season"): {
+		rx("/season"): {
 			BeforeCatch: []aquatic.BeforeCatchFn{optionQuery},
 			OnCatch:     queriedSeason,
 		},
-		rx("user/.id"): {
+		rx("/user/user.id"): {
 			BeforeCatch: []aquatic.BeforeCatchFn{requireUser},
 			OnCatch:     userInfo,
 		},
