@@ -86,7 +86,7 @@ func (p *Pond) Stock(stock Stock) {
 			}
 
 			found = true
-			pondFish.Gobble(&stockFish)
+			pondFish.gobble(&stockFish)
 		}
 		if !found {
 			fmt.Println("did not find matching fish for regex: " + stockFishRegex.String())

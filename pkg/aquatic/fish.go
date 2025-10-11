@@ -85,38 +85,40 @@ type Fish struct {
 	Tackle template.FuncMap
 }
 
-// Gobble has one fish gobble up another. Gaining its Before and On catch fns, and Tackle (if not already has some).
-func (f *Fish) Gobble(f2 *Fish) {
-	if f.OnCatch == nil && f2.OnCatch != nil {
-		f.OnCatch = f2.OnCatch
+// gobble has one fish gobble up another. This allows the stock fish
+// where developer defines data (on catch fn), middleware (before catch),
+// and template fns (tackle) to be applied to the fish discovered in a pond.
+func (f *Fish) gobble(stockFish *Fish) {
+	if f.OnCatch == nil && stockFish.OnCatch != nil {
+		f.OnCatch = stockFish.OnCatch
 	}
 	if f.BeforeCatch == nil {
-		f.BeforeCatch = make([]BeforeCatchFn, 0, len(f2.BeforeCatch))
+		f.BeforeCatch = make([]BeforeCatchFn, 0, len(stockFish.BeforeCatch))
 	}
-	for _, l := range f2.BeforeCatch {
+	for _, l := range stockFish.BeforeCatch {
 		f.BeforeCatch = append(f.BeforeCatch, l)
 	}
 	if f.Tackle == nil {
-		f.Tackle = make(template.FuncMap, len(f2.Tackle))
+		f.Tackle = make(template.FuncMap, len(stockFish.Tackle))
 	}
-	maps.Copy(f.Tackle, f2.Tackle)
+	maps.Copy(f.Tackle, stockFish.Tackle)
 	for i := range f.school {
-		if f.school[i].OnCatch == nil && f2.OnCatch != nil {
-			f.school[i].OnCatch = f2.OnCatch
+		if f.school[i].OnCatch == nil && stockFish.OnCatch != nil {
+			f.school[i].OnCatch = stockFish.OnCatch
 		}
 		if f.school[i].kind != FishKindSardine {
 			continue
 		}
 		if f.school[i].BeforeCatch == nil {
-			f.school[i].BeforeCatch = make([]BeforeCatchFn, 0, len(f2.BeforeCatch))
+			f.school[i].BeforeCatch = make([]BeforeCatchFn, 0, len(stockFish.BeforeCatch))
 		}
-		for _, l := range f2.BeforeCatch {
+		for _, l := range stockFish.BeforeCatch {
 			f.school[i].BeforeCatch = append(f.school[i].BeforeCatch, l)
 		}
 		if f.school[i].Tackle == nil {
-			f.school[i].Tackle = make(template.FuncMap, len(f2.Tackle))
+			f.school[i].Tackle = make(template.FuncMap, len(stockFish.Tackle))
 		}
-		maps.Copy(f.school[i].Tackle, f2.Tackle)
+		maps.Copy(f.school[i].Tackle, stockFish.Tackle)
 	}
 }
 
